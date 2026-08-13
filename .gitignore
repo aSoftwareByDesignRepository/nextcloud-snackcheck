@@ -1,0 +1,7 @@
+/node_modules/
+/.auth/
+/e2e/.env
+/test-results/
+/playwright-report/
+/blob-report/
+.phpunit.result.cache

@@ -1,0 +1,9 @@
+{
+    "$schema": "https://raw.githubusercontent.com/infection/infection/0.27.10/resources/schema.json",
+    "source": {"directories": ["lib/License", "lib/Service"]},
+    "timeout": 30,
+    "logs": {"text": "infection.log", "html": "infection.html", "summary": "infection-summary.log"},
+    "mutators": {"@default": true},
+    "testFramework": "phpunit",
+    "phpUnit": {"configDir": "."}
+}

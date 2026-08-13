@@ -1,0 +1,18 @@
+{
+    "seedLabel": "snackcheck-snk2-test-signing-v1",
+    "publicKeyB64": "nHAJPMKdvk_RqUaBxYKhUbUfDZLGCRQVi7DQGMKuKLk",
+    "payload": {
+        "v": 2,
+        "product": "snackcheck",
+        "customerId": "test",
+        "issuedAt": "2026-01-01",
+        "validUntil": "2027-12-31",
+        "mobileSeats": 0,
+        "terminalDevices": 1
+    },
+    "payloadB64": "eyJ2IjoyLCJwcm9kdWN0Ijoic25hY2tjaGVjayIsImN1c3RvbWVySWQiOiJ0ZXN0IiwiaXNzdWVkQXQiOiIyMDI2LTAxLTAxIiwidmFsaWRVbnRpbCI6IjIwMjctMTItMzEiLCJtb2JpbGVTZWF0cyI6MCwidGVybWluYWxEZXZpY2VzIjoxfQ",
+    "signatureB64": "hJhWgzg-q2r69koYxbnBNJrx5vRnvbySkP3jCRXQXjb5QNOsowKXoA8fX1jyCKvkWFgkIPKNCwhFhQOivgYCAQ",
+    "wireKey": "SNK2.eyJ2IjoyLCJwcm9kdWN0Ijoic25hY2tjaGVjayIsImN1c3RvbWVySWQiOiJ0ZXN0IiwiaXNzdWVkQXQiOiIyMDI2LTAxLTAxIiwidmFsaWRVbnRpbCI6IjIwMjctMTItMzEiLCJtb2JpbGVTZWF0cyI6MCwidGVybWluYWxEZXZpY2VzIjoxfQ.hJhWgzg-q2r69koYxbnBNJrx5vRnvbySkP3jCRXQXjb5QNOsowKXoA8fX1jyCKvkWFgkIPKNCwhFhQOivgYCAQ",
+    "family": "B",
+    "note": "Family B — product second; terminalDevices primary; mobileSeats mint 0 OK when terminalDevices > 0"
+}

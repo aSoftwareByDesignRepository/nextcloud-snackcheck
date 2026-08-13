@@ -1,0 +1,19 @@
+{
+    "seedLabel": "snackcheck-snk2-test-signing-v1",
+    "publicKeyB64": "nHAJPMKdvk_RqUaBxYKhUbUfDZLGCRQVi7DQGMKuKLk",
+    "payload": {
+        "v": 2,
+        "product": "snackcheck",
+        "customerId": "test",
+        "issuedAt": "2026-01-01",
+        "validUntil": "2027-12-31",
+        "mobileSeats": 1,
+        "terminalDevices": 1,
+        "bundle": true
+    },
+    "payloadB64": "eyJ2IjoyLCJwcm9kdWN0Ijoic25hY2tjaGVjayIsImN1c3RvbWVySWQiOiJ0ZXN0IiwiaXNzdWVkQXQiOiIyMDI2LTAxLTAxIiwidmFsaWRVbnRpbCI6IjIwMjctMTItMzEiLCJtb2JpbGVTZWF0cyI6MSwidGVybWluYWxEZXZpY2VzIjoxLCJidW5kbGUiOnRydWV9",
+    "signatureB64": "1dlOdAUm1NlUbHQQBbd6x0fuCoNwO5KQAzxnwzvqcTytnYPnPIH-6QMqXHHpB3N97g7pOqH5S9pvEHg8N9DkAA",
+    "wireKey": "SNK2.eyJ2IjoyLCJwcm9kdWN0Ijoic25hY2tjaGVjayIsImN1c3RvbWVySWQiOiJ0ZXN0IiwiaXNzdWVkQXQiOiIyMDI2LTAxLTAxIiwidmFsaWRVbnRpbCI6IjIwMjctMTItMzEiLCJtb2JpbGVTZWF0cyI6MSwidGVybWluYWxEZXZpY2VzIjoxLCJidW5kbGUiOnRydWV9.1dlOdAUm1NlUbHQQBbd6x0fuCoNwO5KQAzxnwzvqcTytnYPnPIH-6QMqXHHpB3N97g7pOqH5S9pvEHg8N9DkAA",
+    "family": "B",
+    "note": "Bundle fixture \u2014 seats unused in V1 program but valid on wire"
+}

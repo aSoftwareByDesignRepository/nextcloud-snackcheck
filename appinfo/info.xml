@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 Alexander Mäule <info@software-by-design.de>
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>snackcheck</id>
+	<name>SnackCheck</name>
+	<name lang="de">SnackCheck</name>
+	<summary>Honor ledger for office snacks &amp; drinks — one-tap log, monthly payroll export, kitchen tablet</summary>
+	<summary lang="de">Honor-System für Snacks &amp; Getränke — tippen, monatsweise abrechnen, Wand-Tablet am Kühlschrank</summary>
+	<description><![CDATA[
+# SnackCheck — honor kitchen ledger
+
+Employees one-tap log snacks and drinks against their Nextcloud account. Managers run catalog, Kitchen pulse, top-up hints, period close, and cent-reconciled payroll CSV/XLSX for HR deduction outside the app.
+
+**Free AGPL web app.** Kitchen Tablet companion is licensed separately (`SNK2` device licences). Web is never gated by the device licence.
+
+## Clear limits
+
+- Not a POS / TSE / gastro Kassensystem
+- Not DATEV Lohn live posting
+- Not InventoryCheck — optional on-hand/par scalars only; never stock movements; logs never auto-decrement stock
+
+## Requirements
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL or PostgreSQL
+	]]></description>
+	<description lang="de"><![CDATA[
+# SnackCheck — Honor-System für die Büroküche
+
+Mitarbeitende tippen Snacks und Getränke auf ihr Nextcloud-Konto. Verwaltung: Katalog, Kitchen Pulse, Nachfüllhinweise, Periodenabschluss und centgenaue Lohn-CSV/XLSX.
+
+**Kostenlose AGPL-Web-App.** Das Küchen-Tablet wird separat lizenziert (`SNK2`).
+
+## Voraussetzungen
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL oder PostgreSQL
+	]]></description>
+	<version>1.0.6</version>
+	<licence>agpl</licence>
+	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de/">Alexander Mäule</author>
+	<namespace>SnackCheck</namespace>
+	<category>organization</category>
+	<website>https://nextcloud.software-by-design.de/</website>
+	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-snackcheck/issues</bugs>
+	<repository type="git">https://github.com/aSoftwareByDesignRepository/nextcloud-snackcheck.git</repository>
+	<dependencies>
+		<nextcloud min-version="32" max-version="34"/>
+		<php min-version="8.2" max-version="8.5"/>
+		<database>pgsql</database>
+		<database>mysql</database>
+	</dependencies>
+	<commands>
+		<command>OCA\SnackCheck\Command\UpgradeBackupCommand</command>
+	</commands>
+	<background-jobs>
+		<job>OCA\SnackCheck\Cron\PersonalDigestJob</job>
+		<job>OCA\SnackCheck\Cron\WeeklyTopUpJob</job>
+	</background-jobs>
+	<repair-steps>
+		<pre-migration>
+			<step>OCA\SnackCheck\Repair\BackupBeforeUpdate</step>
+		</pre-migration>
+		<install>
+			<step>OCA\SnackCheck\Repair\EnsureSnackCheckSchema</step>
+		</install>
+		<post-migration>
+			<step>OCA\SnackCheck\Repair\EnsureSnackCheckSchema</step>
+		</post-migration>
+		<uninstall>
+			<step>OCA\SnackCheck\Repair\UninstallDropTables</step>
+		</uninstall>
+	</repair-steps>
+	<navigations>
+		<navigation>
+			<name>SnackCheck</name>
+			<route>snackcheck.page.index</route>
+			<icon>app.svg</icon>
+			<order>10</order>
+			<type>link</type>
+		</navigation>
+	</navigations>
+	<release>
+		<databases>
+			<database>mysql</database>
+			<database>pgsql</database>
+		</databases>
+	</release>
+</info>

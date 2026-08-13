@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+	'routes' => [
+		// Pages
+		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
+		['name' => 'page#log', 'url' => '/log', 'verb' => 'GET'],
+		['name' => 'page#myMonth', 'url' => '/my-month', 'verb' => 'GET'],
+		['name' => 'page#catalog', 'url' => '/catalog', 'verb' => 'GET'],
+		['name' => 'page#pulse', 'url' => '/pulse', 'verb' => 'GET'],
+		['name' => 'page#periods', 'url' => '/periods', 'verb' => 'GET'],
+		['name' => 'page#hospitality', 'url' => '/hospitality', 'verb' => 'GET'],
+		['name' => 'page#sites', 'url' => '/sites', 'verb' => 'GET'],
+		['name' => 'page#audit', 'url' => '/audit', 'verb' => 'GET'],
+		['name' => 'page#users', 'url' => '/users', 'verb' => 'GET'],
+		['name' => 'page#settings', 'url' => '/settings/{section}', 'verb' => 'GET',
+			'defaults' => ['section' => 'access'],
+			'requirements' => ['section' => 'access|periods|pulse|privacy|benefits|sites|unlock|license|support|digests']],
+		['name' => 'api#userTotals', 'url' => '/api/admin/users/totals', 'verb' => 'GET'],
+		['name' => 'api#userAudit', 'url' => '/api/admin/audit', 'verb' => 'GET'],
+		['name' => 'api#searchGroups', 'url' => '/api/admin/groups/search', 'verb' => 'GET'],
+
+		// Web JSON API (CSRF + session)
+		['name' => 'api#createLog', 'url' => '/api/logs', 'verb' => 'POST'],
+		['name' => 'api#undoLog', 'url' => '/api/logs/{id}/undo', 'verb' => 'POST'],
+		['name' => 'api#applyStarter', 'url' => '/api/catalog/starter', 'verb' => 'POST'],
+		['name' => 'api#createCatalogItem', 'url' => '/api/catalog', 'verb' => 'POST'],
+		['name' => 'api#restockItem', 'url' => '/api/catalog/{id}/restock', 'verb' => 'POST'],
+		['name' => 'api#copyCatalogItem', 'url' => '/api/catalog/{id}/copy', 'verb' => 'POST'],
+		['name' => 'api#openNextPeriod', 'url' => '/api/periods/open-next', 'verb' => 'POST'],
+		['name' => 'api#closePeriod', 'url' => '/api/periods/{id}/close', 'verb' => 'POST'],
+		['name' => 'api#reopenPeriod', 'url' => '/api/periods/{id}/reopen', 'verb' => 'POST'],
+		['name' => 'api#downloadPayroll', 'url' => '/api/periods/{id}/payroll', 'verb' => 'GET'],
+		['name' => 'api#downloadHospitality', 'url' => '/api/periods/{id}/hospitality-export', 'verb' => 'GET'],
+		['name' => 'api#applyLicense', 'url' => '/api/admin/license', 'verb' => 'POST'],
+		['name' => 'api#registerTerminal', 'url' => '/api/admin/license/terminals', 'verb' => 'POST'],
+		['name' => 'api#revokeTerminal', 'url' => '/api/admin/license/terminals/revoke', 'verb' => 'POST'],
+		['name' => 'api#saveSettings', 'url' => '/api/admin/settings', 'verb' => 'POST'],
+		['name' => 'api#setUnlockPin', 'url' => '/api/admin/unlock/pin', 'verb' => 'POST'],
+
+		// Device API (Bearer snkterm_)
+		['name' => 'device_api#bootstrap', 'url' => '/api/device/bootstrap', 'verb' => 'GET'],
+		['name' => 'device_api#catalog', 'url' => '/api/device/catalog', 'verb' => 'GET'],
+		['name' => 'device_api#unlockVerify', 'url' => '/api/device/unlock/verify', 'verb' => 'POST'],
+		['name' => 'device_api#lockSession', 'url' => '/api/device/unlock/lock', 'verb' => 'POST'],
+		['name' => 'device_api#createLog', 'url' => '/api/device/logs', 'verb' => 'POST'],
+		['name' => 'device_api#undoLog', 'url' => '/api/device/logs/{id}/undo', 'verb' => 'POST'],
+		['name' => 'device_api#colleagues', 'url' => '/api/device/colleagues', 'verb' => 'GET'],
+		['name' => 'device_api#heartbeat', 'url' => '/api/device/heartbeat', 'verb' => 'POST'],
+		['name' => 'device_api#unpair', 'url' => '/api/device/unpair', 'verb' => 'POST'],
+
+		// Additional web APIs
+		['name' => 'api#voidLog', 'url' => '/api/logs/{id}/void', 'verb' => 'POST'],
+		['name' => 'api#updateCatalogItem', 'url' => '/api/catalog/{id}', 'verb' => 'PUT'],
+		['name' => 'api#deleteCatalogItem', 'url' => '/api/catalog/{id}', 'verb' => 'DELETE'],
+		['name' => 'api#setOnHand', 'url' => '/api/catalog/{id}/on-hand', 'verb' => 'POST'],
+		['name' => 'api#createSite', 'url' => '/api/sites', 'verb' => 'POST'],
+		['name' => 'api#updateSite', 'url' => '/api/sites/{id}', 'verb' => 'PUT'],
+		['name' => 'api#markHandedToHr', 'url' => '/api/periods/{id}/handed-to-hr', 'verb' => 'POST'],
+		['name' => 'api#shoppingList', 'url' => '/api/pulse/shopping-list', 'verb' => 'GET'],
+		['name' => 'api#searchUsers', 'url' => '/api/admin/users/search', 'verb' => 'GET'],
+		['name' => 'api#setUnlockQr', 'url' => '/api/admin/unlock/qr', 'verb' => 'POST'],
+		['name' => 'api#downloadMyMonthPdf', 'url' => '/api/my-month/pdf', 'verb' => 'GET'],
+		['name' => 'api#brReport', 'url' => '/api/admin/br-report', 'verb' => 'GET'],
+		['name' => 'api#complimentaryExport', 'url' => '/api/periods/{id}/complimentary', 'verb' => 'GET'],
+		['name' => 'api#shelfQr', 'url' => '/api/catalog/{id}/shelf-qr', 'verb' => 'GET'],
+		['name' => 'page#shelf', 'url' => '/shelf/{itemId}', 'verb' => 'GET', 'requirements' => ['itemId' => '\\d+']],
+		['name' => 'page#brReport', 'url' => '/br-report', 'verb' => 'GET'],
+	],
+];

@@ -37,7 +37,7 @@ Mitarbeitende tippen Snacks und Getränke auf ihr Nextcloud-Konto. Verwaltung: K
 
 - Nextcloud 32–34 · PHP 8.2–8.5 · MySQL oder PostgreSQL
 	]]></description>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 	<licence>agpl</licence>
 	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de/">Alexander Mäule</author>
 	<namespace>SnackCheck</namespace>

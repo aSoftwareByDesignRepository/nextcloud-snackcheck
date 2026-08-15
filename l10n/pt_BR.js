@@ -33,7 +33,7 @@ OC.L10N.register(
     "All sites": "Todos os sites",
     "Allowed groups": "Grupos permitidos",
     "Allowed users": "Usuários permitidos",
-    "Allowlist": "Allowlist",
+    "Allowlist" : "Lista de permissões",
     "Anonymized volume by category and item — no user identifiers.": "Volume anônimo por categoria e item — sem identificadores de usuário.",
     "App admin": "Administrador do aplicativo",
     "App admins": "Administradores de aplicativos",

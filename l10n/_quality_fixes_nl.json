@@ -1,0 +1,21 @@
+{
+	"Actor": "Acteur",
+	"Alcohol": "Dranken met alcohol",
+	"Audit": "Controlelog",
+	"Digests": "Samenvattingen",
+	"Drink": "Drank",
+	"Label": "Etiket",
+	"Menu": "Menukaart",
+	"Multi-site": "Meerdere locaties",
+	"Open": "Openen",
+	"Privacy": "Gegevensbescherming",
+	"Restock": "Aanvullen",
+	"Token: {token}": "Sleutel: {token}",
+	"Leave stock blank unless you track fridge levels for Top-up.": "Laat voorraad leeg tenzij koelkastniveaus voor aanvulling worden bijgehouden.",
+	"One tap logs Me × 1. Open More options only if you need quantity, a colleague, or company.": "Eén tik logt Ik × 1. Open Meer opties alleen bij behoefte aan aantal, collega of bedrijf.",
+	"Par and on hand power Kitchen pulse Top-up. Leave blank only if you do not track stock.": "Par en actuele voorraad sturen keukenpuls en aanvulling. Alleen leeg laten als voorraad niet wordt bijgehouden.",
+	"Pick your kitchen above, then tap a snack here.": "Selecteer hierboven de keuken en tik vervolgens op een snack.",
+	"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.": "Deze licentie is gekoppeld aan een andere Nextcloud-instantie. Pas de SNK2-sleutel opnieuw toe op deze server.",
+	"You cannot book on company.": "Boeken op bedrijf is niet mogelijk.",
+	"You cannot log for a colleague.": "Registreren voor een collega is niet mogelijk."
+}

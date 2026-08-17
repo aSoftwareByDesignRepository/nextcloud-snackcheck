@@ -1,0 +1,9 @@
+{
+	"Alcohol": "Bebidas alcohólicas",
+	"Stock": "Existencias",
+	"Token: {token}": "Clave: {token}",
+	"Total": "Suma",
+	"Pick your kitchen above, then tap a snack here.": "Seleccione la cocina arriba y, a continuación, pulse un snack aquí.",
+	"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.": "Esta licencia está vinculada a otra instancia de Nextcloud. Vuelva a aplicar su clave SNK2 en este servidor.",
+	"Top-up suggestions become your shopping list.": "Las sugerencias de reposición pasan a ser su lista de compras."
+}

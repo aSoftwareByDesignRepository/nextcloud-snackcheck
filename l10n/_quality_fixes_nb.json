@@ -1,0 +1,21 @@
+{
+	"Payroll": "Lønn",
+	"Pulse": "Puls",
+	"Token: {token}": "Nøkkel: {token}",
+	"Top-up": "Påfylling",
+	"Void": "Annullering",
+	"Add a company user and at least one allowlisted person before enabling hospitality.": "Legg til en bedriftsbruker og minst én tillatt person før gjestfrihet aktiveres.",
+	"Ask your IT": "Kontakt IT",
+	"Enable multi-site? Existing catalog, devices, and logs stay on the Default site. You can add more sites next.": "Aktivere flere steder? Eksisterende katalog, enheter og logger forblir på standardsiden. Flere steder kan legges til etterpå.",
+	"Export or print what to buy.": "Eksporter eller skriv ut handlelisten.",
+	"Hide this item from logging? You can reactivate it later via Edit.": "Skjul dette elementet fra logging? Det kan reaktiveres senere via Rediger.",
+	"Leave stock blank unless you track fridge levels for Top-up.": "La lagerfeltet stå tomt med mindre kjøleskapsnivåer spores for påfylling.",
+	"No open period. Logging is locked until you open the next period.": "Ingen åpen periode. Logging er låst til neste periode åpnes.",
+	"One tap logs Me × 1. Open More options only if you need quantity, a colleague, or company.": "Ett trykk logger Meg × 1. Åpne Flere alternativer bare ved behov for antall, kollega eller firma.",
+	"Par and on hand power Kitchen pulse Top-up. Leave blank only if you do not track stock.": "Par og beholdning styr kjøkkenspuls og påfylling. La stå tomt bare hvis lager ikke spores.",
+	"Pick a site above before logging. Each kitchen has its own catalog.": "Velg et sted ovenfor før logging. Hvert kjøkken har sin egen katalog.",
+	"Please check your entries and try again.": "Kontroller oppføringene og prøv igjen.",
+	"Top-up suggestions become your shopping list.": "Påfyllingsforslag blir handlelisten.",
+	"You cannot book on company.": "Bestilling på firma er ikke mulig.",
+	"You cannot log for a colleague.": "Logging for en kollega er ikke mulig."
+}

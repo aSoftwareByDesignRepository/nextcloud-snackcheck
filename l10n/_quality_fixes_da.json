@@ -1,0 +1,22 @@
+{
+	"Menu": "Menukort",
+	"Payroll": "Løn",
+	"Pulse": "Puls",
+	"Token: {token}": "Nøgle: {token}",
+	"Total": "I alt",
+	"Add a company user and at least one allowlisted person before enabling hospitality.": "Tilføj en virksomhedsbruger og mindst én person på tilladelseslisten, før gæstfrihed aktiveres.",
+	"Ask your IT": "Kontakt IT",
+	"Enable multi-site? Existing catalog, devices, and logs stay on the Default site. You can add more sites next.": "Aktivér multi-site? Eksisterende katalog, enheder og logfiler forbliver på standardsitet. Flere sites kan tilføjes bagefter.",
+	"Hide this item from logging? You can reactivate it later via Edit.": "Skjul denne post fra logning? Den kan genaktiveres senere via Rediger.",
+	"Leave stock blank unless you track fridge levels for Top-up.": "Lad lagerfeltet stå tomt, medmindre køleskabsniveauer spores til genopfyldning.",
+	"No open period. Logging is locked until you open the next period.": "Ingen åben periode. Logning er låst, indtil næste periode åbnes.",
+	"One tap logs Me × 1. Open More options only if you need quantity, a colleague, or company.": "Ét tryk logger Mig × 1. Åbn Flere muligheder kun ved behov for antal, kollega eller firma.",
+	"Par and on hand power Kitchen pulse Top-up. Leave blank only if you do not track stock.": "Par og beholdning driver køkken-puls og genopfyldning. Lad feltet stå tomt, hvis lager ikke spores.",
+	"Pick your kitchen above, then tap a snack here.": "Vælg køkkenet ovenfor, og tryk derefter på et snack her.",
+	"Please check your entries and try again.": "Kontrollér indtastningerne, og prøv igen.",
+	"Register kitchen tablet": "Registrér køkkentablet",
+	"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.": "Denne licens er bundet til en anden Nextcloud-instans. Anvend SNK2-nøglen igen på denne server.",
+	"Top-up suggestions become your shopping list.": "Genopfyldningsforslag bliver indkøbslisten.",
+	"You cannot book on company.": "Firma kan ikke vælges til booking.",
+	"Your consumption this period": "Forbrug i denne periode"
+}

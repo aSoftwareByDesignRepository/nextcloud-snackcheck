@@ -1,0 +1,15 @@
+{
+	"Item": "Artigo",
+	"Menu": "Cardápio",
+	"Site": "Local",
+	"Sites": "Locais",
+	"Token: {token}": "Chave: {token}",
+	"Top-up": "Reposição",
+	"Total": "Soma",
+	"Enable multi-site? Existing catalog, devices, and logs stay on the Default site. You can add more sites next.": "Ativar vários locais? O catálogo, dispositivos e registros existentes permanecem no site padrão. Outros locais podem ser adicionados em seguida.",
+	"Hide this item from logging? You can reactivate it later via Edit.": "Ocultar este item do registro? Pode ser reativado depois em Editar.",
+	"Leave stock blank unless you track fridge levels for Top-up.": "Deixe o estoque em branco, salvo se os níveis da geladeira forem acompanhados para reposição.",
+	"One tap logs Me × 1. Open More options only if you need quantity, a colleague, or company.": "Um toque registra Eu × 1. Abra Mais opções somente se precisar de quantidade, colega ou empresa.",
+	"Par and on hand power Kitchen pulse Top-up. Leave blank only if you do not track stock.": "Par e saldo alimentam pulso da cozinha e reposição. Deixe em branco apenas se o estoque não for acompanhado.",
+	"You cannot log for a colleague.": "Não é possível registrar para um colega."
+}

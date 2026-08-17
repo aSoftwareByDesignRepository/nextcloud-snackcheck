@@ -1,0 +1,14 @@
+{
+	"Token: {token}": "Jeton : {token}",
+	"Action": "Opération",
+	"Actions": "Opérations",
+	"Audit": "Journal d'audit",
+	"Digests": "Résumés",
+	"Documentation": "Guide",
+	"Menu": "Menus",
+	"Multi-site": "Multi-sites",
+	"Site": "Emplacement",
+	"Sites": "Emplacements",
+	"Stock": "Inventaire",
+	"Total": "Somme"
+}

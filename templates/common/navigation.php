@@ -77,4 +77,5 @@ if (!empty($_['isAppAdmin'])) {
 			</section>
 		<?php endforeach; ?>
 	</div>
+	<?php include __DIR__ . '/../parts/feedback-nav-footer.php'; ?>
 </nav>

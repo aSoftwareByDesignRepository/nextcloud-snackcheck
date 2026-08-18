@@ -10,7 +10,7 @@
 			'digests' => $l->t('Digests'),
 			'unlock' => $l->t('Unlock PIN / QR'),
 			'license' => $l->t('License'),
-			'support' => $l->t('Support'),
+			'support' => $l->t('Support & us'),
 		];
 		foreach ($secLabels as $sec => $label): ?>
 			<a class="snk-settings-nav__link<?php if ($section===$sec) { p(' is-active'); } ?>" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.settings', ['section'=>$sec])); ?>"<?php if ($section===$sec): ?> aria-current="page"<?php endif; ?>><?php p($label); ?></a>
@@ -301,22 +301,22 @@
 		</div>
 
 	<?php else: ?>
-		<p><?php p($l->t('SnackCheck honor ledger. Kitchen tablets use SNK2 device licences. Web stays free.')); ?></p>
-		<p><a href="https://nextcloud.software-by-design.de/" rel="noopener"><?php p($l->t('Documentation')); ?></a></p>
+		<?php
+		$supportUsLanguageCode = method_exists($l, 'getLanguageCode') ? (string)$l->getLanguageCode() : 'en';
+		$supportUsCssPrefix = 'snk';
+		$supportUsShellPrefix = 'snk';
+		$supportUsBtnPrimaryClass = 'snk-btn snk-btn--primary';
+		$supportUsBtnSecondaryClass = 'snk-btn';
+		$supportUsPresentation = 'embed';
+		$licenseUrl = $urlGenerator->linkToRouteAbsolute('snackcheck.page.settings', ['section' => 'license']) . '#snk-license-key';
+		$supportUsLinks = new \OCA\SnackCheck\Support\SupportUsLinks('SnackCheck', true, $licenseUrl);
+		include __DIR__ . '/../parts/support-us-section.php';
+		?>
 		<p>
-			<a class="snk-btn" href="<?php p($urlGenerator->linkTo('snackcheck', 'docs/DEVICE-SHORTLIST.md')); ?>" rel="noopener" target="_blank">
+			<a class="snk-btn" href="<?php p($urlGenerator->linkTo('snackcheck', 'docs/DEVICE-SHORTLIST.md')); ?>" rel="noopener noreferrer" target="_blank">
 				<?php p($l->t('Kitchen tablet device shortlist')); ?>
 			</a>
 		</p>
-		<details class="snk-details">
-			<summary><?php p($l->t('Kitchen tablet shortlist (summary)')); ?></summary>
-			<ul>
-				<li><?php p($l->t('10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits')); ?></li>
-				<li><?php p($l->t('Industrial wall tablet 8–10″ with kiosk firmware when available')); ?></li>
-				<li><?php p($l->t('Refurbished business tablet + VESA mount for cost-effective LOI path')); ?></li>
-			</ul>
-			<p class="snk-muted"><?php p($l->t('Recommend-only — we do not RMA hardware. PIN/QR remain primary unlock.')); ?></p>
-		</details>
 	<?php endif; ?>
 		</div>
 	</article>

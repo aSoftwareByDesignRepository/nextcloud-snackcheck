@@ -550,6 +550,7 @@ class PageController extends Controller
 		$this->access->assertAccess($user);
 		Util::addStyle('snackcheck', 'app');
 		Util::addScript('snackcheck', 'app');
+		Util::addScript('snackcheck', 'common/app-feedback');
 		$params['pageId'] = $pageId;
 		$params['userId'] = $user;
 		$params['urlGenerator'] = $this->urlGenerator;

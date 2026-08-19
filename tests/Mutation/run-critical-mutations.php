@@ -256,11 +256,14 @@ assertTrue(
 	'web CSRF: OC.requestToken + head data-requesttoken (not meta-only → HTTP 412)'
 );
 assertTrue(
-	is_file($root . '/docs/SUPPORT-MACROS-EN.md') && is_file($root . '/docs/SUPPORT-MACROS-DE.md')
+	!is_file($root . '/docs/SUPPORT-MACROS-EN.md')
+		&& !is_file($root . '/docs/SUPPORT-MACROS-DE.md')
+		&& !is_file($root . '/docs/ZEUS-ARCHITECTURE-AUDIT.md')
+		&& !is_file($root . '/docs/DESIGN-SYSTEM-CHECKLIST-EVIDENCE.md')
 		&& !is_file($root . '/public/docs/SUPPORT-MACROS-EN.md')
 		&& !is_file($root . '/public/docs/DESIGN-SYSTEM-CHECKLIST-EVIDENCE.md')
 		&& !is_file($root . '/public/docs/PARTNER-DEVICE-RECOMMENDATION-EN.md'),
-	'support/partner/QA docs stay private (not web-public)'
+	'internal support/audit/QA docs are not in the app repo'
 );
 $deviceAuth = file_get_contents($root . '/lib/Controller/DeviceApiController.php');
 assertTrue(
@@ -542,10 +545,10 @@ assertTrue(
 );
 
 assertTrue(
-	is_file($root . '/docs/PARTNER-DEVICE-RECOMMENDATION-EN.md')
-		&& is_file($root . '/docs/PARTNER-DEVICE-RECOMMENDATION-DE.md')
+	!is_file($root . '/docs/PARTNER-DEVICE-RECOMMENDATION-EN.md')
+		&& !is_file($root . '/docs/PARTNER-DEVICE-RECOMMENDATION-DE.md')
 		&& !is_file($root . '/public/docs/PARTNER-DEVICE-RECOMMENDATION-EN.md'),
-	'WP-HW2 partner device one-pager EN+DE in maintainer docs only'
+	'WP-HW2 partner device one-pager is not in the app repo'
 );
 $kioskHb = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/hooks/useDeviceHeartbeat.ts');
 assertTrue(

@@ -38,9 +38,9 @@ final class DeviceAuthOverCapContractTest extends TestCase
 		);
 	}
 
-	public function testSupportMacrosShipped(): void
+	public function testSupportMacrosNotInPublicAppRepo(): void
 	{
-		self::assertFileExists(__DIR__ . '/../../../docs/SUPPORT-MACROS-EN.md');
-		self::assertFileExists(__DIR__ . '/../../../docs/SUPPORT-MACROS-DE.md');
+		self::assertFileDoesNotExist(__DIR__ . '/../../../docs/SUPPORT-MACROS-EN.md');
+		self::assertFileDoesNotExist(__DIR__ . '/../../../docs/SUPPORT-MACROS-DE.md');
 	}
 }

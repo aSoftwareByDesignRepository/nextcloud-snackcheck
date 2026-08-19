@@ -1,7 +1,7 @@
 # SnackCheck — High Availability notes
 
 > **Audience:** Platform / Ops running Nextcloud with more than one app server.  
-> **Related:** Zeus SF-01 / Argus SF-A01 (`docs/ZEUS-ARCHITECTURE-AUDIT.md`).
+> **Related:** Zeus SF-01 / Argus SF-A01 (internal architecture/security reviews).
 
 ## What must be shared across nodes
 

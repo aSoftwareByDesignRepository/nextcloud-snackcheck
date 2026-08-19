@@ -54,11 +54,10 @@ final class WcagContrastFallbacksTest extends TestCase
 		self::assertStringContainsString('min-height: var(--snk-touch)', $css);
 	}
 
-	public function testDesignChecklistDocumentsA11y(): void
+	public function testSkipLinksAndPublicDeviceShortlistExist(): void
 	{
-		$doc = (string)file_get_contents(__DIR__ . '/../../../docs/DESIGN-SYSTEM-CHECKLIST-EVIDENCE.md');
-		self::assertStringContainsString('Accessibility', $doc);
-		self::assertStringContainsString('skip link', $doc);
-		self::assertStringContainsString('DEVICE-SHORTLIST', $doc);
+		$main = (string)file_get_contents(__DIR__ . '/../../../templates/main.php');
+		self::assertStringContainsString('snk-skip-link', $main);
+		self::assertFileExists(__DIR__ . '/../../../public/docs/DEVICE-SHORTLIST.md');
 	}
 }

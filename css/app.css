@@ -1929,13 +1929,16 @@ dialog.snk-dialog[open] {
 .snk-nav-footer__popover {
 	position: relative;
 	display: flex;
-	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--snk-space-2, 0.5rem);
 }
 
 .snk-nav-footer__trigger {
 	display: inline-flex;
 	gap: var(--snk-space-3, 0.75rem);
-	min-height: var(--snk-touch-min, 44px);
+	min-height: 44px;
+	min-width: 44px;
 	padding: var(--snk-space-2, 0.5rem) var(--snk-space-3, 0.75rem);
 	border-radius: var(--snk-radius-sm, 6px);
 	box-sizing: border-box;
@@ -1960,6 +1963,11 @@ dialog.snk-dialog[open] {
 
 .snk-nav-footer__trigger:focus:not(:focus-visible) {
 	outline: none;
+}
+
+.snk-nav-footer__trigger-icon .snk-icon {
+	width: 20px;
+	height: 20px;
 }
 
 .snk-nav-footer__menu {
@@ -1992,13 +2000,16 @@ dialog.snk-dialog[open] {
 	display: flex;
 	align-items: center;
 	gap: var(--snk-space-3, 0.75rem);
-	min-height: var(--snk-touch-min, 44px);
+	min-height: 44px;
+	min-width: 44px;
 	padding: var(--snk-space-2, 0.5rem) var(--snk-space-3, 0.75rem);
 	border-radius: var(--snk-radius-sm, 6px);
 	color: var(--color-main-text);
 	text-decoration: none;
 	font-size: var(--snk-fs-sm, 0.875rem);
-	white-space: nowrap;
+	line-height: var(--snk-line-base, 1.45);
+	white-space: normal;
+	overflow-wrap: anywhere;
 }
 
 .snk-nav-footer__menu-item:hover {
@@ -2012,6 +2023,20 @@ dialog.snk-dialog[open] {
 
 .snk-nav-footer__menu-item:focus:not(:focus-visible) {
 	outline: none;
+}
+
+.snk-nav-footer__menu-icon .snk-icon {
+	width: 18px;
+	height: 18px;
+}
+
+.snk-nav-footer__note {
+	margin: 0;
+	font-size: var(--snk-fs-xs, 0.75rem);
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast);
+	text-align: center;
+	overflow-wrap: anywhere;
 }
 
 @media (width < 480px) {
@@ -2056,6 +2081,10 @@ dialog.snk-dialog[open] {
 	outline-offset: 2px;
 }
 
+.snk-nav-footer__toast-link:focus:not(:focus-visible) {
+	outline: none;
+}
+
 @media (prefers-contrast: more) {
 	#app-navigation .snk-nav-footer,
 	.snk-nav .snk-nav-footer,
@@ -2069,26 +2098,30 @@ dialog.snk-dialog[open] {
 	}
 
 	.snk-nav-footer__trigger:focus-visible,
-	.snk-nav-footer__menu-item:focus-visible {
+	.snk-nav-footer__menu-item:focus-visible,
+	.snk-nav-footer__toast-link:focus-visible {
 		outline-width: 3px;
 	}
 }
 
 @media (forced-colors: active) {
-	.snk-nav-footer__menu-item {
+	.snk-nav-footer__menu-item,
+	.snk-nav-footer__toast-link {
 		forced-color-adjust: none;
 		color: LinkText;
 	}
 
 	.snk-nav-footer__trigger:focus-visible,
-	.snk-nav-footer__menu-item:focus-visible {
+	.snk-nav-footer__menu-item:focus-visible,
+	.snk-nav-footer__toast-link:focus-visible {
 		outline: 3px solid Highlight;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.snk-nav-footer__trigger,
-	.snk-nav-footer__menu-item {
+	.snk-nav-footer__menu-item,
+	.snk-nav-footer__toast-link {
 		transition: none;
 	}
 }

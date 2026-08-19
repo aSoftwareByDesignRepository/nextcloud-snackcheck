@@ -6,7 +6,6 @@
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>snackcheck</id>
 	<name>SnackCheck</name>
-	<name lang="de">SnackCheck</name>
 	<summary>Honor ledger for office snacks &amp; drinks — one-tap log, monthly payroll export, kitchen tablet</summary>
 	<summary lang="de">Honor-System für Snacks &amp; Getränke — tippen, monatsweise abrechnen, Wand-Tablet am Kühlschrank</summary>
 	<description><![CDATA[
@@ -37,9 +36,145 @@ Mitarbeitende tippen Snacks und Getränke auf ihr Nextcloud-Konto. Verwaltung: K
 
 - Nextcloud 32–34 · PHP 8.2–8.5 · MySQL oder PostgreSQL
 	]]></description>
+	<description lang="fr"><![CDATA[
+# SnackCheck — tenir le registre de la cuisine
+
+Les employés saisissent en un clic les collations et boissons sur leur compte Nextcloud. Les responsables gèrent le catalogue, le Kitchen Pulse, les indications de réassort, la clôture de période et le fichier CSV/XLSX de paie réconcilié au cent près pour les déductions RH en dehors de l’application.
+
+**Application web AGPL gratuite.** Le compagnon pour Kitchen Tablet est licencié séparément (`SNK2` licences d’appareil). Le web n’est jamais verrouillé par la licence de l’appareil.
+
+## Limites claires
+
+- Pas un système de caisse POS / TSE / gastro
+- Pas une saisie en direct des salaires via DATEV Lohn
+- Pas InventoryCheck — uniquement des valeurs de stock (stock disponible / par) ; jamais des mouvements de stock ; les journaux ne décomptent jamais automatiquement le stock
+
+## Exigences
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL ou PostgreSQL
+	]]></description>
+	<description lang="es"><![CDATA[
+# SnackCheck — llevar el registro de la cocina
+
+Los empleados registran snacks y bebidas en un solo toque en su cuenta de Nextcloud. Las personas responsables gestionan el catálogo, el Kitchen Pulse, las indicaciones de reposición, el cierre de periodo y el CSV/XLSX de nómina conciliado al céntimo para la deducción de RR. HH. fuera de la aplicación.
+
+**Aplicación web AGPL gratuita.** El complemento para Kitchen Tablet se licencia por separado (`SNK2` licencias de dispositivos). La versión web nunca se bloquea por la licencia del dispositivo.
+
+## Límites claros
+
+- No es un sistema de caja POS / TSE / gastro
+- No es la carga en vivo de nóminas en DATEV Lohn
+- No es InventoryCheck — solo valores opcionales de existencias / valores “par”; nunca movimientos de stock; los registros no descuentan automáticamente el stock
+
+## Requisitos
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL o PostgreSQL
+	]]></description>
+	<description lang="da"><![CDATA[
+# SnackCheck — køkkenets logbog
+
+Medarbejdere registrerer snacks og drikkevarer med ét tryk på deres Nextcloud-konto. Ledere kører kataloget, Kitchen Pulse, påfyldningshint, periodelukning og centpræcis løn-CSV/XLSX til HR-træk uden for appen.
+
+**Gratis AGPL-webapp.** Kitchen Tablet-ledsageren licenseres separat (`SNK2` enhedlicenser). Webdelen er aldrig låst af enhedens licens.
+
+## Klare grænser
+
+- Ikke et POS / TSE / gastro-kassessystem
+- Ikke DATEV Lohn live-indlæg
+- Ikke InventoryCheck — kun valgfrie lagerbeholdning/par-værdier; aldrig lagerbevægelser; loggene nedskriver aldrig automatisk lageret
+
+## Krav
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL eller PostgreSQL
+	]]></description>
+	<description lang="nl"><![CDATA[
+# SnackCheck — het presentatieregister voor de keuken
+
+Medewerkers registreren snacks en dranken met één klik op hun Nextcloud-account. Beheerders voeren het catalogus, Kitchen Pulse, aanwijzingen voor bijvullen, de period afsluiting en cent-precisie loon-CSV/XLSX uit voor HR-verrekening buiten de app.
+
+**Gratis AGPL-webapp.** De Kitchen Tablet-bijhouder wordt apart gelicentieerd (`SNK2` apparaatlicenties). De webapp wordt nooit beperkt door de apparaatlicentie.
+
+## Duidelijke grenzen
+
+- Geen POS / TSE / gastro-kassasysteem
+- Geen DATEV Lohn live-verwerking
+- Niet InventoryCheck — alleen optionele voorraad-/par-waarden; nooit voorraadbewegingen; logs verlagen de voorraad nooit automatisch
+
+## Vereisten
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL of PostgreSQL
+	]]></description>
+	<description lang="it"><![CDATA[
+# SnackCheck — registro della cucina
+
+I dipendenti registrano snack e bevande con un solo tocco sul proprio account Nextcloud. I responsabili gestiscono catalogo, Kitchen Pulse, suggerimenti di rifornimento, chiusura del periodo e il CSV/XLSX di busta paga riconciliato al centesimo per le deduzioni HR al di fuori dell’app.
+
+**Web app AGPL gratuita.** Il dispositivo complementare per Kitchen Tablet è licenziato separatamente (`SNK2` licenze per dispositivo). Il web non viene mai bloccato dalla licenza del dispositivo.
+
+## Limiti chiari
+
+- Non è un sistema di cassa POS / TSE / gastro
+- Non è l’inserimento live di DATEV Lohn
+- Non è InventoryCheck — solo valori opzionali di giacenza/par; mai movimenti di magazzino; i log non riducono mai automaticamente la scorta
+
+## Requisiti
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL o PostgreSQL
+	]]></description>
+	<description lang="pl"><![CDATA[
+# SnackCheck — ewidencja kuchni
+
+Pracownicy rejestrują snacki i napoje jednym kliknięciem na swoim koncie Nextcloud. Menedżerowie prowadzą katalog, Kitchen Pulse, podpowiedzi do uzupełniania, zamknięcie okresu oraz centowo zgodny CSV/XLSX płacowy dla potrąceń w HR poza aplikacją.
+
+**Darmowa aplikacja webowa AGPL.** Komponent Kitchen Tablet jest licencjonowany osobno (`SNK2` licencji na urządzenie). Wersja webowa nigdy nie jest blokowana przez licencję urządzenia.
+
+## Jasne ograniczenia
+
+- Nie jest to system POS / TSE / gastro Kassensystem
+- Nie jest to automatyczne (live) wprowadzanie płac w DATEV Lohn
+- Nie jest to InventoryCheck — wyłącznie opcjonalne wartości stanów/par; nigdy nie obejmuje ruchów magazynowych; dzienniki nigdy automatycznie nie zmniejszają stanu zapasu
+
+## Wymagania
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL lub PostgreSQL
+	]]></description>
+	<description lang="sv"><![CDATA[
+# SnackCheck — kökets kassabok
+
+Medarbetare loggar snacks och drycker med ett enda klick mot sitt Nextcloud-konto. Chefer kör katalogen, Kitchen Pulse, påfyllningshints, periodavslut samt löne-CSV/XLSX som stämmer till centen för HR:s avdrag utanför appen.
+
+**Gratis AGPL-webbapp.** Kitchen Tablet-kompanjonen licensieras separat (`SNK2` enhetslicenser). Webbappen är aldrig låst av enhetslicensen.
+
+## Tydliga gränser
+
+- Inte ett POS / TSE / gastro-kassasystem
+- Inte DATEV Lohn live-inlägg
+- Inte InventoryCheck — endast valfria värden för i lager/par; aldrig lagertransaktioner; loggarna minskar aldrig automatiskt lagret
+
+## Krav
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL eller PostgreSQL
+	]]></description>
+	<description lang="nb"><![CDATA[
+# SnackCheck — kjøkkenets loggbok
+
+Ansatte logger snacks og drikke med ett enkelt trykk mot Nextcloud-kontoen sin. Ledelsen kjører katalogen, Kitchen Pulse, påfyllingsforslag, periodestengning og lønns-CSV/XLSX avstemt ned til øre for HR-avdrag utenfor appen.
+
+**Gratis AGPL-nettapp.** Følgesvennen for Kitchen Tablet lisensieres separat (`SNK2` enhetslisenser). Nettappen er aldri begrenset av enhetslisensen.
+
+## Klare grenser
+
+- Ikke et POS / TSE / gastro-kassasystem
+- Ikke DATEV Lohn live-innføring
+- Ikke InventoryCheck — bare valgfrie verdier for lagerbeholdning/par; aldri lagerbevegelser; loggene trekker aldri automatisk ned lageret
+
+## Krav
+
+- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL eller PostgreSQL
+	]]></description>
 	<version>1.0.7</version>
 	<licence>agpl</licence>
-	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de/">Alexander Mäule</author>
+	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de/">Software by Design GbR</author>
 	<namespace>SnackCheck</namespace>
 	<category>organization</category>
 	<website>https://nextcloud.software-by-design.de/</website>

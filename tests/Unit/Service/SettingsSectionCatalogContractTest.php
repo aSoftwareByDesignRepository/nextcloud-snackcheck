@@ -29,7 +29,13 @@ final class SettingsSectionCatalogContractTest extends TestCase
 		}
 		$routes = (string)file_get_contents($this->root() . '/appinfo/routes.php');
 		self::assertStringContainsString('SettingsSectionCatalog::routeRequirement()', $routes);
-		self::assertStringContainsString('SettingsSectionCatalog::DEFAULT_SECTION', $routes);
+		self::assertStringContainsString("page#settingsIndex", $routes);
+		self::assertStringContainsString("'/settings/{section}'", $routes);
+		$page = (string)file_get_contents($this->root() . '/lib/Controller/PageController.php');
+		self::assertStringContainsString('function settingsIndex', $page);
+		self::assertStringContainsString('SettingsSectionCatalog::DEFAULT_SECTION', $page);
+		self::assertStringContainsString('snackcheck.page.settingsIndex', $page);
+		self::assertStringNotContainsString("'route' => 'snackcheck.page.settings'", $page);
 	}
 
 	public function testDispatcherMapCoversEverySectionLiterally(): void
@@ -85,5 +91,62 @@ final class SettingsSectionCatalogContractTest extends TestCase
 				self::assertNotSame('', $cat->help($l, $slug));
 			}
 		}
+	}
+
+	public function testSettingsPartialsAreValidPhp(): void
+	{
+		$dir = $this->root() . '/templates/parts/settings';
+		foreach (SettingsSectionCatalog::SECTIONS as $slug) {
+			$path = $dir . '/' . $slug . '.php';
+			self::assertFileExists($path);
+			$out = [];
+			$code = 0;
+			exec('php -l ' . escapeshellarg($path) . ' 2>&1', $out, $code);
+			self::assertSame(0, $code, $slug . ': ' . implode("\n", $out));
+		}
+		$support = (string)file_get_contents($dir . '/support.php');
+		self::assertDoesNotMatchRegularExpression('/^\s*<\?php\s+endif/m', $support);
+		self::assertStringNotContainsString('<?php endif', $support);
+		self::assertStringContainsString('support-us-section.php', $support);
+		self::assertStringContainsString('SupportUsLinks', $support);
+		self::assertStringContainsString('public/docs/DEVICE-SHORTLIST.md', $support);
+		self::assertFileExists($this->root() . '/public/docs/DEVICE-SHORTLIST.md');
+		$page = (string)file_get_contents($this->root() . '/lib/Controller/PageController.php');
+		self::assertStringContainsString("\$section === 'support'", $page);
+		self::assertStringContainsString('new SupportUsLinks(', $page);
+		self::assertStringContainsString('function settingsIndex', $page);
+		$routes = (string)file_get_contents($this->root() . '/appinfo/routes.php');
+		self::assertStringContainsString("page#settingsIndex", $routes);
+		$access = (string)file_get_contents($dir . '/access.php');
+		self::assertStringContainsString('snk-settings-block', $access);
+		self::assertStringContainsString('snk-callout--info', $access);
+		self::assertStringContainsString('snk-form--settings', $access);
+		self::assertStringContainsString('Who may open the app — not who runs the kitchen.', $access);
+		$unlock = (string)file_get_contents($dir . '/unlock.php');
+		self::assertStringContainsString('snk-callout--info', $unlock);
+		self::assertStringContainsString('Unlock for kitchen tablets', $unlock);
+		self::assertStringContainsString('snk-settings-methods', $unlock);
+		self::assertStringContainsString('snk-settings-method__tag', $unlock);
+		self::assertStringContainsString('snk-unlock-choice-lead', $unlock);
+		self::assertStringNotContainsString('snk-settings-step', $unlock);
+		self::assertStringContainsString('data-snk-form="unlock-pin"', $unlock);
+		self::assertStringContainsString('data-snk-form="unlock-qr"', $unlock);
+		self::assertStringContainsString('aria-describedby="snk-unlock-pin-hint"', $unlock);
+		self::assertStringContainsString('aria-describedby="snk-unlock-qr-hint"', $unlock);
+		self::assertStringContainsString('autocomplete="new-password"', $unlock);
+		self::assertStringNotContainsString('snk-settings-split', $unlock);
+		$chip = (string)file_get_contents($this->root() . '/templates/parts/snk-chip-field.php');
+		self::assertStringContainsString('No one selected yet — tap Choose… then search', $chip);
+		$js = (string)file_get_contents($this->root() . '/js/app.js');
+		self::assertStringContainsString("kind === 'unlock-pin'", $js);
+		self::assertStringContainsString('pinInput.value = \'\'', $js);
+		self::assertStringContainsString('qrInput.value = \'\'', $js);
+		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		self::assertStringContainsString('.snk-form--settings', $css);
+		self::assertStringContainsString('.snk-settings-panel', $css);
+		self::assertStringContainsString('.snk-form-actions', $css);
+		self::assertStringContainsString('.snk-settings-methods', $css);
+		self::assertStringContainsString('.snk-settings-method__tag', $css);
+		self::assertStringContainsString('.snk-unlock-choice-lead', $css);
 	}
 }

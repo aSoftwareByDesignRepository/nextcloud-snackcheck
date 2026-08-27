@@ -23,11 +23,11 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'Print list',
 			'Open',
 			'Closed',
-			'Digests',
+			'Emails',
 			'Hospitality',
 			'Stock',
 			'In fridge',
-			'Target',
+			'Target stock',
 			'quantity',
 			'Why? (short note)',
 			'At least 3 characters — e.g. Forgot badge',
@@ -57,7 +57,17 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'Selected colleague',
 			'Nobody yet — type a name above',
 			'Choose…',
-			'No one selected yet — search below',
+			'No one selected yet — tap Add… then search',
+			'No one selected yet — tap Choose… then search',
+			'Add…',
+			'Unlock for kitchen tablets',
+			'Unlock with PIN',
+			'Unlock with QR code',
+			'Find people',
+			'Choose how they unlock — PIN, QR code, or both.',
+			'Save PIN',
+			'Text in the QR code',
+			'Give someone a PIN and/or a QR sticker so they can unlock the fridge tablet. Never send these secrets in chat or email.',
 			'Matching users',
 			'Tap a field first',
 			'Colleague',
@@ -65,7 +75,7 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'Me',
 			'Choose site',
 			'Open Catalog',
-			'Open Benefits',
+			'Open subsidy settings',
 			'Log a snack',
 			'Matching people',
 			'Saving…',
@@ -87,6 +97,19 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'No picture yet',
 			'This is what payroll takes from your pay for this period.',
 			'Free items',
+			'Kitchen tablet',
+			'Recommended tablets for the kitchen app (SNK2).',
+			'Recommended kitchen tablets',
+			'Access control',
+			'Decide who may open SnackCheck. Restriction takes effect immediately for non-administrators.',
+			'Who may open the app — not who runs the kitchen.',
+			'Who may open the app',
+			'Find people',
+			'Days of recent snacks',
+			'Warn if stock lasts under (days)',
+			'Kitchen overview',
+			'Restock list',
+			"What's popular",
 		];
 	}
 
@@ -109,6 +132,13 @@ final class GermanPrimaryL10nContractTest extends TestCase
 		self::assertSame('Geschlossen', $tr['Closed']);
 		self::assertSame('Bewirtung', $tr['Hospitality']);
 		self::assertSame('Snack finden…', $tr['Find a snack…']);
+		self::assertSame('Küchen-Tablet', $tr['Kitchen tablet']);
+		self::assertSame('Zugangskontrolle', $tr['Access control']);
+		self::assertSame('Wer die App öffnen darf — nicht, wer die Küche führt.', $tr['Who may open the app — not who runs the kitchen.']);
+		self::assertSame('Letzte Snack-Tage', $tr['Days of recent snacks']);
+		self::assertSame('Küchenübersicht', $tr['Kitchen overview']);
+		self::assertSame('E-Mails', $tr['Emails']);
+		self::assertSame('Zuschuss', $tr['Subsidy']);
 	}
 
 	public function testEnJsonContainsPrimaryUiKeys(): void

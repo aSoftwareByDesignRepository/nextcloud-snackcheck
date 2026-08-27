@@ -75,9 +75,9 @@ $multiSiteFilter = !empty($_['siteNote']) && is_countable($sites) && count($site
 			<details class="snk-details snk-period-panel__more">
 				<summary><?php p($l->t('More exports')); ?></summary>
 				<div class="snk-actions">
-					<button type="button" class="snk-btn" data-snk-action="hospitality-export" data-period-id="<?php p($open->getId()); ?>"><?php p($l->t('Hospitality CSV')); ?></button>
+					<button type="button" class="snk-btn" data-snk-action="hospitality-export" data-period-id="<?php p($open->getId()); ?>"><?php p($l->t('Company treats CSV')); ?></button>
 					<a class="snk-btn" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.complimentaryExport', ['id' => $open->getId()])); ?>"><?php p($l->t('Complimentary CSV')); ?></a>
-					<a class="snk-btn" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.brReport')); ?>"><?php p($l->t('BR report')); ?></a>
+					<a class="snk-btn" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.brReport')); ?>"><?php p($l->t('Payroll summary')); ?></a>
 				</div>
 			</details>
 

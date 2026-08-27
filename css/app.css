@@ -1277,6 +1277,204 @@ body[data-theme-dark-highcontrast] {
 	border-inline-start-color: var(--snk-primary);
 	background: var(--snk-tint-info);
 }
+.snk-callout--info {
+	border-color: var(--snk-border);
+	border-inline-start-color: var(--snk-primary);
+	background: var(--snk-tint-info);
+	color: var(--snk-text);
+}
+.snk-callout__text {
+	margin: var(--snk-space-2) 0 0;
+	color: var(--snk-text);
+}
+.snk-callout p {
+	margin: 0;
+	color: var(--snk-text);
+}
+.snk-callout .snk-muted {
+	color: var(--snk-text);
+	opacity: 0.92;
+}
+
+/* Settings pages (SETTINGS-PAGES-STANDARD) */
+.snk-section--settings {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	max-width: 52rem;
+}
+.snk-card.snk-settings-panel {
+	margin-top: 0;
+}
+.snk-settings-panel__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--snk-space-5);
+}
+.snk-form.snk-form--settings,
+.snk-section--settings .snk-form {
+	max-width: none;
+	width: 100%;
+	margin-top: 0;
+	gap: var(--snk-space-5);
+}
+.snk-section--settings .snk-chip-field {
+	max-width: none;
+	width: 100%;
+}
+.snk-settings-block {
+	margin: 0;
+	padding: var(--snk-space-4);
+	border: 1px solid var(--snk-border);
+	border-radius: var(--snk-radius-md);
+	background: var(--snk-bg);
+	display: grid;
+	gap: var(--snk-space-3);
+	min-width: 0;
+}
+.snk-settings-block--flush {
+	border: 0;
+	padding: 0;
+	background: transparent;
+}
+.snk-settings-block__legend,
+.snk-settings-block > .snk-settings-block__legend {
+	padding: 0;
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--snk-text);
+	line-height: var(--snk-line-tight);
+}
+.snk-settings-block__hint {
+	margin: 0;
+	max-width: 42rem;
+}
+.snk-settings-block__nested {
+	display: grid;
+	gap: var(--snk-space-3);
+	padding-top: var(--snk-space-2);
+}
+.snk-field__label {
+	display: block;
+	font-weight: 600;
+	color: var(--snk-text);
+}
+.snk-field__hint {
+	display: block;
+	font-weight: 400;
+	font-size: var(--snk-font-sm, 0.875rem);
+	line-height: var(--snk-line-normal, 1.45);
+	max-width: 36rem;
+}
+.snk-chip-search--settings {
+	margin: 0;
+}
+.snk-form-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--snk-space-3);
+	align-items: center;
+	padding-top: var(--snk-space-2);
+}
+.snk-form-actions .snk-btn {
+	min-height: var(--snk-touch);
+}
+.snk-settings-split {
+	display: grid;
+	gap: var(--snk-space-4);
+	grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+	.snk-settings-split {
+		grid-template-columns: 1fr 1fr;
+		align-items: start;
+	}
+}
+/* Unlock PIN / QR: two clear method cards (alternatives, not a wizard) */
+.snk-unlock-choice-lead {
+	margin: 0;
+	max-width: 42rem;
+	font-weight: 600;
+	color: var(--snk-text);
+}
+.snk-settings-methods {
+	display: grid;
+	gap: var(--snk-space-5);
+	min-width: 0;
+}
+.snk-settings-method {
+	gap: var(--snk-space-4);
+	border-inline-start-width: 4px;
+	border-inline-start-style: solid;
+	border-inline-start-color: var(--snk-primary);
+}
+.snk-settings-method--qr {
+	border-inline-start-color: color-mix(in srgb, var(--snk-primary) 55%, var(--snk-border-strong, var(--snk-border)));
+}
+.snk-settings-method .snk-form-actions {
+	padding-top: var(--snk-space-1);
+}
+.snk-settings-method__tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.5rem;
+	margin-inline-end: var(--snk-space-2);
+	padding: 0.15rem 0.5rem;
+	border-radius: var(--snk-radius-sm);
+	border: 1px solid color-mix(in srgb, var(--snk-primary) 45%, var(--snk-border));
+	background: color-mix(in srgb, var(--snk-primary) 12%, var(--snk-bg));
+	color: var(--snk-text);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	line-height: 1.2;
+	vertical-align: middle;
+}
+.snk-settings-block__legend .snk-settings-method__tag {
+	vertical-align: middle;
+}
+/* Soften chip boxes inside method cards (avoid triple nesting) */
+.snk-section--settings .snk-settings-method .snk-chip-field {
+	background: var(--snk-surface);
+	border-style: dashed;
+	max-width: none;
+}
+.snk-settings-status {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--snk-space-2) var(--snk-space-3);
+	margin: 0;
+	color: var(--snk-text);
+}
+.snk-section--settings .snk-select,
+.snk-section--settings .snk-input,
+.snk-section--settings .snk-textarea,
+.snk-section--settings select,
+.snk-section--settings textarea,
+.snk-section--settings input[type="search"],
+.snk-section--settings input[type="number"],
+.snk-section--settings input[type="password"],
+.snk-section--settings input[type="text"] {
+	width: 100%;
+	max-width: 28rem;
+	min-height: var(--snk-touch);
+}
+.snk-section--settings .snk-textarea {
+	min-height: 6rem;
+	max-width: 36rem;
+}
+.snk-section--settings .snk-support-us,
+.snk-section--settings .snk-support-extra {
+	max-width: none;
+}
+@media (max-width: 640px) {
+	.snk-settings-block {
+		padding: var(--snk-space-3);
+	}
+}
+
 .snk-tile:disabled,
 .snk-tile[aria-disabled="true"] {
 	opacity: 1;
@@ -3383,4 +3581,23 @@ dialog.snk-dialog[open] {
 		transition: none;
 	}
 }
-/* === support-us:snk end === */
+/* Settings · support extras (device shortlist under Support & us) */
+.snk-support-extra {
+	margin-top: var(--snk-space-6, 1.5rem);
+	padding-top: var(--snk-space-5, 1.25rem);
+	border-top: 1px solid var(--color-border, var(--color-border-dark, #ddd));
+}
+.snk-support-extra__title {
+	margin: 0 0 var(--snk-space-2, 0.5rem);
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+.snk-support-extra .snk-muted {
+	margin: 0 0 var(--snk-space-3, 0.75rem);
+	max-width: 42rem;
+}
+.snk-support-extra .snk-btn {
+	min-height: 44px;
+}
+

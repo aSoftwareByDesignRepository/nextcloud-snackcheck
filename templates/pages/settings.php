@@ -26,8 +26,8 @@ $snkSettingsSectionFiles = [
 <section class="snk-section snk-section--settings" aria-label="<?php p($l->t('Settings')); ?>">
 	<?php include __DIR__ . '/../parts/settings-nav.php'; ?>
 
-	<article class="snk-card">
-		<div class="snk-card__body">
+	<article class="snk-card snk-settings-panel">
+		<div class="snk-card__body snk-settings-panel__body">
 			<?php
 			if (!isset($snkSettingsSectionFiles[$snkRequestedSection])) {
 				throw new \RuntimeException('SnackCheck settings: unknown section reached the template dispatcher.');

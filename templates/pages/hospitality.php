@@ -41,14 +41,14 @@ $period = $_['period'] ?? null;
 	<?php if (!$period || empty($_['rows'])): ?>
 		<?php
 		$icon = 'coffee';
-		$title = $l->t('No company hospitality bookings this period.');
+		$title = $l->t('No company-treat bookings this period.');
 		$text = $l->t('When colleagues book on company, lines appear here.');
 		$actionsHtml = '<a class="snk-btn snk-btn--primary" href="'
 			. htmlspecialchars($urlGenerator->linkToRoute('snackcheck.page.log'), ENT_QUOTES, 'UTF-8')
 			. '">' . htmlspecialchars($l->t('Log a snack'), ENT_QUOTES, 'UTF-8') . '</a>'
 			. '<a class="snk-btn" href="'
 			. htmlspecialchars($urlGenerator->linkToRoute('snackcheck.page.settings', ['section' => 'benefits']), ENT_QUOTES, 'UTF-8')
-			. '">' . htmlspecialchars($l->t('Open Benefits'), ENT_QUOTES, 'UTF-8') . '</a>';
+			. '">' . htmlspecialchars($l->t('Open subsidy settings'), ENT_QUOTES, 'UTF-8') . '</a>';
 		include __DIR__ . '/../parts/snk-empty-state.php';
 		?>
 	<?php else: ?>
@@ -98,7 +98,7 @@ $period = $_['period'] ?? null;
 				$hospParams['siteId'] = (int)$_['exportSiteId'];
 			}
 			?>
-			<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.downloadHospitality', $hospParams)); ?>"><?php p($l->t('Download hospitality CSV')); ?></a>
+			<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.downloadHospitality', $hospParams)); ?>"><?php p($l->t('Download company treats CSV')); ?></a>
 		</div>
 	<?php endif; ?>
 		</div>

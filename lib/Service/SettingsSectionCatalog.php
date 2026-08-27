@@ -67,10 +67,10 @@ final class SettingsSectionCatalog
 	{
 		return match ($section) {
 			'access' => $l->t('Access control'),
-			'benefits' => $l->t('Benefits & kitchens'),
+			'benefits' => $l->t('Subsidy & kitchens'),
 			'privacy' => $l->t('Privacy'),
-			'pulse' => $l->t('Kitchen pulse settings'),
-			'digests' => $l->t('Email digests'),
+			'pulse' => $l->t('Kitchen overview settings'),
+			'digests' => $l->t('Reminder emails'),
 			'unlock' => $l->t('Unlock PIN / QR'),
 			'license' => $l->t('Official tablet licenses'),
 			'support' => $l->t('Support & us'),
@@ -85,10 +85,10 @@ final class SettingsSectionCatalog
 	{
 		return match ($section) {
 			'access' => $l->t('Access'),
-			'benefits' => $l->t('Benefits'),
+			'benefits' => $l->t('Subsidy'),
 			'privacy' => $l->t('Privacy'),
-			'pulse' => $l->t('Pulse'),
-			'digests' => $l->t('Digests'),
+			'pulse' => $l->t('Overview'),
+			'digests' => $l->t('Emails'),
 			'unlock' => $l->t('Unlock PIN / QR'),
 			'license' => $l->t('License'),
 			'support' => $l->t('Support & us'),
@@ -103,11 +103,11 @@ final class SettingsSectionCatalog
 	{
 		return match ($section) {
 			'access' => $l->t('Decide who may open SnackCheck. Restriction takes effect immediately for non-administrators.'),
-			'benefits' => $l->t('Monthly subsidy, company hospitality, and multi-kitchen mode.'),
+			'benefits' => $l->t('Monthly subsidy, company treats, and several kitchens.'),
 			'privacy' => $l->t('Hide itemized consumption lines when privacy mode is on.'),
-			'pulse' => $l->t('How far ahead Kitchen pulse looks for restock and pace.'),
-			'digests' => $l->t('Optional emails before period close and weekly top-up reminders.'),
-			'unlock' => $l->t('Set PIN or QR unlock for kitchen tablets — never share secrets in chat.'),
+			'pulse' => $l->t('How many days the overview uses for snacks and restock.'),
+			'digests' => $l->t('Optional emails before month end and weekly restock reminders.'),
+			'unlock' => $l->t('PIN or QR so people can unlock the kitchen tablet. Keep secrets offline.'),
 			'license' => $l->t('Apply an SNK2 key and register or revoke kitchen tablets.'),
 			'support' => '',
 			default => '',

@@ -80,7 +80,9 @@ if ($autoReady) {
 			<?php p($single ? $l->t('Choose…') : $l->t('Add…')); ?>
 		</button>
 		<p class="snk-muted snk-chip-field__empty" data-snk-chip-empty<?php if ($chips !== []) { ?> hidden<?php } ?>>
-			<?php p($l->t('No one selected yet — search below')); ?>
+			<?php p($single
+				? $l->t('No one selected yet — tap Choose… then search')
+				: $l->t('No one selected yet — tap Add… then search')); ?>
 		</p>
 	<?php else: ?>
 		<p class="snk-muted snk-chip-field__empty" data-snk-chip-empty<?php if ($chips !== []) { ?> hidden<?php } ?>>

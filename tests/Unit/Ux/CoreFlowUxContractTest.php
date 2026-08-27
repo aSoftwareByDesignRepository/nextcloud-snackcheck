@@ -172,7 +172,7 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringContainsString('Open next period', $users);
 		$hosp = (string)file_get_contents($this->root() . '/templates/pages/hospitality.php');
 		self::assertStringContainsString('Log a snack', $hosp);
-		self::assertStringContainsString('Open Benefits', $hosp);
+		self::assertStringContainsString('Open subsidy settings', $hosp);
 		$br = (string)file_get_contents($this->root() . '/templates/pages/brreport.php');
 		self::assertMatchesRegularExpression(
 			'/!empty\(\$report\[\'byCategory\'\]\)[\s\S]{0,200}Download CSV/',

@@ -188,7 +188,7 @@ class DigestMailService
 				);
 			}
 			$sectionsBySite[$siteId] = $this->l10n->t('Site %1$s:', [$site->getName()]) . "\n"
-				. ($lines === [] ? $this->l10n->t('Nothing needs topping up.') : implode("\n", $lines));
+				. ($lines === [] ? $this->l10n->t('Nothing needs restocking.') : implode("\n", $lines));
 			$claimKeys[] = $claimKey;
 		}
 		if ($claimKeys === [] || $sectionsBySite === []) {

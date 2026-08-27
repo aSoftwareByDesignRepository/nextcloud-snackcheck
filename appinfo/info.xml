@@ -6,12 +6,12 @@
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>snackcheck</id>
 	<name>SnackCheck</name>
-	<summary>Honor ledger for office snacks &amp; drinks — one-tap log, monthly payroll export, kitchen tablet</summary>
-	<summary lang="de">Honor-System für Snacks &amp; Getränke — tippen, monatsweise abrechnen, Wand-Tablet am Kühlschrank</summary>
+	<summary>Trust ledger for office snacks &amp; drinks — one-tap log, monthly payroll export, kitchen tablet</summary>
+	<summary lang="de">Vertrauensbuch für Snacks &amp; Getränke — tippen, monatsweise abrechnen, Tablet am Kühlschrank</summary>
 	<description><![CDATA[
-# SnackCheck — honor kitchen ledger
+# SnackCheck — kitchen trust ledger
 
-Employees one-tap log snacks and drinks against their Nextcloud account. Managers run catalog, Kitchen pulse, top-up hints, period close, and cent-reconciled payroll CSV/XLSX for HR deduction outside the app.
+Employees one-tap log snacks and drinks against their Nextcloud account. Managers run catalog, kitchen overview, restock hints, period close, and cent-reconciled payroll CSV/XLSX for HR deduction outside the app.
 
 **Free AGPL web app.** Kitchen Tablet companion is licensed separately (`SNK2` device licences). Web is never gated by the device licence.
 

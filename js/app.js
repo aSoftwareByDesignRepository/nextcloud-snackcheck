@@ -1496,7 +1496,7 @@
 						body.hospitalityEnabled = '0';
 						const en = document.getElementById('snk-hosp-enabled');
 						if (en) en.checked = false;
-						toast(t('Hospitality left off — add company user and allowlist first.', 'Hospitality left off — add company user and allowlist first.'));
+						toast(t('Company treats left off — add company user and allowlist first.', 'Company treats left off — add company user and allowlist first.'));
 					}
 				}
 				await post(OC.generateUrl('/apps/snackcheck/api/admin/settings'), body);
@@ -1612,9 +1612,17 @@
 				toast(t('Saved', 'Saved'));
 			} else if (kind === 'unlock-pin') {
 				await post(OC.generateUrl('/apps/snackcheck/api/admin/unlock/pin'), body);
+				const pinInput = form.querySelector('#snk-unlock-pin, input[name="pin"]');
+				if (pinInput instanceof HTMLInputElement) {
+					pinInput.value = '';
+				}
 				toast(t('PIN saved', 'PIN saved'));
 			} else if (kind === 'unlock-qr') {
 				await post(OC.generateUrl('/apps/snackcheck/api/admin/unlock/qr'), body);
+				const qrInput = form.querySelector('#snk-unlock-qr, input[name="payload"]');
+				if (qrInput instanceof HTMLInputElement) {
+					qrInput.value = '';
+				}
 				toast(t('QR saved', 'QR saved'));
 			} else if (kind === 'void-log') {
 				const submitter = ev.submitter;

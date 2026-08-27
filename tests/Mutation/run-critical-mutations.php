@@ -235,7 +235,7 @@ assertTrue(
 		&& str_contains($uxPulse, "\$icon = 'fridge'")
 		&& str_contains($uxPulse, 'snk-rank-panel')
 		&& str_contains($uxPulse, 'snk-rank__place')
-		&& !str_contains($uxPulse, 'Nothing needs topping up.'),
+		&& !str_contains($uxPulse, 'Nothing needs restocking.'),
 	'pulse UX: restock + plain fridge language; ranks collapsed; family empty icons'
 );
 $uxCss = file_get_contents($root . '/css/app.css');
@@ -385,7 +385,7 @@ assertTrue(
 		&& str_contains($uxJsSwitch, 'removeChipId')
 		&& str_contains($uxJsSwitch, 'wireChipFields')
 		&& str_contains($uxJsSwitch, 'subsidyAllowanceEuro')
-		&& str_contains($uxJsSwitch, 'Hospitality left off'),
+		&& str_contains($uxJsSwitch, 'Company treats left off'),
 	'settings FormData last-wins; combobox + removable chips; multi-site never native submit; euro subsidy + hosp auto-clear'
 );
 $chipPartial = file_get_contents($root . '/templates/parts/snk-chip-field.php');

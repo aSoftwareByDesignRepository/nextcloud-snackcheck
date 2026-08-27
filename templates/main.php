@@ -18,15 +18,15 @@ $locale = $l->getLanguageCode();
 $pageMeta = [
 	'log' => ['title' => $l->t('Log'), 'help' => $l->t('Tap a snack. Done.'), 'icon' => 'utensils'],
 	'mymonth' => ['title' => $l->t('My month'), 'help' => $l->t('What payroll will deduct this period.'), 'icon' => 'calendar'],
-	'pulse' => ['title' => $l->t('Kitchen pulse'), 'help' => $l->t('What is running low and what to restock.'), 'icon' => 'activity'],
+	'pulse' => ['title' => $l->t('Kitchen overview'), 'help' => $l->t('What is running low and what to restock.'), 'icon' => 'activity'],
 	'catalog' => ['title' => $l->t('Catalog'), 'help' => $l->t('Prices, stock, and what people can tap.'), 'icon' => 'package'],
-	'users' => ['title' => $l->t('Users / totals'), 'help' => $l->t('Period totals and proxy logging.'), 'icon' => 'users'],
+	'users' => ['title' => $l->t('Users / totals'), 'help' => $l->t('Period totals and booking for others.'), 'icon' => 'users'],
 	'periods' => ['title' => $l->t('Periods'), 'help' => $l->t('Open and close payroll periods.'), 'icon' => 'calendar-range'],
-	'brreport' => ['title' => $l->t('BR aggregate report'), 'help' => $l->t('Export aggregates for payroll.'), 'icon' => 'file-text'],
+	'brreport' => ['title' => $l->t('Payroll summary report'), 'help' => $l->t('Export totals for payroll.'), 'icon' => 'file-text'],
 	'sites' => ['title' => $l->t('Sites'), 'help' => $l->t('Kitchens and who manages them.'), 'icon' => 'building-2'],
 	'audit' => ['title' => $l->t('Audit'), 'help' => $l->t('Who changed what, and when.'), 'icon' => 'clipboard-list'],
-	'settings' => ['title' => $l->t('Settings'), 'help' => $l->t('Access, benefits, digests, and license.'), 'icon' => 'settings'],
-	'hospitality' => ['title' => $l->t('Hospitality'), 'help' => $l->t('Company treats and allowlists.'), 'icon' => 'coffee'],
+	'settings' => ['title' => $l->t('Settings'), 'help' => $l->t('Access, subsidy, emails, and license.'), 'icon' => 'settings'],
+	'hospitality' => ['title' => $l->t('Hospitality'), 'help' => $l->t('Company treats and who may use them.'), 'icon' => 'coffee'],
 ];
 $meta = $pageMeta[$pageId] ?? ['title' => $l->t('SnackCheck'), 'help' => '', 'icon' => 'fridge'];
 $pageTitle = (string)($_['pageTitle'] ?? $meta['title']);
@@ -59,7 +59,7 @@ include __DIR__ . '/common/navigation.php';
 					<li class="snk-breadcrumb__sep" aria-hidden="true">/</li>
 					<?php if ($pageId === 'settings'): ?>
 						<li>
-							<a href="<?php p($urlGenerator->linkToRoute('snackcheck.page.settings', ['section' => 'access'])); ?>"><?php p($l->t('Settings')); ?></a>
+							<a href="<?php p($urlGenerator->linkToRoute('snackcheck.page.settingsIndex')); ?>"><?php p($l->t('Settings')); ?></a>
 						</li>
 						<li class="snk-breadcrumb__sep" aria-hidden="true">/</li>
 						<li class="snk-breadcrumb__current" aria-current="page"><?php p($pageTitle); ?></li>

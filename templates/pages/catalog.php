@@ -84,7 +84,7 @@ $tagLabels = [
 						}
 					?></td>
 					<td class="snk-muted"><?php p($item->getCategory() ?: '—'); ?></td>
-					<td title="<?php p($l->t('On hand / Target')); ?>"><?php p($stockLabel); ?></td>
+					<td title="<?php p($l->t('In fridge / Target stock')); ?>"><?php p($stockLabel); ?></td>
 					<td class="snk-table__actions">
 						<?php
 						$itemName = (string)$item->getName();
@@ -185,14 +185,14 @@ $tagLabels = [
 				</select>
 			</label>
 			<label class="snk-field">
-				<span><?php p($l->t('On hand')); ?></span>
+				<span><?php p($l->t('In fridge')); ?></span>
 				<input name="onHand" type="number" min="0" placeholder="<?php p($l->t('optional')); ?>" />
 			</label>
 			<label class="snk-field">
-				<span><?php p($l->t('Par level')); ?></span>
+				<span><?php p($l->t('Target stock')); ?></span>
 				<input name="parLevel" type="number" min="0" placeholder="<?php p($l->t('optional')); ?>" />
 			</label>
-			<p class="snk-muted"><?php p($l->t('Leave stock blank unless you track fridge levels for Top-up.')); ?></p>
+			<p class="snk-muted"><?php p($l->t('Leave stock blank unless you track fridge levels for restock.')); ?></p>
 			<fieldset class="snk-fieldset">
 				<legend><?php p($l->t('Diet / allergen tags')); ?></legend>
 				<p class="snk-muted"><?php p($l->t('Shown as text on tiles (not colour-only).')); ?></p>
@@ -251,10 +251,10 @@ $tagLabels = [
 							<option value="other"><?php p($l->t('Other')); ?></option>
 						</select>
 					</label>
-					<label class="snk-field"><span><?php p($l->t('On hand')); ?></span>
+					<label class="snk-field"><span><?php p($l->t('In fridge')); ?></span>
 						<input name="onHand" id="snk-edit-onhand" class="snk-input" type="number" min="0" />
 					</label>
-					<label class="snk-field"><span><?php p($l->t('Par level')); ?></span>
+					<label class="snk-field"><span><?php p($l->t('Target stock')); ?></span>
 						<input name="parLevel" id="snk-edit-par" class="snk-input" type="number" min="0" />
 					</label>
 					<fieldset class="snk-fieldset">

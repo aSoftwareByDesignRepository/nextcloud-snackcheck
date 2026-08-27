@@ -256,8 +256,8 @@ final class BachusUxJourneyContractTest extends TestCase
 	public function testPulseTopUpFirstAndRanksCollapsed(): void
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/pages/pulse.php');
-		$top = strpos($src, 'Top-up');
-		$ranks = strpos($src, "What's selling");
+		$top = strpos($src, 'Restock list');
+		$ranks = strpos($src, "What's popular");
 		self::assertNotFalse($top);
 		self::assertNotFalse($ranks);
 		self::assertLessThan($ranks, $top);
@@ -265,10 +265,10 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('snk-details--flush', $src);
 		self::assertStringContainsString("\$icon = 'fridge'", $src);
 		self::assertStringContainsString("\$icon = 'activity'", $src);
-		self::assertStringContainsString('Nothing needs topping up', $src);
-		self::assertStringNotContainsString('Nothing needs topping up.', $src);
+		self::assertStringContainsString('Nothing needs restocking', $src);
+		self::assertStringNotContainsString('Nothing needs restocking.', $src);
 		self::assertStringContainsString('In fridge', $src);
-		self::assertStringContainsString('Target', $src);
+		self::assertStringContainsString('Target stock', $src);
 		self::assertStringNotContainsString('Shopping list', $src);
 		self::assertStringContainsString('snk-rank-panel', $src);
 		self::assertStringContainsString('snk-rank__place', $src);
@@ -331,7 +331,7 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('save.disabled = false', $src);
 		self::assertStringNotContainsString('save.disabled = block', $src);
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
-		self::assertStringContainsString('Hospitality left off', $js);
+		self::assertStringContainsString('Company treats left off', $js);
 		self::assertStringContainsString('subsidyAllowanceEuro', $js);
 	}
 

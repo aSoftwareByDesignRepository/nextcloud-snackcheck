@@ -21,6 +21,7 @@ use OCA\SnackCheck\Service\SiteService;
 use OCA\SnackCheck\Service\SubsidyService;
 use OCA\SnackCheck\Service\TerminalDeviceService;
 use OCA\SnackCheck\Support\PeriodDisplay;
+use OCA\SnackCheck\Support\SupportUsLinks;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -442,7 +443,19 @@ class PageController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function settings(string $section = 'access'): TemplateResponse|RedirectResponse|NotFoundResponse
+	public function settingsIndex(): RedirectResponse
+	{
+		$user = $this->requireUser();
+		$this->access->assertAppAdmin($user);
+		return new RedirectResponse($this->urlGenerator->linkToRoute(
+			'snackcheck.page.settings',
+			['section' => SettingsSectionCatalog::DEFAULT_SECTION],
+		));
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function settings(string $section): TemplateResponse|RedirectResponse|NotFoundResponse
 	{
 		$user = $this->requireUser();
 		$this->access->assertAppAdmin($user);
@@ -466,7 +479,7 @@ class PageController extends Controller
 			$sectionUrls[$sectionId] = $this->urlGenerator->linkToRoute('snackcheck.page.settings', ['section' => $sectionId]);
 		}
 
-		return $this->page('settings', [
+		$payload = [
 			'section' => $section,
 			'settingsSection' => $section,
 			'settingsSectionLabels' => $sectionLabels,
@@ -486,7 +499,16 @@ class PageController extends Controller
 			'terminalLimit' => $this->terminals->getDeviceLimit(),
 			'terminalUsed' => $this->terminals->getActiveCount(),
 			'sites' => $this->sites->listActive(),
-		]);
+		];
+		if ($section === 'support') {
+			$payload['supportUsLinks'] = new SupportUsLinks(
+				'SnackCheck',
+				true,
+				$this->urlGenerator->linkToRouteAbsolute('snackcheck.page.settings', ['section' => 'license']) . '#snk-license-key',
+			);
+		}
+
+		return $this->page('settings', $payload);
 	}
 
 	#[NoAdminRequired]
@@ -575,18 +597,18 @@ class PageController extends Controller
 			['id' => 'mymonth', 'label' => 'My month', 'route' => 'snackcheck.page.myMonth', 'group' => 'me', 'icon' => 'calendar', 'hint' => 'Payroll preview'],
 		];
 		if ($this->access->isKitchenManager($userId)) {
-			$nav[] = ['id' => 'pulse', 'label' => 'Kitchen pulse', 'route' => 'snackcheck.page.pulse', 'group' => 'kitchen', 'icon' => 'activity', 'hint' => 'Stock & restock'];
+			$nav[] = ['id' => 'pulse', 'label' => 'Kitchen overview', 'route' => 'snackcheck.page.pulse', 'group' => 'kitchen', 'icon' => 'activity', 'hint' => 'Stock & restock'];
 			$nav[] = ['id' => 'catalog', 'label' => 'Catalog', 'route' => 'snackcheck.page.catalog', 'group' => 'kitchen', 'icon' => 'package', 'hint' => 'Items & prices'];
-			$nav[] = ['id' => 'users', 'label' => 'Users / totals', 'route' => 'snackcheck.page.users', 'group' => 'kitchen', 'icon' => 'users', 'hint' => 'Totals & proxy'];
+			$nav[] = ['id' => 'users', 'label' => 'Users / totals', 'route' => 'snackcheck.page.users', 'group' => 'kitchen', 'icon' => 'users', 'hint' => 'Totals & book for others'];
 		}
 		if ($this->access->isAppAdmin($userId)) {
 			$nav[] = ['id' => 'periods', 'label' => 'Periods', 'route' => 'snackcheck.page.periods', 'group' => 'money', 'icon' => 'calendar-range', 'hint' => 'Open & close'];
-			$nav[] = ['id' => 'brreport', 'label' => 'BR report', 'route' => 'snackcheck.page.brReport', 'group' => 'money', 'icon' => 'file-text', 'hint' => 'Payroll export'];
+			$nav[] = ['id' => 'brreport', 'label' => 'Payroll summary', 'route' => 'snackcheck.page.brReport', 'group' => 'money', 'icon' => 'file-text', 'hint' => 'Payroll export'];
 			if ($this->settings->isMultiSiteEnabled()) {
 				$nav[] = ['id' => 'sites', 'label' => 'Sites', 'route' => 'snackcheck.page.sites', 'group' => 'admin', 'icon' => 'building-2', 'hint' => 'Kitchens'];
 			}
 			$nav[] = ['id' => 'audit', 'label' => 'Audit', 'route' => 'snackcheck.page.audit', 'group' => 'admin', 'icon' => 'clipboard-list', 'hint' => 'Change log'];
-			$nav[] = ['id' => 'settings', 'label' => 'Settings', 'route' => 'snackcheck.page.settings', 'group' => 'admin', 'icon' => 'settings', 'hint' => 'Access & policy'];
+			$nav[] = ['id' => 'settings', 'label' => 'Settings', 'route' => 'snackcheck.page.settingsIndex', 'group' => 'admin', 'icon' => 'settings', 'hint' => 'Access & rules'];
 		}
 		if ($this->settings->isHospitalityEnabled() && $this->access->isKitchenManager($userId)) {
 			$nav[] = ['id' => 'hospitality', 'label' => 'Hospitality', 'route' => 'snackcheck.page.hospitality', 'group' => 'money', 'icon' => 'coffee', 'hint' => 'Company treats'];

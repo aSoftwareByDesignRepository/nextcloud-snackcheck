@@ -1,5 +1,5 @@
 <?php /** @var array $_ */ /** @var \OCP\IL10N $l */ $report = $_['report'] ?? ['byCategory'=>[],'byItem'=>[],'periodLabel'=>'']; ?>
-<section class="snk-section" aria-label="<?php p($l->t('BR aggregate report')); ?>">
+<section class="snk-section" aria-label="<?php p($l->t('Payroll summary report')); ?>">
 	<article class="snk-card">
 		<header class="snk-card__header">
 			<div class="snk-card__header-text">

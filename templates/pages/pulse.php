@@ -1,7 +1,7 @@
 <?php /** @var array $_ */ /** @var \OCP\IL10N $l */ $pulse = $_['pulse'] ?? ['ranks'=>[],'topUp'=>[],'shoppingList'=>[]]; $cat = $_['category'] ?? 'all'; $cats = $_['categories'] ?? ['all'];
 $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'] ?? []);
 ?>
-<section class="snk-section" aria-label="<?php p($l->t('Kitchen pulse')); ?>">
+<section class="snk-section" aria-label="<?php p($l->t('Kitchen overview')); ?>">
 	<section class="snk-quick-filters" aria-labelledby="snk-pulse-cat-label">
 		<p class="snk-quick-filters__label" id="snk-pulse-cat-label"><?php p($l->t('Category')); ?></p>
 		<nav class="snk-filter-bar" aria-labelledby="snk-pulse-cat-label">
@@ -30,7 +30,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 	<article class="snk-card">
 		<header class="snk-card__header">
 			<div class="snk-card__header-text">
-				<h2 class="snk-card__title"><?php p($l->t('Top-up')); ?></h2>
+				<h2 class="snk-card__title"><?php p($l->t('Restock list')); ?></h2>
 				<p class="snk-card__lead"><?php p($l->t('One tap restocks the suggested amount.')); ?></p>
 			</div>
 			<?php if ($exportList !== []): ?>
@@ -44,7 +44,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 	<?php if (empty($pulse['topUp'])): ?>
 		<?php
 		$icon = 'fridge';
-		$title = $l->t('Nothing needs topping up');
+		$title = $l->t('Nothing needs restocking');
 		$text = $l->t('When stock runs low, suggested buys appear here.');
 		$actionsHtml = '';
 		include __DIR__ . '/../parts/snk-empty-state.php';
@@ -56,7 +56,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 					<div class="snk-list__main">
 						<strong><?php p($t['name']); ?></strong>
 						<span class="snk-muted"><?php p($l->t('buy')); ?> <?php p($t['suggestedBuy'] ?? 0); ?>
-							· <?php p($l->t('In fridge')); ?> <?php p($t['onHand'] ?? '—'); ?> / <?php p($l->t('Target')); ?> <?php p($t['parLevel'] ?? '—'); ?>
+							· <?php p($l->t('In fridge')); ?> <?php p($t['onHand'] ?? '—'); ?> / <?php p($l->t('Target stock')); ?> <?php p($t['parLevel'] ?? '—'); ?>
 						</span>
 					</div>
 					<button type="button"
@@ -79,11 +79,11 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 
 	<article class="snk-card">
 		<details class="snk-details snk-details--flush">
-			<summary><?php p($l->t("What's selling")); ?></summary>
+			<summary><?php p($l->t("What's popular")); ?></summary>
 			<?php if (empty($pulse['ranks'])): ?>
 				<?php
 				$icon = 'activity';
-				$title = $l->t('No consumption in the pace window yet');
+				$title = $l->t('No snacks logged in these days yet');
 				$text = $l->t('After people log snacks, rankings appear here.');
 				$actionsHtml = '';
 				include __DIR__ . '/../parts/snk-empty-state.php';

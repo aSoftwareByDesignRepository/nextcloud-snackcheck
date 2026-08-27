@@ -7,6 +7,16 @@
 	</p>
 
 	<?php if (!empty($_['canProxy'])): ?>
+		<?php
+		$tagLabels = [
+			'vegan' => $l->t('Vegan'),
+			'vegetarian' => $l->t('Vegetarian'),
+			'gluten_free' => $l->t('Gluten-free'),
+			'lactose_free' => $l->t('Lactose-free'),
+			'contains_nuts' => $l->t('Contains nuts'),
+			'contains_alcohol' => $l->t('Alcohol'),
+		];
+		?>
 		<section class="snk-card snk-card--proxy" aria-labelledby="snk-users-proxy-title">
 			<header class="snk-card__header">
 				<div class="snk-card__header-text">
@@ -20,8 +30,7 @@
 					<p><?php p($l->t('Period closed. Ask a kitchen admin to open the next period before logging.')); ?></p>
 					<p class="snk-actions">
 						<?php if (!empty($_['isAppAdmin'])): ?>
-							<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.periods')); ?>"><?php p($l->t('Open Periods')); ?></a>
-							<button type="button" class="snk-btn" data-snk-action="open-next-period"><?php p($l->t('Open next period')); ?></button>
+							<button type="button" class="snk-btn snk-btn--primary" data-snk-action="open-next-period"><?php p($l->t('Open next period')); ?></button>
 						<?php else: ?>
 							<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.mymonth')); ?>"><?php p($l->t('See My month')); ?></a>
 						<?php endif; ?>
@@ -48,67 +57,27 @@
 				<div class="snk-log-controls" id="snk-users-proxy-controls">
 					<?php /* Force proxy mode for Users AC-35 — no Me/Company here */ ?>
 					<input type="radio" name="snk-log-mode" value="proxy" checked data-snk-mode hidden aria-hidden="true" />
-					<div class="snk-mode-panel" id="snk-mode-proxy">
-						<p class="snk-muted" role="status"><?php p($l->t('Pick a colleague and reason, then tap a snack below.')); ?></p>
-						<div class="snk-form snk-form--inline" data-snk-proxy-fields>
-							<input type="hidden" name="siteId" value="<?php p($_['siteId']); ?>" />
-							<label class="snk-field">
-								<span><?php p($l->t('Colleague')); ?></span>
-								<?php
-								$name = 'targetUserId';
-								$value = '';
-								$picker = 'users';
-								$single = true;
-								$required = true;
-								$listLabel = $l->t('Colleague');
-								$chips = [];
-								$fieldId = 'snk-users-proxy-target';
-								include __DIR__ . '/../parts/snk-chip-field.php';
-								?>
-							</label>
-							<label class="snk-field">
-								<span><?php p($l->t('Reason (min. 3 characters)')); ?></span>
-								<input name="proxyReason" id="snk-proxy-reason" required minlength="3" maxlength="500" />
-							</label>
-						</div>
-						<div class="snk-chip-search">
-						<label class="snk-field">
-							<span><?php p($l->t('Find users')); ?> — <span class="snk-muted" data-snk-chip-hint><?php p($l->t('Choose… then search')); ?></span></span>
-							<input type="search" data-snk-user-search data-snk-search-scope="access" autocomplete="off" aria-controls="snk-users-proxy-results" />
-						</label>
-						<ul id="snk-users-proxy-results" class="snk-user-results" data-snk-user-results role="listbox" aria-label="<?php p($l->t('Matching people')); ?>" aria-live="polite"></ul>
-						</div>
-					</div>
+					<?php
+					$siteId = (int)($_['siteId'] ?? 0);
+					$fieldId = 'snk-users-proxy-target';
+					$resultsId = 'snk-users-proxy-results';
+					$reasonHintId = 'snk-users-proxy-reason-hint';
+					$proxyPanelHidden = false;
+					$showLead = true;
+					$embedded = true;
+					include __DIR__ . '/../parts/snk-proxy-panel.php';
+					$embedded = false;
+					?>
 				</div>
 				<ul class="snk-tile-grid" role="list" aria-label="<?php p($l->t('Catalog')); ?>">
-					<?php foreach ($_['proxyItems'] as $item): ?>
-						<?php
-						$priceLabel = !empty($item['free'])
-							? $l->t('Free')
-							: number_format($item['priceCents'] / 100, 2, ',', '.') . ' €';
-						$aria = $item['name'] . ' — ' . $priceLabel;
-						?>
-						<li>
-							<button type="button"
-								class="snk-tile"
-								data-snk-action="log"
-								data-item-id="<?php p($item['id']); ?>"
-								data-site-id="<?php p($_['siteId']); ?>"
-								aria-label="<?php p($aria); ?>">
-								<span class="snk-tile__name"><?php p($item['name']); ?></span>
-								<?php if (!empty($item['category'])): ?>
-									<span class="snk-tile__meta"><?php p($item['category']); ?></span>
-								<?php endif; ?>
-								<span class="snk-tile__price">
-									<?php if (!empty($item['free'])): ?>
-										<?php p($l->t('Free')); ?>
-									<?php else: ?>
-										<?php p(number_format($item['priceCents'] / 100, 2, ',', '.') . ' €'); ?>
-									<?php endif; ?>
-								</span>
-							</button>
-						</li>
-					<?php endforeach; ?>
+					<?php
+					$siteId = (int)($_['siteId'] ?? 0);
+					$periodClosed = false;
+					$shelfFocus = false;
+					foreach ($_['proxyItems'] as $item):
+						include __DIR__ . '/../parts/snk-log-tile.php';
+					endforeach;
+					?>
 				</ul>
 			<?php endif; ?>
 			</div>
@@ -179,8 +148,8 @@
 				<input name="reason" class="snk-input" required minlength="3" />
 			</label>
 			<div class="snk-actions">
-				<button type="submit" class="snk-btn snk-btn--danger" value="confirm"><?php p($l->t('Void')); ?></button>
 				<button type="submit" class="snk-btn snk-btn--secondary" value="cancel"><?php p($l->t('Cancel')); ?></button>
+				<button type="submit" class="snk-btn snk-btn--danger" value="confirm"><?php p($l->t('Void')); ?></button>
 			</div>
 		</form>
 	</dialog>

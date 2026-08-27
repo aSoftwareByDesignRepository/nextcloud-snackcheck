@@ -12,6 +12,24 @@ use OCA\SnackCheck\Service\IconCatalog;
 $urlGenerator = $_['urlGenerator'];
 $pageId = (string)($_['pageId'] ?? 'log');
 $nav = $_['nav'] ?? [];
+$settingsSection = (string)($_['settingsSection'] ?? '');
+$settingsSectionUrls = (array)(($_['urls']['settingsSections'] ?? []) ?: []);
+$settingsSectionLabels = (array)($_['settingsSectionLabels'] ?? []);
+$settingsChildren = [];
+if ($pageId === 'settings' && $settingsSectionLabels !== []) {
+	foreach ($settingsSectionLabels as $sectionId => $sectionLabel) {
+		$childHref = (string)($settingsSectionUrls[$sectionId] ?? '');
+		if ($childHref === '' || $childHref === '#') {
+			continue;
+		}
+		$settingsChildren[] = [
+			'id' => (string)$sectionId,
+			'label' => (string)$sectionLabel,
+			'href' => $childHref,
+			'active' => $settingsSection === (string)$sectionId,
+		];
+	}
+}
 
 $groups = [
 	'me' => $l->t('Me'),
@@ -56,21 +74,36 @@ if (!empty($_['isAppAdmin'])) {
 						$active = ($item['id'] ?? '') === $pageId;
 						$icon = (string)($item['icon'] ?? 'layout-grid');
 						$hint = (string)($item['hint'] ?? '');
+						$isSettingsParent = ($item['id'] ?? '') === 'settings' && $settingsChildren !== [];
 						?>
 						<li class="snk-nav__item<?php if ($active) { p(' is-active'); } ?>">
-							<a class="snk-nav__link<?php if ($active) { p(' is-active'); } ?>"
+							<a class="snk-nav__link<?php if ($active && !$isSettingsParent) { p(' is-active'); } ?><?php if ($isSettingsParent) { p(' snk-nav__link--parent'); } ?>"
 							   href="<?php p($urlGenerator->linkToRoute($item['route'])); ?>"
-							   <?php if ($active): ?>aria-current="page"<?php endif; ?>>
+							   <?php if ($active && !$isSettingsParent): ?>aria-current="page"<?php endif; ?>
+							   <?php if ($isSettingsParent): ?>aria-expanded="true"<?php endif; ?>>
 								<span class="snk-nav__icon" aria-hidden="true">
 									<?php print_unescaped(IconCatalog::render($icon)); ?>
 								</span>
 								<span class="snk-nav__label">
 									<span class="snk-nav__name"><?php p($l->t($item['label'])); ?></span>
-									<?php if ($hint !== ''): ?>
+									<?php if ($hint !== '' && !$isSettingsParent): ?>
 										<span class="snk-nav__hint"><?php p($l->t($hint)); ?></span>
 									<?php endif; ?>
 								</span>
 							</a>
+							<?php if ($isSettingsParent): ?>
+								<ul class="snk-nav__sublist">
+									<?php foreach ($settingsChildren as $child): ?>
+										<li class="snk-nav__subitem">
+											<a class="snk-nav__sublink<?php if (!empty($child['active'])) { p(' is-active'); } ?>"
+												href="<?php p($child['href']); ?>"
+												<?php if (!empty($child['active'])): ?>aria-current="page"<?php endif; ?>>
+												<?php p($child['label']); ?>
+											</a>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endif; ?>
 						</li>
 					<?php endforeach; ?>
 				</ul>

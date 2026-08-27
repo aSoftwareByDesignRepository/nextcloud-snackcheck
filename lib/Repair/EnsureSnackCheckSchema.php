@@ -32,7 +32,7 @@ final class EnsureSnackCheckSchema implements IRepairStep
 	{
 		$this->config->deleteAppValue(self::APP_ID, UninstallDropTables::REPAIR_PASS_KEY);
 		$missing = [];
-		foreach (SnackCheckTableCatalog::TABLES as $table) {
+		foreach (SnackCheckTableCatalog::requiredTables() as $table) {
 			if (!$this->connection->tableExists($table)) {
 				$missing[] = $table;
 			}

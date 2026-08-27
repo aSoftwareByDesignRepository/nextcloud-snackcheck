@@ -133,4 +133,37 @@ class TerminalDeviceServiceTest extends TestCase
 		self::assertFalse($result['ok']);
 		self::assertSame('terminal_not_found', $result['error']);
 	}
+
+	public function testRevokeAllBySiteRevokesUnderCapacityLock(): void
+	{
+		$a = new TerminalDevice();
+		$a->setId(1);
+		$a->setSiteId(3);
+		$a->setRevoked(0);
+		$b = new TerminalDevice();
+		$b->setId(2);
+		$b->setSiteId(3);
+		$b->setRevoked(0);
+		$mapper = $this->createMock(TerminalDeviceMapper::class);
+		$mapper->method('findActiveBySite')->with(3)->willReturn([$a, $b]);
+		$mapper->expects($this->exactly(2))->method('update')->willReturnCallback(
+			static function (TerminalDevice $d): TerminalDevice {
+				self::assertSame(1, (int)$d->getRevoked());
+				return $d;
+			}
+		);
+		$lockGate = $this->createMock(LockGate::class);
+		$lockGate->expects($this->once())->method('lock')->with(TerminalDeviceService::CAPACITY_LOCK);
+		$db = $this->createMock(IDBConnection::class);
+		$db->expects($this->once())->method('beginTransaction');
+		$db->expects($this->once())->method('commit');
+		$svc = new TerminalDeviceService(
+			$mapper,
+			$this->createMock(LicenseService::class),
+			$db,
+			$lockGate,
+			$this->createMock(ITimeFactory::class),
+		);
+		self::assertSame(2, $svc->revokeAllBySite(3, 'site-deactivate:3'));
+	}
 }

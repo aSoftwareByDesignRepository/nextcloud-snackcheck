@@ -20,7 +20,8 @@ final class CoreFlowUxContractTest extends TestCase
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/pages/log.php');
 		self::assertStringContainsString('open-next-period', $src);
-		self::assertStringContainsString('page.periods', $src);
+		// Bachus: one primary that does the job — no dual "Open Periods" nav detour.
+		self::assertStringNotContainsString('Open Periods', $src);
 		self::assertStringContainsString('data-snk-mode', $src);
 		self::assertStringContainsString('Colleague', $src);
 		self::assertStringNotContainsString("More…", $src);
@@ -41,12 +42,15 @@ final class CoreFlowUxContractTest extends TestCase
 	public function testCatalogPrimaryActionsOnlyWithMoreDetails(): void
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/pages/catalog.php');
+		self::assertStringContainsString('snk-row-actions', $src);
+		self::assertStringContainsString('snk-row-actions__panel', $src);
 		self::assertStringContainsString('snk-row-more', $src);
 		self::assertStringContainsString('snk-restock-dialog', $src);
 		self::assertStringContainsString('snk-table-wrap', $src);
 		self::assertStringContainsString('catalog-deactivate', $src);
 		self::assertStringContainsString('data-instant="1"', $src);
 		self::assertStringContainsString('Restock other amount', $src);
+		self::assertStringContainsString('Actions for %s', $src);
 		// Restock must not rely on window.prompt in JS
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
 		self::assertStringNotContainsString("window.prompt('Add quantity'", $js);
@@ -55,26 +59,35 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringContainsString('snkConfirm', $js);
 		self::assertStringContainsString('catalog-restock', $js);
 		self::assertStringContainsString('ensureRestockDialog', $js);
+		self::assertStringContainsString('wireRowActionMenus', $js);
+		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		self::assertStringContainsString('.snk-row-actions__panel', $css);
+		self::assertStringContainsString('.snk-row-actions__item--danger', $css);
 	}
 
 	public function testSettingsNavIsLeanAndLabeled(): void
 	{
-		$src = (string)file_get_contents($this->root() . '/templates/pages/settings.php');
-		self::assertStringContainsString("'unlock' => \$l->t('Unlock PIN / QR')", $src);
-		self::assertStringNotContainsString("'periods'", $src);
-		self::assertStringNotContainsString("foreach (['access','benefits'", $src);
+		$shell = (string)file_get_contents($this->root() . '/templates/pages/settings.php');
+		$nav = (string)file_get_contents($this->root() . '/templates/parts/settings-nav.php');
+		$benefits = (string)file_get_contents($this->root() . '/templates/parts/settings/benefits.php');
+		$catalog = (string)file_get_contents($this->root() . '/lib/Service/SettingsSectionCatalog.php');
+		self::assertStringContainsString('settings-nav.php', $shell);
+		self::assertStringContainsString('Settings pages', $nav);
+		self::assertStringContainsString("'unlock'", $catalog);
+		self::assertStringContainsString('Unlock PIN / QR', $catalog);
+		self::assertStringNotContainsString("'periods'", $shell);
 		// UX-30: hospitality Save stays enabled; incomplete hospitality auto-clears on submit.
-		self::assertStringContainsString('snk-benefits-save', $src);
-		self::assertStringContainsString('save.disabled = false', $src);
-		self::assertStringContainsString('aria-disabled', $src);
-		self::assertStringContainsString('Monthly subsidy (€)', $src);
-		self::assertStringContainsString('subsidyAllowanceEuro', $src);
-		self::assertStringContainsString('snk-switch-field', $src);
-		self::assertStringContainsString('role="switch"', $src);
-		self::assertStringContainsString('id="snk-hosp-enabled"', $src);
-		self::assertStringContainsString('const on = !!en.checked;', $src);
-		self::assertStringNotContainsString('en.value === \'1\'', $src);
-		self::assertStringNotContainsString('save.disabled = block', $src);
+		self::assertStringContainsString('snk-benefits-save', $benefits);
+		self::assertStringContainsString('save.disabled = false', $benefits);
+		self::assertStringContainsString('aria-disabled', $benefits);
+		self::assertStringContainsString('Monthly subsidy (€)', $benefits);
+		self::assertStringContainsString('subsidyAllowanceEuro', $benefits);
+		self::assertStringContainsString('snk-switch-field', $benefits);
+		self::assertStringContainsString('role="switch"', $benefits);
+		self::assertStringContainsString('id="snk-hosp-enabled"', $benefits);
+		self::assertStringContainsString('const on = !!en.checked;', $benefits);
+		self::assertStringNotContainsString('en.value === \'1\'', $benefits);
+		self::assertStringNotContainsString('save.disabled = block', $benefits);
 	}
 
 	public function testChipPickerRequiresExplicitTarget(): void
@@ -156,7 +169,7 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringContainsString('data-snk-action="focus-site"', $log);
 		$users = (string)file_get_contents($this->root() . '/templates/pages/users.php');
 		self::assertStringContainsString('Open Catalog', $users);
-		self::assertStringContainsString('Open Periods', $users);
+		self::assertStringContainsString('Open next period', $users);
 		$hosp = (string)file_get_contents($this->root() . '/templates/pages/hospitality.php');
 		self::assertStringContainsString('Log a snack', $hosp);
 		self::assertStringContainsString('Open Benefits', $hosp);
@@ -170,9 +183,10 @@ final class CoreFlowUxContractTest extends TestCase
 	public function testLogMultiSitePickAndA11yPriceLabels(): void
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/pages/log.php');
+		$tile = (string)file_get_contents($this->root() . '/templates/parts/snk-log-tile.php');
 		self::assertStringContainsString('sitePickRequired', $src);
 		self::assertStringContainsString('Pick a site above', $src);
-		self::assertStringContainsString(" \$item['name'] . ' — ' . \$priceLabel", $src);
+		self::assertStringContainsString(" \$item['name'] . ' — ' . \$priceLabel", $tile);
 		self::assertStringContainsString('maxlength="500"', $src);
 		self::assertStringContainsString("!empty(\$_['canProxy'])", $src);
 		$page = (string)file_get_contents($this->root() . '/lib/Controller/PageController.php');
@@ -213,5 +227,16 @@ final class CoreFlowUxContractTest extends TestCase
 		);
 		self::assertStringContainsString('isHospitalityEnabled()', $page);
 		self::assertStringContainsString('isMultiSiteEnabled()', $page);
+	}
+
+	public function testStarterCatalogPostsScopedSiteId(): void
+	{
+		$js = (string)file_get_contents($this->root() . '/js/app.js');
+		self::assertStringContainsString("action === 'starter'", $js);
+		self::assertMatchesRegularExpression(
+			"/action === 'starter'[\s\S]{0,400}starterBody\.siteId/",
+			$js
+		);
+		self::assertStringContainsString("/apps/snackcheck/api/catalog/starter", $js);
 	}
 }

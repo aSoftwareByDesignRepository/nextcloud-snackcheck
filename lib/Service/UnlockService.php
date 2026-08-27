@@ -10,6 +10,7 @@ use OCA\SnackCheck\Db\UnlockQr;
 use OCA\SnackCheck\Db\UnlockQrMapper;
 use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\DB\Exception as DbException;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUserManager;
@@ -21,6 +22,10 @@ use OCP\Security\ISecureRandom;
  * PIN/QR unlock maps + short-lived unlockToken issuance.
  * Lockout: 3 failures → progressive soft lockout (30s → 60s → 5m → 15m).
  * Escalation clears on successful unlock; tier TTL bounds the window.
+ *
+ * Fail accounting and lockout checks share one exclusive per-device lock so
+ * concurrent bad PINs cannot under-count and a success cannot race past an
+ * active trip (Argus SF / Aristoteles).
  */
 class UnlockService
 {
@@ -31,6 +36,12 @@ class UnlockService
 	/** @var list<int> */
 	public const LOCKOUT_SCHEDULE_SECONDS = [30, 60, 300, 900];
 	public const TIER_TTL_SECONDS = 86_400;
+	/**
+	 * Partial fail-counter TTL. Must outlive slow attackers spacing attempts;
+	 * previously LOCKOUT_SECONDS*2 (60s) let 2 fails expire before the 3rd.
+	 * Bound to 2× the longest lockout step (15m → 30m).
+	 */
+	public const FAIL_COUNTER_TTL_SECONDS = 1_800;
 
 	private ICache $cache;
 
@@ -64,22 +75,29 @@ class UnlockService
 			throw new DomainException('validation_failed', 'PIN already in use', 422);
 		}
 		$now = $this->timeFactory->getDateTime();
-		$existing = $this->pins->findByUserId($userId);
-		if ($existing !== null) {
-			$existing->setPinHash($hash);
-			$existing->setUpdatedAt($now);
-			$existing->setUpdatedBy($actorUid);
-			$this->pins->update($existing);
-			return;
+		try {
+			$existing = $this->pins->findByUserId($userId);
+			if ($existing !== null) {
+				$existing->setPinHash($hash);
+				$existing->setUpdatedAt($now);
+				$existing->setUpdatedBy($actorUid);
+				$this->pins->update($existing);
+				return;
+			}
+			$row = new UnlockPin();
+			$row->setUserId($userId);
+			$row->setPinHash($hash);
+			$row->setFailCount(0);
+			$row->setLockedUntil(null);
+			$row->setUpdatedAt($now);
+			$row->setUpdatedBy($actorUid);
+			$this->pins->insert($row);
+		} catch (DbException $e) {
+			if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new DomainException('validation_failed', 'PIN already in use', 422);
+			}
+			throw $e;
 		}
-		$row = new UnlockPin();
-		$row->setUserId($userId);
-		$row->setPinHash($hash);
-		$row->setFailCount(0);
-		$row->setLockedUntil(null);
-		$row->setUpdatedAt($now);
-		$row->setUpdatedBy($actorUid);
-		$this->pins->insert($row);
 	}
 
 	public function setQr(string $userId, string $payload, string $actorUid): void
@@ -101,20 +119,27 @@ class UnlockService
 			throw new DomainException('validation_failed', 'QR already in use', 422);
 		}
 		$now = $this->timeFactory->getDateTime();
-		$existing = $this->qrs->findByUserId($userId);
-		if ($existing !== null) {
-			$existing->setTokenHash($hash);
-			$existing->setUpdatedAt($now);
-			$existing->setUpdatedBy($actorUid);
-			$this->qrs->update($existing);
-			return;
+		try {
+			$existing = $this->qrs->findByUserId($userId);
+			if ($existing !== null) {
+				$existing->setTokenHash($hash);
+				$existing->setUpdatedAt($now);
+				$existing->setUpdatedBy($actorUid);
+				$this->qrs->update($existing);
+				return;
+			}
+			$row = new UnlockQr();
+			$row->setUserId($userId);
+			$row->setTokenHash($hash);
+			$row->setUpdatedAt($now);
+			$row->setUpdatedBy($actorUid);
+			$this->qrs->insert($row);
+		} catch (DbException $e) {
+			if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new DomainException('validation_failed', 'QR already in use', 422);
+			}
+			throw $e;
 		}
-		$row = new UnlockQr();
-		$row->setUserId($userId);
-		$row->setTokenHash($hash);
-		$row->setUpdatedAt($now);
-		$row->setUpdatedBy($actorUid);
-		$this->qrs->insert($row);
 	}
 
 	/**
@@ -128,90 +153,107 @@ class UnlockService
 		?int $deviceSiteId = null,
 		string $bindDeviceId = '',
 	): array {
-		$lockKey = 'lockout:' . $deviceKey;
-		$failKey = 'fails:' . $deviceKey;
-		$lockUntil = $this->cache->get($lockKey);
-		if (is_int($lockUntil) && $lockUntil > $this->timeFactory->getTime()) {
-			$retry = max(1, $lockUntil - $this->timeFactory->getTime());
-			throw new DomainException('unlock_lockout', 'Locked out', 429, $retry);
-		}
-
 		// NFC badges map to the same token store as QR (AC-OPP-S1).
 		if ((!$qrPayload || $qrPayload === '') && is_string($nfcPayload) && $nfcPayload !== '') {
 			$qrPayload = $nfcPayload;
 		}
 
-		$userId = null;
-		if (is_string($pin) && $pin !== '') {
-			$row = $this->pins->findByPinHash($this->hashPin($pin));
-			// Soft-upgrade: accept pre-pepper hashes once, then rehash under pepper.
-			if ($row === null) {
-				$legacy = hash('sha256', 'snk-pin|' . $pin);
-				$row = $this->pins->findByPinHash($legacy);
-				if ($row !== null) {
-					$this->setPin((string)$row->getUserId(), $pin, 'system-rehash');
-					$row = $this->pins->findByPinHash($this->hashPin($pin)) ?? $row;
-				}
-			}
-			$userId = $row?->getUserId();
-		} elseif (is_string($qrPayload) && $qrPayload !== '') {
-			$row = $this->qrs->findByTokenHash($this->hashQr($qrPayload));
-			if ($row === null) {
-				$legacy = hash('sha256', $qrPayload);
-				$row = $this->qrs->findByTokenHash($legacy);
-				if ($row !== null) {
-					$this->setQr((string)$row->getUserId(), $qrPayload, 'system-rehash');
-					$row = $this->qrs->findByTokenHash($this->hashQr($qrPayload)) ?? $row;
-				}
-			}
-			$userId = $row?->getUserId();
-		} else {
+		$hasPin = is_string($pin) && $pin !== '';
+		$hasQr = is_string($qrPayload) && $qrPayload !== '';
+		if (!$hasPin && !$hasQr) {
 			throw new DomainException('unlock_invalid', 'PIN, QR, or NFC payload required', 422);
 		}
 
-		if ($userId === null || $userId === '') {
-			$this->recordUnlockFailure($deviceKey, $failKey, $lockKey);
-			throw new DomainException('unlock_invalid', 'Invalid unlock', 401);
-		}
+		$failKey = 'fails:' . $deviceKey;
+		$lockKey = 'lockout:' . $deviceKey;
 
-		// Access door: listed ACL must not be bypassable via leftover PIN.
-		// Argus MF: same response + fail accounting as wrong PIN (no 401/403 oracle).
-		if (!$this->access->canAccessApp($userId)) {
-			$this->recordUnlockFailure($deviceKey, $failKey, $lockKey);
-			throw new DomainException('unlock_invalid', 'Invalid unlock', 401);
-		}
+		return $this->withDeviceFailLock($deviceKey, function () use (
+			$pin,
+			$qrPayload,
+			$hasPin,
+			$deviceKey,
+			$failKey,
+			$lockKey,
+			$deviceSiteId,
+			$bindDeviceId,
+		): array {
+			$lockUntil = $this->cache->get($lockKey);
+			if (is_int($lockUntil) && $lockUntil > $this->timeFactory->getTime()) {
+				$retry = max(1, $lockUntil - $this->timeFactory->getTime());
+				throw new DomainException('unlock_lockout', 'Locked out', 429, $retry);
+			}
 
-		$this->cache->remove($failKey);
-		$this->cache->remove('tier:' . $deviceKey);
-		$token = 'snkunlock_' . $this->random->generate(48);
-		$expires = $this->timeFactory->getTime() + self::TOKEN_TTL_SECONDS;
-		$isKitchenAdmin = $this->access->isAppAdmin($userId);
-		if (!$isKitchenAdmin && $deviceSiteId !== null && $deviceSiteId > 0) {
-			$isKitchenAdmin = $this->access->canManageSite($userId, $deviceSiteId);
-		} elseif (!$isKitchenAdmin) {
-			$isKitchenAdmin = $this->access->isKitchenManager($userId);
-		}
-		$boundDeviceId = $bindDeviceId !== '' ? $bindDeviceId : $deviceKey;
-		$session = [
-			'userId' => $userId,
-			'expiresAt' => $expires,
-			'isKitchenAdmin' => $isKitchenAdmin,
-			'hospitalityAllowed' => $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($userId),
-			'deviceId' => $boundDeviceId,
-		];
-		$this->cache->set('tok:' . hash('sha256', $token), $session, self::TOKEN_TTL_SECONDS);
+			$userId = null;
+			if ($hasPin) {
+				$row = $this->pins->findByPinHash($this->hashPin((string)$pin));
+				// Soft-upgrade: accept pre-pepper hashes once, then rehash under pepper.
+				if ($row === null) {
+					$legacy = hash('sha256', 'snk-pin|' . $pin);
+					$row = $this->pins->findByPinHash($legacy);
+					if ($row !== null) {
+						$this->setPin((string)$row->getUserId(), (string)$pin, 'system-rehash');
+						$row = $this->pins->findByPinHash($this->hashPin((string)$pin)) ?? $row;
+					}
+				}
+				$userId = $row?->getUserId();
+			} else {
+				$row = $this->qrs->findByTokenHash($this->hashQr((string)$qrPayload));
+				if ($row === null) {
+					$legacy = hash('sha256', (string)$qrPayload);
+					$row = $this->qrs->findByTokenHash($legacy);
+					if ($row !== null) {
+						$this->setQr((string)$row->getUserId(), (string)$qrPayload, 'system-rehash');
+						$row = $this->qrs->findByTokenHash($this->hashQr((string)$qrPayload)) ?? $row;
+					}
+				}
+				$userId = $row?->getUserId();
+			}
 
-		$user = $this->userManager->get($userId);
-		$display = $user?->getDisplayName() ?: $userId;
+			if ($userId === null || $userId === '') {
+				$this->recordUnlockFailureLocked($deviceKey, $failKey, $lockKey);
+				throw new DomainException('unlock_invalid', 'Invalid unlock', 401);
+			}
 
-		return [
-			'unlockToken' => $token,
-			'userId' => $userId,
-			'userDisplayName' => $display,
-			'expiresAt' => (new \DateTimeImmutable('@' . $expires))->format('c'),
-			'isKitchenAdmin' => $session['isKitchenAdmin'],
-			'hospitalityAllowed' => $session['hospitalityAllowed'],
-		];
+			// Access door: listed ACL must not be bypassable via leftover PIN.
+			// Argus MF: same response + fail accounting as wrong PIN (no 401/403 oracle).
+			if (!$this->access->canAccessApp($userId)) {
+				$this->recordUnlockFailureLocked($deviceKey, $failKey, $lockKey);
+				throw new DomainException('unlock_invalid', 'Invalid unlock', 401);
+			}
+
+			$this->cache->remove($failKey);
+			$this->cache->remove('tier:' . $deviceKey);
+			$this->cache->remove($lockKey);
+			$token = 'snkunlock_' . $this->random->generate(48);
+			$expires = $this->timeFactory->getTime() + self::TOKEN_TTL_SECONDS;
+			$isKitchenAdmin = $this->access->isAppAdmin($userId);
+			if (!$isKitchenAdmin && $deviceSiteId !== null && $deviceSiteId > 0) {
+				$isKitchenAdmin = $this->access->canManageSite($userId, $deviceSiteId);
+			} elseif (!$isKitchenAdmin) {
+				$isKitchenAdmin = $this->access->isKitchenManager($userId);
+			}
+			$boundDeviceId = $bindDeviceId !== '' ? $bindDeviceId : $deviceKey;
+			$session = [
+				'userId' => $userId,
+				'expiresAt' => $expires,
+				'isKitchenAdmin' => $isKitchenAdmin,
+				'hospitalityAllowed' => $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($userId),
+				'deviceId' => $boundDeviceId,
+			];
+			$this->cache->set('tok:' . hash('sha256', $token), $session, self::TOKEN_TTL_SECONDS);
+
+			$user = $this->userManager->get($userId);
+			$display = $user?->getDisplayName() ?: $userId;
+
+			return [
+				'unlockToken' => $token,
+				'userId' => $userId,
+				'userDisplayName' => $display,
+				'expiresAt' => (new \DateTimeImmutable('@' . $expires))->format('c'),
+				'isKitchenAdmin' => $session['isKitchenAdmin'],
+				'hospitalityAllowed' => $session['hospitalityAllowed'],
+			];
+		});
 	}
 
 	/**
@@ -291,8 +333,12 @@ class UnlockService
 		return hash_hmac('sha256', $payload, 'snk-qr|' . $this->settings->getUnlockPepper());
 	}
 
-	/** Serialize fail counter increments so concurrent bad PINs cannot skip lockout. */
-	private function recordUnlockFailure(string $deviceKey, string $failKey, string $lockKey): void
+	/**
+	 * @template T
+	 * @param callable(): T $fn
+	 * @return T
+	 */
+	private function withDeviceFailLock(string $deviceKey, callable $fn): mixed
 	{
 		$lockName = 'snackcheck/unlock_fail/' . hash('sha256', $deviceKey);
 		$acquired = false;
@@ -300,27 +346,33 @@ class UnlockService
 			$this->locking->acquireLock($lockName, ILockingProvider::LOCK_EXCLUSIVE);
 			$acquired = true;
 		} catch (LockedException) {
-			// Contended — treat as soft lockout rather than under-counting.
+			// Contended — treat as soft lockout rather than racing the counter.
 			throw new DomainException('unlock_lockout', 'Locked out', 429, self::LOCKOUT_SECONDS);
 		}
 		try {
-			$fails = (int)($this->cache->get($failKey) ?? 0) + 1;
-			$this->cache->set($failKey, $fails, self::LOCKOUT_SECONDS * 2);
-			if ($fails >= self::LOCKOUT_FAILURES) {
-				$tierKey = 'tier:' . $deviceKey;
-				$tier = (int)($this->cache->get($tierKey) ?? 0);
-				$schedule = self::LOCKOUT_SCHEDULE_SECONDS;
-				$duration = $schedule[min($tier, count($schedule) - 1)];
-				$until = $this->timeFactory->getTime() + $duration;
-				$this->cache->set($lockKey, $until, $duration);
-				$this->cache->set($tierKey, $tier + 1, self::TIER_TTL_SECONDS);
-				$this->cache->remove($failKey);
-				throw new DomainException('unlock_lockout', 'Locked out', 429, $duration);
-			}
+			return $fn();
 		} finally {
 			if ($acquired) {
 				$this->locking->releaseLock($lockName, ILockingProvider::LOCK_EXCLUSIVE);
 			}
+		}
+	}
+
+	/** Caller must already hold {@see withDeviceFailLock}. */
+	private function recordUnlockFailureLocked(string $deviceKey, string $failKey, string $lockKey): void
+	{
+		$fails = (int)($this->cache->get($failKey) ?? 0) + 1;
+		$this->cache->set($failKey, $fails, self::FAIL_COUNTER_TTL_SECONDS);
+		if ($fails >= self::LOCKOUT_FAILURES) {
+			$tierKey = 'tier:' . $deviceKey;
+			$tier = (int)($this->cache->get($tierKey) ?? 0);
+			$schedule = self::LOCKOUT_SCHEDULE_SECONDS;
+			$duration = $schedule[min($tier, count($schedule) - 1)];
+			$until = $this->timeFactory->getTime() + $duration;
+			$this->cache->set($lockKey, $until, $duration);
+			$this->cache->set($tierKey, $tier + 1, self::TIER_TTL_SECONDS);
+			$this->cache->remove($failKey);
+			throw new DomainException('unlock_lockout', 'Locked out', 429, $duration);
 		}
 	}
 }

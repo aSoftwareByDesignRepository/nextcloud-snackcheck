@@ -26,5 +26,8 @@ class CatalogStarterTest extends TestCase
 		$src = (string)file_get_contents(__DIR__ . '/../../../lib/Service/CatalogService.php');
 		self::assertMatchesRegularExpression('/applyStarterDe[\s\S]*?12,[\s\S]*?20,/m', $src);
 		self::assertStringContainsString('copyToSite', $src);
+		self::assertStringContainsString('catalog_starter:', $src);
+		self::assertStringContainsString('lockGate->lock', $src);
+		self::assertStringContainsString('countBySite', $src);
 	}
 }

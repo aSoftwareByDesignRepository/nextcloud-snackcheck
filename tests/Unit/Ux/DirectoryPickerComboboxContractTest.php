@@ -42,12 +42,16 @@ final class DirectoryPickerComboboxContractTest extends TestCase
 	public function testDirectoryScopeSearchTemplatesAndApi(): void
 	{
 		$settings = (string)file_get_contents($this->root() . '/templates/pages/settings.php');
-		self::assertStringContainsString('data-snk-search-scope="directory"', $settings);
-		self::assertStringContainsString('snk-chip-search', $settings);
+		self::assertStringContainsString('settings-nav.php', $settings);
+		$access = (string)file_get_contents($this->root() . '/templates/parts/settings/access.php');
+		self::assertStringContainsString('data-snk-search-scope="directory"', $access);
+		self::assertStringContainsString('snk-chip-search', $access);
 		$sites = (string)file_get_contents($this->root() . '/templates/pages/sites.php');
 		self::assertStringContainsString('data-snk-search-scope="directory"', $sites);
 		$log = (string)file_get_contents($this->root() . '/templates/pages/log.php');
-		self::assertStringContainsString('data-snk-search-scope="access"', $log);
+		$proxy = (string)file_get_contents($this->root() . '/templates/parts/snk-proxy-panel.php');
+		self::assertStringContainsString('snk-proxy-panel.php', $log);
+		self::assertStringContainsString('data-snk-search-scope="access"', $proxy);
 		$api = (string)file_get_contents($this->root() . '/lib/Controller/ApiController.php');
 		self::assertStringContainsString("\$scope === 'directory'", $api);
 		self::assertMatchesRegularExpression(
@@ -79,15 +83,25 @@ final class DirectoryPickerComboboxContractTest extends TestCase
 		self::assertStringContainsString('data-snk-chip-remove', $partial);
 		self::assertStringContainsString('type="hidden"', $partial);
 		self::assertStringContainsString('data-snk-chip-activate', $partial);
+		self::assertStringContainsString('data-snk-chip-auto', $partial);
 		self::assertStringContainsString('No one selected yet', $partial);
+		self::assertStringContainsString('Nobody yet — type a name above', $partial);
 		$settings = (string)file_get_contents($this->root() . '/templates/pages/settings.php');
-		self::assertStringContainsString('snk-chip-field.php', $settings);
-		self::assertStringNotContainsString('class="snk-chip-target" value="', $settings);
-		self::assertStringNotContainsString('readonly />', $settings);
+		self::assertStringContainsString('settings-nav.php', $settings);
+		self::assertStringContainsString('parts/settings/', $settings);
+		$access = (string)file_get_contents($this->root() . '/templates/parts/settings/access.php');
+		self::assertStringContainsString('snk-chip-field.php', $access);
+		self::assertStringNotContainsString('class="snk-chip-target" value="', $access);
+		self::assertStringNotContainsString('readonly />', $access);
 		$sites = (string)file_get_contents($this->root() . '/templates/pages/sites.php');
 		self::assertStringContainsString('snk-chip-field.php', $sites);
+		$proxy = (string)file_get_contents($this->root() . '/templates/parts/snk-proxy-panel.php');
+		self::assertStringContainsString('snk-chip-field.php', $proxy);
+		self::assertStringContainsString('$autoReady = true', $proxy);
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
 		self::assertStringContainsString('wireChipFields', $js);
+		self::assertStringContainsString('data-snk-chip-auto', $js);
+		self::assertStringContainsString('snk-proxy-pick', $js);
 		self::assertStringContainsString('min-height: 2.75rem', (string)file_get_contents($this->root() . '/css/app.css'));
 	}
 }

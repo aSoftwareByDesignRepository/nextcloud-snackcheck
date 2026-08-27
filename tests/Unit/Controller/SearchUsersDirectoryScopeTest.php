@@ -37,6 +37,7 @@ final class SearchUsersDirectoryScopeTest extends TestCase
 			$access,
 			$this->createMock(\OCA\SnackCheck\Service\ConsumptionLogService::class),
 			$this->createMock(\OCA\SnackCheck\Service\CatalogService::class),
+			$this->createMock(\OCA\SnackCheck\Service\CatalogImageService::class),
 			$this->createMock(\OCA\SnackCheck\Service\PeriodService::class),
 			$this->createMock(\OCA\SnackCheck\Service\SiteService::class),
 			$this->createMock(\OCA\SnackCheck\Service\SettingsService::class),

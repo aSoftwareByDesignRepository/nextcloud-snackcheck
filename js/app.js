@@ -37,6 +37,10 @@
 		const raw = String((err && err.message) || err || '');
 		const code = raw.replace(/^Error:\s*/i, '').trim();
 		const map = {
+			photo_too_large: t('The photo is too large. Maximum size is 2 MB.', 'The photo is too large. Maximum size is 2 MB.'),
+			photo_type_invalid: t('Only JPEG, PNG, or WebP photos are allowed.', 'Only JPEG, PNG, or WebP photos are allowed.'),
+			photo_not_found: t('No photo for this item.', 'No photo for this item.'),
+			upload_failed: t('Could not upload the photo.', 'Could not upload the photo.'),
 			period_closed: t('Period closed. Ask a kitchen admin to open the next period before logging.', 'Period closed. Ask a kitchen admin to open the next period before logging.'),
 			item_inactive: t('That snack is no longer available.', 'That snack is no longer available.'),
 			item_not_found: t('That snack is no longer available.', 'That snack is no longer available.'),
@@ -182,7 +186,11 @@
 		} else {
 			dlg.setAttribute('open', 'open');
 		}
-		const focusable = dlg.querySelector('input:not([type=hidden]), textarea, select, button');
+		// Prefer an explicit initial focus (e.g. Name on Edit). Else Cancel / least-destructive.
+		const preferred = dlg.querySelector('[data-snk-initial-focus]');
+		const focusable = preferred || dlg.querySelector(
+			'button[value="cancel"], button[value="no"], .snk-btn--secondary, input:not([type=hidden]):not([type=file]), textarea, select, button'
+		);
 		if (focusable) focusable.focus();
 		const onClose = function () {
 			dlg.removeEventListener('close', onClose);
@@ -209,8 +217,8 @@
 			+ '<label class="snk-field"><span>' + t('Add quantity', 'Add quantity') + '</span>'
 			+ '<input name="qty" id="snk-restock-qty" class="snk-input" type="number" min="1" step="1" value="1" required /></label>'
 			+ '<div class="snk-actions">'
-			+ '<button type="submit" class="snk-btn snk-btn--primary" value="confirm">' + t('Restock', 'Restock') + '</button>'
 			+ '<button type="submit" class="snk-btn snk-btn--secondary" value="cancel">' + t('Cancel', 'Cancel') + '</button>'
+			+ '<button type="submit" class="snk-btn snk-btn--primary" value="confirm">' + t('Restock', 'Restock') + '</button>'
 			+ '</div></form>';
 		document.body.appendChild(dlg);
 		return dlg;
@@ -228,8 +236,8 @@
 					+ '<h2 id="snk-confirm-title" class="snk-h2"></h2>'
 					+ '<p id="snk-confirm-body" class="snk-lead"></p>'
 					+ '<div class="snk-actions">'
-					+ '<button type="submit" class="snk-btn snk-btn--primary" value="yes" id="snk-confirm-yes"></button>'
 					+ '<button type="submit" class="snk-btn snk-btn--secondary" value="no" id="snk-confirm-no"></button>'
+					+ '<button type="submit" class="snk-btn snk-btn--primary" value="yes" id="snk-confirm-yes"></button>'
 					+ '</div></form>';
 				document.body.appendChild(dlg);
 			}
@@ -320,6 +328,162 @@
 		throw lastError || new Error('HTTP 412');
 	}
 	async function post(url, body) { return api('POST', url, body || {}); }
+
+	const CATALOG_IMAGE_MAX_BYTES = 2097152;
+	const CATALOG_IMAGE_TYPES = {
+		'image/jpeg': true,
+		'image/png': true,
+		'image/webp': true
+	};
+
+	/** @returns {string|null} error code or null when ok */
+	function validateCatalogImageFile(file) {
+		if (!file) return null;
+		const type = String(file.type || '').toLowerCase();
+		if (!CATALOG_IMAGE_TYPES[type]) {
+			return 'photo_type_invalid';
+		}
+		if (!file.size || file.size > CATALOG_IMAGE_MAX_BYTES) {
+			return 'photo_too_large';
+		}
+		return null;
+	}
+
+	function revokeEditPhotoObjectUrl(root) {
+		if (!root || !root._snkPhotoObjectUrl) return;
+		try {
+			URL.revokeObjectURL(root._snkPhotoObjectUrl);
+		} catch (e) { /* ignore */ }
+		root._snkPhotoObjectUrl = null;
+	}
+
+	function setEditPhotoPreview(root, url, opts) {
+		if (!root) return;
+		const frame = root.querySelector('[data-snk-edit-photo-preview]');
+		const img = root.querySelector('[data-snk-edit-photo-img]');
+		const pickLabel = root.querySelector('[data-snk-edit-photo-pick-label]');
+		const clearBtn = root.querySelector('[data-snk-action="clear-item-image"]');
+		const hasUrl = !!(url && String(url).trim());
+		const showClear = !!(opts && opts.showClear);
+		revokeEditPhotoObjectUrl(root);
+		if (img) {
+			if (hasUrl) {
+				img.hidden = false;
+				img.src = url;
+			} else {
+				img.hidden = true;
+				img.removeAttribute('src');
+			}
+		}
+		if (frame) {
+			frame.setAttribute('data-has-preview', hasUrl ? '1' : '0');
+		}
+		if (pickLabel) {
+			pickLabel.textContent = hasUrl
+				? t('Replace picture', 'Replace picture')
+				: t('Choose picture', 'Choose picture');
+		}
+		if (clearBtn) {
+			clearBtn.hidden = !showClear;
+		}
+	}
+
+	async function uploadCatalogImage(itemId, file) {
+		if (!file || !itemId) return;
+		const invalid = validateCatalogImageFile(file);
+		if (invalid) {
+			throw new Error(invalid);
+		}
+		if (!token()) {
+			await refreshCsrfToken();
+		}
+		let lastError = null;
+		for (let attempt = 0; attempt < 2; attempt++) {
+			const csrf = token();
+			const fd = new FormData();
+			fd.append('image', file);
+			fd.append('requesttoken', csrf);
+			const res = await fetch(OC.generateUrl('/apps/snackcheck/api/catalog/' + itemId + '/image'), {
+				method: 'POST',
+				headers: { requesttoken: csrf },
+				body: fd,
+				credentials: 'same-origin'
+			});
+			if (res.ok) {
+				const ct = res.headers.get('content-type') || '';
+				if (ct.indexOf('json') >= 0) {
+					const data = await res.json().catch(function () { return {}; });
+					if (data && data.ok === false) {
+						lastError = new Error((data.error && data.error.code) || 'upload_failed');
+						break;
+					}
+				}
+				return;
+			}
+			if (res.status === 412 && attempt === 0) {
+				const fresh = await refreshCsrfToken();
+				if (fresh) {
+					continue;
+				}
+			}
+			let code = 'upload_failed';
+			try {
+				const j = await res.json();
+				if (j && j.error && j.error.code) code = j.error.code;
+			} catch (e) { /* ignore */ }
+			lastError = new Error(code);
+			break;
+		}
+		throw lastError || new Error('upload_failed');
+	}
+
+	function wireEditPhotoInputs() {
+		document.querySelectorAll('[data-snk-edit-photo]').forEach(function (root) {
+			if (root.dataset.snkPhotoWired === '1') return;
+			root.dataset.snkPhotoWired = '1';
+			const input = root.querySelector('[data-snk-edit-photo-input], input[type="file"][name="image"]');
+			if (!input) return;
+			input.addEventListener('change', function () {
+				const file = input.files && input.files[0];
+				if (!file) {
+					const serverUrl = root.getAttribute('data-server-image-url') || '';
+					const hasServer = root.getAttribute('data-server-has-image') === '1';
+					setEditPhotoPreview(root, serverUrl, { showClear: hasServer });
+					return;
+				}
+				const invalid = validateCatalogImageFile(file);
+				if (invalid) {
+					input.value = '';
+					toast(userFacingError(new Error(invalid)), null, true);
+					const serverUrl = root.getAttribute('data-server-image-url') || '';
+					const hasServer = root.getAttribute('data-server-has-image') === '1';
+					setEditPhotoPreview(root, serverUrl, { showClear: hasServer });
+					return;
+				}
+				revokeEditPhotoObjectUrl(root);
+				const objectUrl = URL.createObjectURL(file);
+				root._snkPhotoObjectUrl = objectUrl;
+				const frame = root.querySelector('[data-snk-edit-photo-preview]');
+				const img = root.querySelector('[data-snk-edit-photo-img]');
+				const pickLabel = root.querySelector('[data-snk-edit-photo-pick-label]');
+				if (img) {
+					img.hidden = false;
+					img.src = objectUrl;
+				}
+				if (frame) {
+					frame.setAttribute('data-has-preview', '1');
+				}
+				if (pickLabel) {
+					pickLabel.textContent = t('Replace picture', 'Replace picture');
+				}
+				// Pending local file — clear still means "remove saved picture" only when server has one.
+				const clearBtn = root.querySelector('[data-snk-action="clear-item-image"]');
+				if (clearBtn) {
+					clearBtn.hidden = root.getAttribute('data-server-has-image') !== '1';
+				}
+			});
+		});
+	}
 
 	function activeChipTarget() {
 		return document.querySelector('.snk-chip-target[data-snk-active="1"]');
@@ -437,20 +601,26 @@
 	function findUserSearchNear(el) {
 		const form = el && el.closest ? el.closest('form') : null;
 		const section = el && el.closest
-			? (el.closest('.snk-chip-search') || el.closest('.snk-card__body') || el.closest('.snk-section') || el.closest('.snk-card'))
+			? (el.closest('.snk-proxy-pick')
+				|| el.closest('#snk-mode-proxy')
+				|| el.closest('.snk-chip-search')
+				|| el.closest('.snk-card__body')
+				|| el.closest('.snk-section')
+				|| el.closest('.snk-card'))
 			: null;
-		if (form) {
-			const inForm = form.querySelector('[data-snk-user-search]');
-			if (inForm) return inForm;
-		}
 		if (section) {
 			const inSection = section.querySelector('[data-snk-user-search]');
 			if (inSection) return inSection;
+		}
+		if (form) {
+			const inForm = form.querySelector('[data-snk-user-search]');
+			if (inForm) return inForm;
 		}
 		return document.querySelector('[data-snk-user-search]');
 	}
 	function findResultsList(input) {
 		const wrap = input.closest('.snk-chip-search')
+			|| input.closest('.snk-proxy-pick')
 			|| (input.parentElement && input.parentElement.parentElement)
 			|| input.parentElement;
 		if (wrap) {
@@ -462,7 +632,10 @@
 	function resolveChipTargetForSearch(searchInput) {
 		const active = activeChipTarget();
 		if (active) return active;
-		const scope = searchInput.closest('.snk-chip-search')
+		// Chip targets sit beside the search box — never scope to .snk-chip-search alone.
+		const scope = searchInput.closest('.snk-proxy-pick')
+			|| searchInput.closest('#snk-mode-proxy')
+			|| searchInput.closest('[data-snk-proxy-fields]')
 			|| searchInput.closest('form')
 			|| searchInput.closest('.snk-section')
 			|| document;
@@ -492,6 +665,10 @@
 	function formBodyLastWins(fd) {
 		const body = {};
 		fd.forEach(function (value, key) {
+			// Never coerce File into the JSON/urlencoded body — image uploads use FormData separately.
+			if (typeof File !== 'undefined' && value instanceof File) {
+				return;
+			}
 			body[key] = value;
 		});
 		return body;
@@ -513,6 +690,13 @@
 				if (ev.target.closest('[data-snk-chip-activate]')) return;
 				activateChipTarget(input);
 			});
+			// Proxy single-colleague: mark ready without focusing (panel may be hidden on Log/Me).
+			if (field.getAttribute('data-snk-chip-auto') === '1') {
+				input.setAttribute('data-snk-active', '1');
+				field.classList.add('is-active');
+				const search = findUserSearchNear(input);
+				if (search) search.classList.add('snk-input--ready');
+			}
 		});
 		updateChipHints();
 	}
@@ -771,12 +955,11 @@
 		if (mode === 'proxy' && proxy) {
 			const chips = proxy.querySelectorAll('.snk-chip-target');
 			if (chips.length === 1) {
-				chips[0].setAttribute('data-snk-active', '1');
-				updateChipHints();
-				const search = proxy.querySelector('[data-snk-user-search]');
-				if (search) {
-					window.setTimeout(function () { search.focus(); }, 0);
-				}
+				activateChipTarget(chips[0]);
+			}
+			const search = proxy.querySelector('[data-snk-user-search]');
+			if (search) {
+				window.setTimeout(function () { search.focus(); }, 0);
 			}
 		}
 		if (mode === 'hospitality') {
@@ -790,6 +973,108 @@
 		radio.addEventListener('change', syncLogModePanels);
 	});
 	syncLogModePanels();
+
+	(function wireRowActionMenus() {
+		document.querySelectorAll('.snk-row-actions__more').forEach(function (details) {
+			details.addEventListener('toggle', function () {
+				if (!details.open) return;
+				document.querySelectorAll('.snk-row-actions__more[open]').forEach(function (other) {
+					if (other !== details) other.open = false;
+				});
+			});
+		});
+	})();
+
+	(function wirePayrollSiteFilters() {
+		const bar = document.querySelector('[data-snk-payroll-site-filters]');
+		const hidden = document.getElementById('snk-payroll-site');
+		if (!bar || !hidden) return;
+		function syncTabIndex() {
+			bar.querySelectorAll('[data-snk-payroll-site]').forEach(function (b) {
+				const on = b.getAttribute('aria-checked') === 'true';
+				b.tabIndex = on ? 0 : -1;
+			});
+		}
+		function activate(btn) {
+			if (!btn) return;
+			const val = String(btn.getAttribute('data-snk-payroll-site') || 'all');
+			hidden.value = val;
+			bar.querySelectorAll('[data-snk-payroll-site]').forEach(function (b) {
+				const on = b === btn;
+				b.classList.toggle('snk-filter--active', on);
+				b.setAttribute('aria-checked', on ? 'true' : 'false');
+			});
+			syncTabIndex();
+		}
+		syncTabIndex();
+		bar.addEventListener('click', function (ev) {
+			const btn = ev.target.closest('[data-snk-payroll-site]');
+			if (!btn || !bar.contains(btn)) return;
+			ev.preventDefault();
+			activate(btn);
+		});
+		bar.addEventListener('keydown', function (ev) {
+			const radios = Array.prototype.slice.call(bar.querySelectorAll('[data-snk-payroll-site]'));
+			if (!radios.length) return;
+			const cur = document.activeElement && bar.contains(document.activeElement)
+				? document.activeElement
+				: radios.find(function (r) { return r.getAttribute('aria-checked') === 'true'; }) || radios[0];
+			const idx = radios.indexOf(cur);
+			if (idx < 0) return;
+			let next = -1;
+			if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') next = (idx + 1) % radios.length;
+			if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') next = (idx - 1 + radios.length) % radios.length;
+			if (ev.key === 'Home') next = 0;
+			if (ev.key === 'End') next = radios.length - 1;
+			if (next < 0) return;
+			ev.preventDefault();
+			activate(radios[next]);
+			radios[next].focus();
+		});
+	})();
+
+	(function wireLogBrowse() {
+		const root = document.querySelector('[data-snk-log-browse], [data-snk-log-catalog]');
+		if (!root && !document.querySelector('[data-snk-log-catalog]')) return;
+		const find = document.querySelector('[data-snk-log-find]');
+		const filters = document.querySelector('[data-snk-log-filters]');
+		const empty = document.querySelector('[data-snk-log-empty]');
+		let cat = 'all';
+		function apply() {
+			const q = find ? String(find.value || '').trim().toLowerCase() : '';
+			let visible = 0;
+			document.querySelectorAll('[data-snk-tile-item]').forEach(function (li) {
+				const name = String(li.getAttribute('data-snk-name') || '');
+				const itemCat = String(li.getAttribute('data-snk-cat') || '');
+				const catOk = cat === 'all' || itemCat === cat;
+				const textOk = !q || name.indexOf(q) !== -1;
+				const show = catOk && textOk;
+				li.hidden = !show;
+				if (show) visible += 1;
+			});
+			document.querySelectorAll('[data-snk-log-group]').forEach(function (sec) {
+				const any = sec.querySelector('[data-snk-tile-item]:not([hidden])');
+				sec.hidden = !any;
+			});
+			if (empty) empty.hidden = visible > 0;
+		}
+		if (find) {
+			find.addEventListener('input', apply);
+		}
+		if (filters) {
+			filters.addEventListener('click', function (ev) {
+				const btn = ev.target.closest('[data-snk-log-cat]');
+				if (!btn) return;
+				cat = String(btn.getAttribute('data-snk-log-cat') || 'all');
+				filters.querySelectorAll('[data-snk-log-cat]').forEach(function (b) {
+					const on = b === btn;
+					b.classList.toggle('snk-filter--active', on);
+					b.setAttribute('aria-pressed', on ? 'true' : 'false');
+				});
+				apply();
+			});
+		}
+	})();
 
 	function flashTile(btn, ok) {
 		if (!btn) return;
@@ -879,6 +1164,8 @@
 					const why = reason ? String(reason.value || '').trim() : '';
 					if (!uid) {
 						toast(t('Pick a colleague first', 'Pick a colleague first'));
+						const search = document.querySelector('#snk-mode-proxy [data-snk-user-search]');
+						if (search) search.focus();
 						btn.classList.remove('is-logging');
 						btn.removeAttribute('aria-busy');
 						flashTile(btn, false);
@@ -944,7 +1231,12 @@
 					toast(t('Use the Site menu in the page header', 'Use the Site menu in the page header'));
 				}
 			} else if (action === 'starter') {
-				await post(OC.generateUrl('/apps/snackcheck/api/catalog/starter'), {});
+				const siteEl = document.getElementById('snk-site-select');
+				const starterBody = {};
+				if (siteEl && siteEl.tagName === 'SELECT' && siteEl.value) {
+					starterBody.siteId = Number(siteEl.value);
+				}
+				await post(OC.generateUrl('/apps/snackcheck/api/catalog/starter'), starterBody);
 				window.location.reload();
 			} else if (action === 'close-period') {
 				const id = btn.getAttribute('data-period-id');
@@ -1049,7 +1341,35 @@
 				dlg.querySelectorAll('.snk-edit-tag').forEach(function (cb) {
 					cb.checked = !!tagSet[cb.getAttribute('data-tag')];
 				});
+				const photoRoot = dlg.querySelector('[data-snk-edit-photo]');
+				const imgInput = document.getElementById('snk-edit-image');
+				if (imgInput) imgInput.value = '';
+				const hasImage = btn.getAttribute('data-has-image') === '1';
+				const imageUrl = btn.getAttribute('data-image-url') || '';
+				if (photoRoot) {
+					photoRoot.setAttribute('data-server-has-image', hasImage ? '1' : '0');
+					photoRoot.setAttribute('data-server-image-url', hasImage ? imageUrl : '');
+					setEditPhotoPreview(photoRoot, hasImage ? imageUrl : '', { showClear: hasImage });
+					const clearBtn = photoRoot.querySelector('[data-snk-action="clear-item-image"]');
+					if (clearBtn) {
+						clearBtn.setAttribute('data-item-id', btn.getAttribute('data-item-id') || '');
+					}
+				}
+				const more = dlg.querySelector('details.snk-details');
+				if (more) more.open = false;
 				openSnkDialog(dlg, btn);
+			} else if (action === 'clear-item-image') {
+				const itemId = btn.getAttribute('data-item-id') || '';
+				if (!itemId) return;
+				const okClear = await snkConfirm(
+					t('Remove this picture?', 'Remove this picture?'),
+					t('Remove picture', 'Remove picture'),
+					{ danger: true }
+				);
+				if (!okClear) return;
+				await api('DELETE', OC.generateUrl('/apps/snackcheck/api/catalog/' + itemId + '/image'));
+				toast(t('Picture removed', 'Picture removed'));
+				window.location.reload();
 			} else if (action === 'copy-item') {
 				const dlg = document.getElementById('snk-copy-item-dialog');
 				if (!dlg) return;
@@ -1081,6 +1401,17 @@
 				window.location.reload();
 			} else if (action === 'activate-site') {
 				await api('PUT', OC.generateUrl('/apps/snackcheck/api/sites/' + btn.getAttribute('data-site-id')), { active: '1' });
+				window.location.reload();
+			} else if (action === 'revoke-terminal') {
+				const okRevoke = await snkConfirm(
+					t('Revoke this kitchen tablet? It will stop working immediately.', 'Revoke this kitchen tablet? It will stop working immediately.'),
+					t('Revoke tablet', 'Revoke tablet'),
+					{ danger: true }
+				);
+				if (!okRevoke) return;
+				await post(OC.generateUrl('/apps/snackcheck/api/admin/license/terminals/revoke'), {
+					deviceId: btn.getAttribute('data-device-id') || '',
+				});
 				window.location.reload();
 			}
 		} catch (e) {
@@ -1186,7 +1517,21 @@
 					body.tags = tags;
 				}
 				delete body['tags[]'];
-				await post(OC.generateUrl('/apps/snackcheck/api/catalog'), body);
+				const fileInput = form.querySelector('input[name="image"]');
+				const pendingFile = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+				if (pendingFile) {
+					const invalid = validateCatalogImageFile(pendingFile);
+					if (invalid) {
+						toast(userFacingError(new Error(invalid)), null, true);
+						return;
+					}
+				}
+				delete body.image;
+				const created = await post(OC.generateUrl('/apps/snackcheck/api/catalog'), body);
+				const newId = created && created.data && created.data.id;
+				if (newId && pendingFile) {
+					await uploadCatalogImage(newId, pendingFile);
+				}
 				window.location.reload();
 			} else if (kind === 'catalog-update') {
 				const submitter = ev.submitter;
@@ -1207,7 +1552,20 @@
 				delete body['tags[]'];
 				const itemId = body.itemId;
 				delete body.itemId;
+				delete body.image;
+				const fileInput = form.querySelector('input[name="image"]');
+				const pendingFile = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+				if (pendingFile) {
+					const invalid = validateCatalogImageFile(pendingFile);
+					if (invalid) {
+						toast(userFacingError(new Error(invalid)), null, true);
+						return;
+					}
+				}
 				await api('PUT', OC.generateUrl('/apps/snackcheck/api/catalog/' + itemId), body);
+				if (pendingFile) {
+					await uploadCatalogImage(itemId, pendingFile);
+				}
 				form.closest('dialog')?.close();
 				window.location.reload();
 			} else if (kind === 'catalog-copy') {
@@ -1311,67 +1669,6 @@
 
 	wireChipFields();
 	wireUserSearch();
-
-	(function initNavToggle() {
-		const toggle = document.querySelector('[data-snk-nav-toggle]');
-		const nav = document.getElementById('app-navigation');
-		if (!toggle || !nav) {
-			return;
-		}
-		document.body.classList.add('snk-has-nav');
-		const coreToggle = document.getElementById('app-navigation-toggle');
-		if (coreToggle) {
-			coreToggle.setAttribute('aria-hidden', 'true');
-			coreToggle.setAttribute('tabindex', '-1');
-		}
-		const shell = document.getElementById('app-content-wrapper') || document.getElementById('app-content');
-		const openLabel = toggle.getAttribute('data-aria-label-open') || '';
-		const closeLabel = toggle.getAttribute('data-aria-label-close') || openLabel;
-		const desktopMq = window.matchMedia('(min-width: 1024px)');
-		let backdrop = document.getElementById('snk-nav-backdrop');
-		if (!backdrop) {
-			backdrop = document.createElement('div');
-			backdrop.id = 'snk-nav-backdrop';
-			backdrop.className = 'snk-nav-backdrop';
-			backdrop.hidden = true;
-			(nav.parentElement || document.body).insertBefore(backdrop, nav);
-		}
-		function setOpen(open) {
-			if (desktopMq.matches) {
-				open = false;
-			}
-			nav.classList.toggle('snk-nav--open', open);
-			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-			toggle.setAttribute('aria-label', open ? closeLabel : openLabel);
-			document.body.classList.toggle('snk-nav-open', open);
-			backdrop.hidden = !open;
-			if (shell) {
-				if (open) {
-					shell.setAttribute('inert', '');
-				} else {
-					shell.removeAttribute('inert');
-				}
-			}
-		}
-		toggle.addEventListener('click', function () {
-			setOpen(!nav.classList.contains('snk-nav--open'));
-		});
-		backdrop.addEventListener('click', function () { setOpen(false); });
-		document.addEventListener('keydown', function (ev) {
-			if (ev.key === 'Escape' && nav.classList.contains('snk-nav--open')) {
-				setOpen(false);
-				toggle.focus();
-			}
-		});
-		function onMq() {
-			if (desktopMq.matches) {
-				setOpen(false);
-			}
-		}
-		if (typeof desktopMq.addEventListener === 'function') {
-			desktopMq.addEventListener('change', onMq);
-		} else if (typeof desktopMq.addListener === 'function') {
-			desktopMq.addListener(onMq);
-		}
-	})();
+	wireEditPhotoInputs();
+	/* Mobile nav: Nextcloud #app-navigation-toggle only (design-system checklist — no custom burger). */
 })();

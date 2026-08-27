@@ -6,6 +6,7 @@ namespace OCA\SnackCheck\Service;
 
 use OCA\SnackCheck\Db\CatalogItem;
 use OCA\SnackCheck\Db\CatalogItemMapper;
+use OCA\SnackCheck\Db\LockGate;
 use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IDBConnection;
@@ -43,6 +44,7 @@ class CatalogService
 		private readonly AuditService $audit,
 		private readonly ITimeFactory $timeFactory,
 		private readonly IDBConnection $db,
+		private readonly LockGate $lockGate,
 	) {
 	}
 
@@ -273,29 +275,48 @@ class CatalogService
 		});
 	}
 
-	/** Idempotent starter apply when site catalog empty. @return list<CatalogItem> */
+	/**
+	 * Idempotent starter apply when site catalog empty.
+	 * Serialized per site via LockGate so concurrent "Load starter" cannot double-insert.
+	 *
+	 * @return list<CatalogItem>
+	 */
 	public function applyStarterDe(int $siteId, string $actorUid): array
 	{
-		if ($this->mapper->countActiveBySite($siteId) > 0) {
-			return $this->mapper->findActiveBySite($siteId);
+		$this->db->beginTransaction();
+		try {
+			// Per-site gate (dynamic key; LockGate inserts missing snk_locks rows).
+			$this->lockGate->lock('catalog_starter:' . $siteId);
+			// Any historical row (incl. soft-deactivated) blocks re-seed — avoids duplicate names.
+			if ($this->mapper->countBySite($siteId) > 0) {
+				$existing = $this->mapper->findActiveBySite($siteId);
+				$this->db->commit();
+				return $existing;
+			}
+			$created = [];
+			$sort = 0;
+			foreach (self::STARTER_DE as $row) {
+				$created[] = $this->create(
+					$siteId,
+					$row['name'],
+					(int)$row['price'],
+					$actorUid,
+					(string)$row['category'],
+					null,
+					12, // par — enables pulse Top-up after starter (AC-8 / pack F)
+					20, // on hand above par so shelves start healthy
+					null,
+					$sort++,
+				);
+			}
+			$this->db->commit();
+			return $created;
+		} catch (\Throwable $e) {
+			if ($this->db->inTransaction()) {
+				$this->db->rollBack();
+			}
+			throw $e;
 		}
-		$created = [];
-		$sort = 0;
-		foreach (self::STARTER_DE as $row) {
-			$created[] = $this->create(
-				$siteId,
-				$row['name'],
-				(int)$row['price'],
-				$actorUid,
-				(string)$row['category'],
-				null,
-				12, // par — enables pulse Top-up after starter (AC-8 / pack F)
-				20, // on hand above par so shelves start healthy
-				null,
-				$sort++,
-			);
-		}
-		return $created;
 	}
 
 	/**

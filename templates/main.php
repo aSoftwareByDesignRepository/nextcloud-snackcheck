@@ -57,51 +57,46 @@ include __DIR__ . '/common/navigation.php';
 						<a class="snk-breadcrumb__brand" href="<?php p($logUrl); ?>"><?php p($l->t('SnackCheck')); ?></a>
 					</li>
 					<li class="snk-breadcrumb__sep" aria-hidden="true">/</li>
-					<li class="snk-breadcrumb__current" aria-current="page"><?php p($pageTitle); ?></li>
+					<?php if ($pageId === 'settings'): ?>
+						<li>
+							<a href="<?php p($urlGenerator->linkToRoute('snackcheck.page.settings', ['section' => 'access'])); ?>"><?php p($l->t('Settings')); ?></a>
+						</li>
+						<li class="snk-breadcrumb__sep" aria-hidden="true">/</li>
+						<li class="snk-breadcrumb__current" aria-current="page"><?php p($pageTitle); ?></li>
+					<?php else: ?>
+						<li class="snk-breadcrumb__current" aria-current="page"><?php p($pageTitle); ?></li>
+					<?php endif; ?>
 				</ol>
 			</nav>
-			<div class="snk-page-header__row">
-				<button type="button"
-					class="snk-nav-toggle"
-					id="snk-nav-toggle"
-					data-snk-nav-toggle
-					aria-controls="app-navigation"
-					aria-expanded="false"
-					aria-label="<?php p($l->t('Toggle mobile menu')); ?>"
-					data-aria-label-open="<?php p($l->t('Toggle mobile menu')); ?>"
-					data-aria-label-close="<?php p($l->t('Close navigation menu')); ?>">
-					<?php print_unescaped(IconCatalog::render('menu', 'snk-nav-toggle__icon')); ?>
-					<span class="snk-nav-toggle__label"><?php p($l->t('Menu')); ?></span>
-				</button>
-				<div class="snk-page-header__main">
-					<div class="snk-page-header__icon" aria-hidden="true">
-						<?php print_unescaped(IconCatalog::render($headerIcon, 'snk-page-header__icon-svg')); ?>
-					</div>
-					<div class="snk-page-header__text">
-						<h1 id="snk-page-title"><?php p($pageTitle); ?></h1>
-						<?php if ($pageHelp !== '' || $pageId === 'log'): ?>
-							<p class="snk-page-header__lead"<?php if ($pageId === 'log'): ?> id="snk-log-lead"<?php endif; ?>><?php p($pageHelp); ?></p>
-						<?php endif; ?>
-					</div>
-					<div id="snk-page-actions" class="snk-page-header__actions" aria-live="polite"></div>
+			<div class="snk-page-header__main">
+				<div class="snk-page-header__icon" aria-hidden="true">
+					<?php print_unescaped(IconCatalog::render($headerIcon, 'snk-page-header__icon-svg')); ?>
 				</div>
+				<div class="snk-page-header__text">
+					<h1 id="snk-page-title"><?php p($pageTitle); ?></h1>
+					<?php if ($pageHelp !== '' || $pageId === 'log'): ?>
+						<p class="snk-page-header__lead"<?php if ($pageId === 'log'): ?> id="snk-log-lead"<?php endif; ?>><?php p($pageHelp); ?></p>
+					<?php endif; ?>
+				</div>
+				<div id="snk-page-actions" class="snk-page-header__actions" aria-live="polite"></div>
 			</div>
 			<?php if (!empty($_['multiSite']) && !empty($_['sites']) && $pageId !== 'mymonth'): ?>
 				<div class="snk-scope-strip snk-site-scope" role="navigation" aria-label="<?php p($l->t('Site scope')); ?>">
-					<label class="snk-scope-strip__label" for="snk-site-select"><?php p($l->t('Site')); ?></label>
 					<?php
 					$siteCount = is_countable($_['sites']) ? count($_['sites']) : 0;
 					$forceSelect = !empty($_['isAppAdmin']) && $siteCount > 1;
 					$single = $siteCount === 1;
 					?>
 					<?php if ($single && empty($_['isAppAdmin'])): ?>
-						<span id="snk-site-select" class="snk-scope-strip__value snk-site-label" aria-live="polite">
+						<span class="snk-scope-strip__label" id="snk-site-scope-label"><?php p($l->t('Site')); ?></span>
+						<span id="snk-site-select" class="snk-scope-strip__value snk-site-label" aria-labelledby="snk-site-scope-label" aria-live="polite">
 							<?php
 							$only = $_['sites'][0];
 							p(is_object($only) ? $only->getName() : ($only['name'] ?? ''));
 							?>
 						</span>
 					<?php else: ?>
+						<label class="snk-scope-strip__label" for="snk-site-select"><?php p($l->t('Site')); ?></label>
 						<select id="snk-site-select" class="snk-select"<?php if (!empty($_['sitePickRequired']) || ((int)($_['currentSiteId'] ?? 0) <= 0 && $forceSelect)) { ?> required aria-invalid="true"<?php } ?>>
 							<?php
 							$curSite = (int)($_['currentSiteId'] ?? 0);

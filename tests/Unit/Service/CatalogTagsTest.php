@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\SnackCheck\Tests\Unit\Service;
 
 use OCA\SnackCheck\Db\CatalogItemMapper;
+use OCA\SnackCheck\Db\LockGate;
 use OCA\SnackCheck\Service\AuditService;
 use OCA\SnackCheck\Service\CatalogService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -20,6 +21,7 @@ final class CatalogTagsTest extends TestCase
 			$this->createMock(AuditService::class),
 			$this->createMock(ITimeFactory::class),
 			$this->createMock(IDBConnection::class),
+			$this->createMock(LockGate::class),
 		);
 	}
 

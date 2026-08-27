@@ -6,6 +6,7 @@ namespace OCA\SnackCheck\Service;
 
 use OCA\SnackCheck\Db\ConsumptionLogMapper;
 use OCA\SnackCheck\Exception\DomainException;
+use OCA\SnackCheck\Support\PeriodDisplay;
 
 /**
  * Admin Users / totals view with privacy mode enforcement (MH-06 / AC-27).
@@ -91,7 +92,7 @@ class AdminTotalsService
 		}
 		usort($users, static fn ($a, $b) => strcasecmp($a['displayName'], $b['displayName']));
 		return [
-			'periodLabel' => $period->getLabel(),
+			'periodLabel' => PeriodDisplay::format((string)$period->getLabel()),
 			'privacyTotalsOnly' => $privacy,
 			'users' => $users,
 		];

@@ -83,6 +83,18 @@ class TerminalDeviceMapper extends QBMapper
 	}
 
 	/** @return list<TerminalDevice> */
+	public function findActiveBySite(int $siteId): array
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('revoked', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->eq('site_id', $qb->createNamedParameter($siteId, IQueryBuilder::PARAM_INT)))
+			->orderBy('id', 'ASC');
+		return $this->findEntities($qb);
+	}
+
+	/** @return list<TerminalDevice> */
 	public function findActiveNewestFirst(): array
 	{
 		$qb = $this->db->getQueryBuilder();

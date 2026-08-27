@@ -15,6 +15,11 @@ class LockGate
 	public const KEY_OPEN_PERIOD = 'open_period';
 	/** Zeus MF-03: terminal register/trim capacity seat gate (DB-enforced). */
 	public const KEY_TERMINAL_CAPACITY = 'terminal_capacity';
+	/**
+	 * Starter-catalog apply uses dynamic keys `catalog_starter:{siteId}`
+	 * (created on demand by {@see lock()}). Documented here for auditors.
+	 */
+	public const KEY_CATALOG_STARTER_PREFIX = 'catalog_starter:';
 
 	public function __construct(
 		private readonly IDBConnection $db,

@@ -39,7 +39,7 @@ final class UnlockSessionArchitectureContractTest extends TestCase
 			}
 			$path = $file->getPathname();
 			if (str_contains($path, '/Migration/')) {
-				continue; // schema may declare the reserved table
+				continue; // schema may declare/drop the reserved table
 			}
 			$src = (string)file_get_contents($path);
 			if (preg_match('/\bsnk_unlock_tokens\b/', $src)
@@ -48,6 +48,22 @@ final class UnlockSessionArchitectureContractTest extends TestCase
 			}
 		}
 		self::assertSame([], $hits, 'No PHP writer may insert into snk_unlock_tokens');
+	}
+
+	public function testDeadUnlockTokensTableIsDroppedByMigration(): void
+	{
+		$mig = (string)file_get_contents(
+			$this->root() . '/lib/Migration/Version1007Date20260827141500.php'
+		);
+		self::assertStringContainsString("dropTable('snk_unlock_tokens')", $mig);
+		self::assertContains(
+			'snk_unlock_tokens',
+			\OCA\SnackCheck\Db\SnackCheckTableCatalog::DROPPED_LEGACY_TABLES
+		);
+		self::assertNotContains(
+			'snk_unlock_tokens',
+			\OCA\SnackCheck\Db\SnackCheckTableCatalog::requiredTables()
+		);
 	}
 
 	public function testVoidLogDoesNotPreLockFindForSiteAcl(): void

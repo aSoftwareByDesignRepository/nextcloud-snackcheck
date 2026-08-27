@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\SnackCheck\Service;
 
 use OCA\SnackCheck\Db\ConsumptionLogMapper;
+use OCA\SnackCheck\Support\PeriodDisplay;
 
 /**
  * Complimentary usage CSV (US-OPP-V) — qty of free lines, anonymized by item.
@@ -39,7 +40,7 @@ class ComplimentaryExportService
 			$rows[] = [
 				'item_name' => $name,
 				'qty' => $qty,
-				'period_label' => $period->getLabel(),
+				'period_label' => PeriodDisplay::format((string)$period->getLabel()),
 			];
 		}
 		usort($rows, static fn ($a, $b) => $b['qty'] <=> $a['qty']);

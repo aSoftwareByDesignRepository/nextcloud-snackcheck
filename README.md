@@ -2,6 +2,14 @@
 
 Honor kitchen snack/drink ledger for Nextcloud (AGPL). Kitchen Tablet companion uses `SNK2` device licences — web is never gated.
 
+App Store listing screenshots (1920×1040) live in [`screenshots/`](screenshots/). Regenerate:
+
+```bash
+npx playwright test e2e/capture-store-screenshots.spec.js --project=chromium-store
+```
+
+Release archives: `make release` / `make release-signed` (see the App Store developer guide). Security reports: [SECURITY.md](SECURITY.md).
+
 ## Dev
 
 ```bash

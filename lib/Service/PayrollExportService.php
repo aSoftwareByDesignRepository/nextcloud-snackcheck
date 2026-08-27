@@ -9,6 +9,7 @@ use OCA\SnackCheck\Db\ConsumptionLogMapper;
 use OCA\SnackCheck\Db\Period;
 use OCA\SnackCheck\Db\SiteMapper;
 use OCA\SnackCheck\Exception\DomainException;
+use OCA\SnackCheck\Support\PeriodDisplay;
 use OCP\IUserManager;
 
 /**
@@ -76,7 +77,7 @@ class PayrollExportService
 			}
 			$siteMeta = $siteMap[$sid] ?? ['code' => '', 'name' => ''];
 			$row = [
-				'period_label' => $period->getLabel(),
+				'period_label' => PeriodDisplay::format((string)$period->getLabel()),
 				'user_id' => $uid,
 				'user_display_name' => $log->getUserDisplaySnap(),
 				'item_name' => $log->getItemNameSnap(),
@@ -149,7 +150,7 @@ class PayrollExportService
 			'reconcileOk' => $reconcileOk,
 			'multiSiteEnabled' => $this->settings->isMultiSiteEnabled(),
 			'siteFilter' => $siteFilter,
-			'periodLabel' => $period->getLabel(),
+			'periodLabel' => PeriodDisplay::format((string)$period->getLabel()),
 		];
 	}
 
@@ -192,7 +193,7 @@ class PayrollExportService
 				'source' => $log->getSource(),
 				'site_code' => $siteMap[$sid]['code'] ?? '',
 				'site_name' => $siteMap[$sid]['name'] ?? '',
-				'period_label' => $period->getLabel(),
+				'period_label' => PeriodDisplay::format((string)$period->getLabel()),
 			];
 		}
 		return $rows;

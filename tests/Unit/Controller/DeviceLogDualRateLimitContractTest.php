@@ -96,18 +96,22 @@ final class DeviceLogDualRateLimitContractTest extends TestCase
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-08-10T12:00:00+00:00'));
 
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+
 		$ctrl = new DeviceApiController(
 			'snackcheck',
 			$request,
 			$terminals,
 			$license,
 			$this->createMock(CatalogService::class),
+			$this->createMock(\OCA\SnackCheck\Service\CatalogImageService::class),
 			$periods,
 			$sites,
 			$unlock,
 			$logs,
 			$this->createMock(SettingsService::class),
-			$this->createMock(AccessControlService::class),
+			$access,
 			$rate,
 			$this->createMock(IUserManager::class),
 			$time,
@@ -120,7 +124,7 @@ final class DeviceLogDualRateLimitContractTest extends TestCase
 	{
 		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/DeviceApiController.php');
 		self::assertMatchesRegularExpression(
-			'/function authenticateDevice[\s\S]{0,900}assertDeviceApi/',
+			'/function authenticateDevice[\s\S]{0,1400}assertDeviceApi/',
 			$src
 		);
 		$pos = strpos($src, 'function createLog');

@@ -89,9 +89,22 @@ final class ThemeAndResponsiveContractTest extends TestCase
 		self::assertStringContainsString('safe-area-inset-bottom', $css);
 		self::assertStringContainsString('safe-area-inset-left', $css);
 		self::assertStringContainsString('overflow-x: clip', $css);
-		self::assertStringContainsString('grid-template-columns: 1fr', $css);
+		self::assertStringContainsString('minmax(0, 1fr)', $css);
 		self::assertStringContainsString('max-height: min(90dvh', $css);
 		self::assertStringContainsString('@media (forced-colors: active)', $css);
+		// Equal tracks: 2-up below 768; single column only on very narrow phones.
+		self::assertMatchesRegularExpression(
+			'/@media \(max-width: 768px\)[\s\S]{0,900}\.snk-tile-grid\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*;/',
+			$css
+		);
+		self::assertMatchesRegularExpression(
+			'/@media \(max-width: 480px\)[\s\S]{0,400}\.snk-tile-grid\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*;/',
+			$css
+		);
+		self::assertStringNotContainsString("stroke='%23595959'", $css);
+		self::assertStringContainsString('--icon-triangle-s-dark', $css);
+		self::assertStringContainsString('clip-path: inset(50%)', $css);
+		self::assertStringNotContainsString('left: -9999px', $css);
 	}
 
 	public function testFocusContrastAndHighContrastMode(): void
@@ -113,6 +126,12 @@ final class ThemeAndResponsiveContractTest extends TestCase
 			'/\.snk-nav__link\.is-active \.snk-nav__hint[\s\S]{0,80}color:\s*var\(--snk-text\)/',
 			$css
 		);
+		self::assertStringContainsString(':focus:not(:focus-visible)', $css);
+		self::assertStringContainsString('.snk-mode-chip:has(input:focus-visible)', $css);
+		self::assertStringContainsString('border-inline-start-width: 5px', $css);
+		self::assertStringContainsString('.snk-mode-chip', $css);
+		self::assertStringContainsString('.snk-term-list__row', $css);
+		self::assertStringContainsString('--snk-icon-stroke', $css);
 	}
 
 	public function testSpacingAndRadiusScalePresent(): void

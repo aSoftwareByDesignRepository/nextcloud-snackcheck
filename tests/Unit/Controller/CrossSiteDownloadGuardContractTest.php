@@ -36,5 +36,9 @@ final class CrossSiteDownloadGuardContractTest extends TestCase
 			'/format === \'csv\' \|\| \$format === \'html\'[\s\S]{0,80}assertNotCrossSiteDownload/',
 			$api
 		);
+		// My-month PDF must be a statement with an explicit total (not a truncated line dump).
+		self::assertStringContainsString('SimplePdfBuilder::buildStatement', $api);
+		self::assertStringContainsString('TOTAL TO DEDUCT', $api);
+		self::assertStringContainsString('Total to deduct', $api);
 	}
 }

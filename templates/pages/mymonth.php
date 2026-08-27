@@ -1,33 +1,57 @@
-<?php /** @var array $_ */ /** @var \OCP\IL10N $l */ ?>
+<?php
+/** @var array $_ */
+/** @var \OCP\IL10N $l */
+$fmtEuro = static function (int $cents): string {
+	return number_format($cents / 100, 2, ',', '.') . ' €';
+};
+$deductCents = (int)($_['deductCents'] ?? 0);
+$grossCents = (int)($_['grossCents'] ?? 0);
+$subsidyCents = (int)($_['subsidyCents'] ?? 0);
+$freeQty = (int)($_['freeQty'] ?? 0);
+$hasLines = !empty($_['lines']);
+?>
 <section class="snk-section" aria-label="<?php p($l->t('My month')); ?>">
 	<?php if (!empty($_['periodClosed'])): ?>
 		<div class="snk-callout snk-callout--warn" role="status">
 			<p><?php p($l->t('Showing the last closed period. Logging is locked until the next period opens.')); ?></p>
 			<?php if (!empty($_['isAppAdmin'])): ?>
 				<p class="snk-actions">
-					<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.periods')); ?>"><?php p($l->t('Open Periods')); ?></a>
-					<button type="button" class="snk-btn" data-snk-action="open-next-period"><?php p($l->t('Open next period')); ?></button>
+					<button type="button" class="snk-btn snk-btn--primary" data-snk-action="open-next-period"><?php p($l->t('Open next period')); ?></button>
 				</p>
 			<?php endif; ?>
 		</div>
 	<?php endif; ?>
-	<div class="snk-hero" aria-label="<?php p($l->t('To deduct')); ?>">
-		<p class="snk-hero__label"><?php p($l->t('To deduct')); ?></p>
-		<p class="snk-hero__value"><?php p(number_format(($_['deductCents'] ?? 0) / 100, 2, ',', '.') . ' €'); ?></p>
-		<p class="snk-hero__meta">
-			<?php p($l->t('Gross')); ?>: <?php p(number_format(($_['grossCents'] ?? 0) / 100, 2, ',', '.') . ' €'); ?>
-			· <?php p($l->t('Subsidy')); ?>: <?php p(number_format(($_['subsidyCents'] ?? 0) / 100, 2, ',', '.') . ' €'); ?>
-			<?php if (!empty($_['freeQty'])): ?>
-				· <?php p($l->t('Free items logged')); ?>: <?php p((int)$_['freeQty']); ?>
+
+	<article class="snk-hero" aria-labelledby="snk-hero-deduct-label">
+		<div class="snk-hero__main">
+			<p id="snk-hero-deduct-label" class="snk-hero__label"><?php p($l->t('To deduct')); ?></p>
+			<p class="snk-hero__value" data-snk-hero-value><?php p($fmtEuro($deductCents)); ?></p>
+			<p class="snk-hero__hint snk-muted"><?php p($l->t('This is what payroll takes from your pay for this period.')); ?></p>
+		</div>
+		<dl class="snk-hero__stats">
+			<div class="snk-hero__stat">
+				<dt><?php p($l->t('Gross')); ?></dt>
+				<dd><?php p($fmtEuro($grossCents)); ?></dd>
+			</div>
+			<div class="snk-hero__stat">
+				<dt><?php p($l->t('Subsidy')); ?></dt>
+				<dd><?php p($fmtEuro($subsidyCents)); ?></dd>
+			</div>
+			<?php if ($freeQty > 0): ?>
+				<div class="snk-hero__stat">
+					<dt><?php p($l->t('Free items')); ?></dt>
+					<dd><?php p((string)$freeQty); ?></dd>
+				</div>
 			<?php endif; ?>
-		</p>
-		<?php if (!empty($_['lines'])): ?>
-			<p class="snk-actions">
+		</dl>
+		<?php if ($hasLines): ?>
+			<div class="snk-hero__actions">
 				<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.downloadMyMonthPdf')); ?>"><?php p($l->t('Download PDF')); ?></a>
-			</p>
+			</div>
 		<?php endif; ?>
-	</div>
-	<?php if (empty($_['lines'])): ?>
+	</article>
+
+	<?php if (!$hasLines): ?>
 		<?php
 		$icon = 'utensils';
 		$title = $l->t('Nothing logged this month yet.');
@@ -61,8 +85,8 @@
 							<td class="snk-muted"><?php p($line['siteName'] ?? ''); ?></td>
 							<?php endif; ?>
 							<td><?php p($line['qty']); ?></td>
-							<td><?php if (!empty($line['free'])): ?><?php p($l->t('Free')); ?><?php else: ?><?php p(number_format($line['line_total_cents'] / 100, 2, ',', '.') . ' €'); ?><?php endif; ?></td>
-							<td><?php p($line['createdAt'] ?? ''); ?></td>
+							<td><?php if (!empty($line['free'])): ?><?php p($l->t('Free')); ?><?php else: ?><?php p($fmtEuro((int)$line['line_total_cents'])); ?><?php endif; ?></td>
+							<td class="snk-muted snk-tabular"><?php p($line['createdAt'] ?? ''); ?></td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>

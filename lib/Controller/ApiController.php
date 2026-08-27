@@ -11,6 +11,7 @@ use OCA\SnackCheck\Service\BrAggregateService;
 use OCA\SnackCheck\Service\ComplimentaryExportService;
 use OCA\SnackCheck\Service\DigestMailService;
 use OCA\SnackCheck\Service\ShelfQrService;
+use OCA\SnackCheck\Service\CatalogImageService;
 use OCA\SnackCheck\Service\CatalogService;
 use OCA\SnackCheck\Service\ConsumptionLogService;
 use OCA\SnackCheck\Service\LicenseEnforcementService;
@@ -26,12 +27,14 @@ use OCA\SnackCheck\Service\SiteService;
 use OCA\SnackCheck\Service\SubsidyService;
 use OCA\SnackCheck\Service\TerminalDeviceService;
 use OCA\SnackCheck\Service\UnlockService;
+use OCA\SnackCheck\Support\PeriodDisplay;
 use OCA\SnackCheck\Db\ConsumptionLogMapper;
 use OCA\SnackCheck\Db\HospAllowMapper;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -49,6 +52,7 @@ class ApiController extends Controller
 		private readonly AccessControlService $access,
 		private readonly ConsumptionLogService $logs,
 		private readonly CatalogService $catalog,
+		private readonly CatalogImageService $catalogImages,
 		private readonly PeriodService $periods,
 		private readonly SiteService $sites,
 		private readonly SettingsService $settings,
@@ -557,6 +561,62 @@ class ApiController extends Controller
 	}
 
 	#[NoAdminRequired]
+	public function uploadCatalogImage(int $id): JSONResponse
+	{
+		try {
+			$user = $this->uid();
+			$this->access->assertKitchenManager($user);
+			$existing = $this->catalog->get($id);
+			$this->access->assertCanManageSite($user, (int)$existing->getSiteId());
+			$file = $this->request->getUploadedFile('image');
+			if (!is_array($file)) {
+				throw new \OCA\SnackCheck\Exception\DomainException('upload_failed', 'Upload failed', 422);
+			}
+			$item = $this->catalogImages->upload($id, $file, $user);
+			return $this->ok([
+				'id' => $item->getId(),
+				'hasImage' => CatalogImageService::hasImage($item),
+			]);
+		} catch (\Throwable $e) {
+			return $this->fromDomain($e);
+		}
+	}
+
+	#[NoAdminRequired]
+	public function deleteCatalogImage(int $id): JSONResponse
+	{
+		try {
+			$user = $this->uid();
+			$this->access->assertKitchenManager($user);
+			$existing = $this->catalog->get($id);
+			$this->access->assertCanManageSite($user, (int)$existing->getSiteId());
+			$item = $this->catalogImages->delete($id, $user);
+			return $this->ok([
+				'id' => $item->getId(),
+				'hasImage' => false,
+			]);
+		} catch (\Throwable $e) {
+			return $this->fromDomain($e);
+		}
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function catalogImage(int $id): DataDisplayResponse|JSONResponse
+	{
+		try {
+			$this->uid();
+			$blob = $this->catalogImages->read($id);
+			$res = new DataDisplayResponse($blob['content']);
+			$res->addHeader('Content-Type', $blob['mime']);
+			$res->cacheFor(86_400);
+			return $res;
+		} catch (\Throwable $e) {
+			return $this->fromDomain($e);
+		}
+	}
+
+	#[NoAdminRequired]
 	public function updateCatalogItem(int $id): JSONResponse
 	{
 		try {
@@ -808,42 +868,98 @@ class ApiController extends Controller
 			if ($period === null) {
 				return $this->fail('period_closed', 409, 'No period available');
 			}
+			$multiSite = $this->settings->isMultiSiteEnabled();
+			$siteMap = [];
+			if ($multiSite) {
+				foreach ($this->sites->listActive() as $s) {
+					$siteMap[(int)$s->getId()] = $s->getName();
+				}
+			}
 			$lineArr = [];
+			$freeQty = 0;
 			foreach ($this->logMapper->findForUserPeriod((int)$period->getId(), $user) as $l) {
 				if ($l->getBillingBucket() === 'company_hospitality') {
 					continue;
+				}
+				$free = ((int)$l->getLineTotalCents()) === 0;
+				if ($free) {
+					$freeQty += (int)$l->getQty();
 				}
 				$lineArr[] = [
 					'line_total_cents' => (int)$l->getLineTotalCents(),
 					'billing_bucket' => 'personal',
 					'name' => $l->getItemNameSnap(),
 					'qty' => $l->getQty(),
-					'free' => ((int)$l->getLineTotalCents()) === 0,
+					'free' => $free,
+					'createdAt' => $l->getCreatedAt()?->format('Y-m-d H:i') ?? '',
+					'siteName' => $multiSite ? ($siteMap[(int)$l->getSiteId()] ?? '') : '',
 				];
 			}
 			$calc = $this->subsidy->computeForUser($this->settings->getSubsidyAllowanceCents(), $lineArr);
-			$chargeable = [];
-			$freeQty = 0;
-			foreach ($lineArr as $row) {
-				if (!empty($row['free'])) {
-					$freeQty += (int)$row['qty'];
-					continue;
+			$eur = static fn (int $cents): string => PayrollExportService::centsToEur($cents) . ' EUR';
+			$displayUser = $user;
+			$sessionUser = $this->userSession->getUser();
+			if ($sessionUser !== null) {
+				$dn = trim($sessionUser->getDisplayName());
+				if ($dn !== '') {
+					$displayUser = $dn;
 				}
-				$chargeable[] = $row;
 			}
-			$lines = [
-				'Period: ' . $period->getLabel(),
-				'User: ' . $user,
-				'To deduct: ' . PayrollExportService::centsToEur($calc['deduct_cents']) . ' EUR',
-				'Gross: ' . PayrollExportService::centsToEur($calc['gross_cents']) . ' EUR',
-				'Subsidy: ' . PayrollExportService::centsToEur($calc['subsidy_cents']) . ' EUR',
-				'Free items qty: ' . $freeQty,
-				'--- Chargeable ---',
-			];
-			foreach ($chargeable as $row) {
-				$lines[] = $row['name'] . ' x' . $row['qty'] . ' = ' . PayrollExportService::centsToEur((int)$row['line_total_cents']) . ' EUR';
+			$periodLabel = PeriodDisplay::format((string)$period->getLabel());
+
+			if ($multiSite) {
+				$columns = ['Item', 'Site', 'Qty', 'Amount', 'When'];
+				$colWidths = [0.34, 0.16, 0.10, 0.20, 0.20];
+			} else {
+				$columns = ['Item', 'Qty', 'Amount', 'When'];
+				$colWidths = [0.46, 0.12, 0.22, 0.20];
 			}
-			$pdf = SimplePdfBuilder::fromLines('SnackCheck My month', $lines);
+
+			$rows = [];
+			foreach ($lineArr as $row) {
+				$cells = [(string)$row['name']];
+				if ($multiSite) {
+					$cells[] = (string)$row['siteName'];
+				}
+				$cells[] = (string)(int)$row['qty'];
+				$cells[] = !empty($row['free']) ? 'Free' : $eur((int)$row['line_total_cents']);
+				$cells[] = (string)$row['createdAt'];
+				$rows[] = $cells;
+			}
+
+			$gross = $eur((int)$calc['gross_cents']);
+			$subsidy = $eur((int)$calc['subsidy_cents']);
+			$deduct = $eur((int)$calc['deduct_cents']);
+
+			$note = 'Amounts in EUR. Free items are logged for restock and are not charged.';
+			if ($freeQty > 0) {
+				$note .= ' Free items in this period: ' . $freeQty . '.';
+			}
+
+			$pdf = SimplePdfBuilder::buildStatement([
+				'brand' => 'SnackCheck',
+				'title' => 'My month — payroll preview',
+				'meta' => [
+					['Period', $periodLabel],
+					['Person', $displayUser],
+					['Generated', (new \DateTimeImmutable('now'))->format('Y-m-d H:i')],
+				],
+				'summary' => [
+					['label' => 'Gross', 'value' => $gross],
+					['label' => 'Subsidy', 'value' => $subsidy],
+					['label' => 'Total to deduct', 'value' => $deduct, 'strong' => true],
+				],
+				'tableTitle' => 'Logged items',
+				'columns' => $columns,
+				'colWidths' => $colWidths,
+				'rows' => $rows,
+				'totals' => [
+					['label' => 'Gross', 'value' => $gross],
+					['label' => 'Subsidy', 'value' => $subsidy],
+					['label' => 'TOTAL TO DEDUCT', 'value' => $deduct, 'strong' => true],
+				],
+				'note' => $note,
+			]);
 			return new DataDownloadResponse($pdf, 'snackcheck-my-month.pdf', 'application/pdf');
 		} catch (\Throwable $e) {
 			return $this->fromDomain($e);

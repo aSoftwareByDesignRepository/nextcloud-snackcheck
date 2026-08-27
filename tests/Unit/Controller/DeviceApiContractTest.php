@@ -11,6 +11,7 @@ use OCA\SnackCheck\Db\Site;
 use OCA\SnackCheck\Db\TerminalDevice;
 use OCA\SnackCheck\Exception\DomainException;
 use OCA\SnackCheck\Service\AccessControlService;
+use OCA\SnackCheck\Service\CatalogImageService;
 use OCA\SnackCheck\Service\CatalogService;
 use OCA\SnackCheck\Service\ConsumptionLogService;
 use OCA\SnackCheck\Service\LicenseService;
@@ -65,6 +66,7 @@ final class DeviceApiContractTest extends TestCase
 		self::assertSame(11, $data['items'][0]['id']);
 		self::assertSame(['milk'], $data['items'][0]['allergenTags']);
 		self::assertTrue($data['items'][0]['active']);
+		self::assertFalse($data['items'][0]['hasImage']);
 		self::assertSame(
 			\OCA\SnackCheck\Controller\DeviceApiController::catalogVersionToken([$item]),
 			(string)$data['catalogVersion']
@@ -173,10 +175,35 @@ final class DeviceApiContractTest extends TestCase
 		$access = $this->createMock(AccessControlService::class);
 		$access->method('isAppAdmin')->with('alice')->willReturn(false);
 		$access->method('canManageSite')->with('alice', 1)->willReturn(false);
+		$access->method('canAccessApp')->willReturn(true);
 		$ctrl = $this->controller(terminals: $terminals, license: $license, unlock: $unlock, access: $access);
 		$res = $ctrl->colleagues();
 		self::assertSame(403, $res->getStatus());
 		self::assertSame('permission_denied', $res->getData()['code']);
+	}
+
+	public function testColleaguesRejectsWhenLiveAccessRevoked(): void
+	{
+		$device = $this->device(1, 1);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => true,
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->with('alice')->willReturn(false);
+		$access->expects($this->never())->method('canManageSite');
+		$ctrl = $this->controller(terminals: $terminals, license: $license, unlock: $unlock, access: $access);
+		$res = $ctrl->colleagues();
+		self::assertSame(401, $res->getStatus());
+		self::assertSame('unlock_invalid', $res->getData()['code']);
 	}
 
 	public function testLockSessionBindsInvalidateToDevice(): void
@@ -221,6 +248,7 @@ final class DeviceApiContractTest extends TestCase
 		$access = $this->createMock(AccessControlService::class);
 		$access->method('isAppAdmin')->with('alice')->willReturn(false);
 		$access->method('canManageSite')->with('alice', 9)->willReturn(false);
+		$access->method('canAccessApp')->with('alice')->willReturn(true);
 		$logs = $this->createMock(ConsumptionLogService::class);
 		$logs->expects($this->once())->method('create')->with($this->callback(
 			static function (array $input): bool {
@@ -262,6 +290,76 @@ final class DeviceApiContractTest extends TestCase
 		);
 		$res = $ctrl->createLog();
 		self::assertSame(201, $res->getStatus());
+	}
+
+	public function testInactiveSiteDeviceAuthIsClosedOracle(): void
+	{
+		$device = $this->device(1, 99);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$sites = $this->createMock(SiteService::class);
+		$sites->method('get')->willThrowException(new DomainException('not_found', 'Site not found', 404));
+		$ctrl = $this->controller(terminals: $terminals, license: $license, sites: $sites);
+		$res = $ctrl->heartbeat();
+		self::assertSame(401, $res->getStatus());
+		self::assertSame('no_device', $res->getData()['code']);
+	}
+
+	public function testCreateLogRejectsWhenLiveAccessRevoked(): void
+	{
+		$device = $this->device(1, 2);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => false,
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->with('alice')->willReturn(false);
+		$logs = $this->createMock(ConsumptionLogService::class);
+		$logs->expects($this->never())->method('create');
+		$rate = $this->createMock(RateLimitService::class);
+		$rate->expects($this->never())->method('assertUserLog');
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->willReturnCallback(static function (string $h): string {
+			return match ($h) {
+				'Authorization' => 'Bearer snkterm_x',
+				'Idempotency-Key' => 'idem-1',
+				default => '',
+			};
+		});
+		$request->method('getParam')->willReturnCallback(static function (string $k) {
+			return match ($k) {
+				'itemId' => 11,
+				'qty' => 1,
+				'mode' => 'self',
+				'unlockToken' => 'tok',
+				default => null,
+			};
+		});
+		$request->method('getRemoteAddress')->willReturn('127.0.0.1');
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			license: $license,
+			unlock: $unlock,
+			logs: $logs,
+			access: $access,
+			rateLimit: $rate,
+			request: $request,
+		);
+		$res = $ctrl->createLog();
+		self::assertSame(401, $res->getStatus());
+		self::assertSame('unlock_invalid', $res->getData()['code']);
 	}
 
 	/** NN-13: device createLog attributes from unlock session only — never client userId. */
@@ -411,18 +509,24 @@ final class DeviceApiContractTest extends TestCase
 		]);
 		$license->method('isTerminalPlanActive')->willReturn(true);
 
+		if ($access === null) {
+			$access = $this->createMock(AccessControlService::class);
+			$access->method('canAccessApp')->willReturn(true);
+		}
+
 		return new DeviceApiController(
 			'snackcheck',
 			$request,
 			$terminals ?? $this->createMock(TerminalDeviceService::class),
 			$license,
 			$catalog ?? $this->createMock(CatalogService::class),
+			$this->createMock(CatalogImageService::class),
 			$periods,
 			$sites,
 			$unlock ?? $this->createMock(UnlockService::class),
 			$logs ?? $this->createMock(ConsumptionLogService::class),
 			$settings ?? $this->createMock(SettingsService::class),
-			$access ?? $this->createMock(AccessControlService::class),
+			$access,
 			$rateLimit ?? $this->createMock(RateLimitService::class),
 			$users ?? $this->createMock(IUserManager::class),
 			$time,

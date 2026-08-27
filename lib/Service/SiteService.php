@@ -24,6 +24,7 @@ class SiteService
 		private readonly SettingsService $settings,
 		private readonly CatalogItemMapper $catalog,
 		private readonly TerminalDeviceMapper $terminals,
+		private readonly TerminalDeviceService $terminalDevices,
 		private readonly ITimeFactory $timeFactory,
 		private readonly ILockingProvider $locking,
 	) {
@@ -187,6 +188,7 @@ class SiteService
 		if ($site === null) {
 			throw new DomainException('not_found', 'Site not found', 404);
 		}
+		$wasActive = (int)$site->getActive() === 1;
 		if ($name !== null) {
 			$name = trim($name);
 			if ($name === '' || mb_strlen($name) > 80) {
@@ -204,6 +206,11 @@ class SiteService
 			$site->setActive($active ? 1 : 0);
 		}
 		$site->setUpdatedAt($this->timeFactory->getDateTime());
-		return $this->mapper->update($site);
+		$updated = $this->mapper->update($site);
+		// Kill kitchen tablets when a site goes inactive — seats free under capacity lock.
+		if ($active === false && $wasActive) {
+			$this->terminalDevices->revokeAllBySite($id, 'site-deactivate:' . $id);
+		}
+		return $updated;
 	}
 }

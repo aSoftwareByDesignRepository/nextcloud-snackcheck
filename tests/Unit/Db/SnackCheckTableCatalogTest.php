@@ -21,4 +21,12 @@ final class SnackCheckTableCatalogTest extends TestCase
 		sort($sorted);
 		self::assertSame($sorted, SnackCheckTableCatalog::TABLES, 'catalog must stay sorted');
 	}
+
+	public function testRequiredTablesExcludeDroppedLegacy(): void
+	{
+		self::assertContains('snk_unlock_tokens', SnackCheckTableCatalog::DROPPED_LEGACY_TABLES);
+		self::assertNotContains('snk_unlock_tokens', SnackCheckTableCatalog::requiredTables());
+		self::assertContains('snk_locks', SnackCheckTableCatalog::requiredTables());
+		self::assertContains('snk_consumption_logs', SnackCheckTableCatalog::requiredTables());
+	}
 }

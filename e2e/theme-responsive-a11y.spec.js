@@ -164,7 +164,7 @@ async function assertChromeTouchTargets(page) {
 			const minH = Math.max(rect.height, parseFloat(style.minHeight) || 0);
 			const minW = Math.max(rect.width, parseFloat(style.minWidth) || 0);
 			const isBar = rect.width >= 120;
-			if (minH < 40 || (!isBar && minW < 40)) {
+			if (minH < 44 || (!isBar && minW < 44)) {
 				undersized.push({
 					tag: el.tagName,
 					cls: String(el.className).slice(0, 80),
@@ -253,6 +253,56 @@ test.describe('SnackCheck theme × viewport a11y matrix', () => {
 		}
 	});
 
+	test('Log tiles use equal columns (2-up @600, 1-up @400)', async ({ page }) => {
+		test.skip(!process.env.E2E_USER, 'Set E2E_USER + E2E_PASS in e2e/.env');
+		await gotoReady(page, routes[0].url);
+		await setUserTheme(page, 'light');
+		await dismissOpenAppNavigation(page);
+
+		await page.setViewportSize({ width: 600, height: 800 });
+		const cols600 = await page.evaluate(() => {
+			const grid = document.querySelector('#app-content.snk-app .snk-tile-grid');
+			if (!grid) return null;
+			return getComputedStyle(grid).gridTemplateColumns;
+		});
+		if (cols600 === null) {
+			test.info().annotations.push({ type: 'note', description: 'no tile grid on this fixture' });
+			return;
+		}
+		expect(cols600.split(' ').length, `grid@600=${cols600}`).toBe(2);
+
+		await page.setViewportSize({ width: 400, height: 800 });
+		const cols400 = await page.evaluate(() => {
+			const grid = document.querySelector('#app-content.snk-app .snk-tile-grid');
+			if (!grid) return null;
+			return getComputedStyle(grid).gridTemplateColumns;
+		});
+		expect(cols400.split(' ').length, `grid@400=${cols400}`).toBe(1);
+	});
+
+	test('Log tiles in a row share equal widths', async ({ page }) => {
+		test.skip(!process.env.E2E_USER, 'Set E2E_USER + E2E_PASS in e2e/.env');
+		await page.setViewportSize({ width: 1280, height: 800 });
+		await gotoReady(page, routes[0].url);
+		await setUserTheme(page, 'light');
+		await dismissOpenAppNavigation(page);
+		const widths = await page.evaluate(() => {
+			const group = document.querySelector('#app-content.snk-app .snk-log-group');
+			if (!group) return [];
+			return Array.from(group.querySelectorAll('button.snk-tile')).slice(0, 4).map((el) => {
+				const r = el.getBoundingClientRect();
+				return Math.round(r.width * 10) / 10;
+			});
+		});
+		if (widths.length < 2) {
+			test.info().annotations.push({ type: 'note', description: 'need ≥2 tiles to compare widths' });
+			return;
+		}
+		const max = Math.max(...widths);
+		const min = Math.min(...widths);
+		expect(max - min, `tile widths=${widths.join(',')}`).toBeLessThanOrEqual(2);
+	});
+
 	test('custom accent primary resolves into snk-primary', async ({ page }) => {
 		test.skip(!process.env.E2E_USER, 'Set E2E_USER + E2E_PASS in e2e/.env');
 		const accent = '#c45c26';
@@ -273,6 +323,9 @@ test.describe('SnackCheck theme × viewport a11y matrix', () => {
 			});
 			expect(primary.nc, 'NC primary after accent').not.toEqual('');
 			expect(primary.snk, 'snk-primary after accent').not.toEqual('');
+			// Design tokens must track the NC accent (normalize rgb/hex loosely).
+			const norm = (v) => v.replace(/\s+/g, '').toLowerCase();
+			expect(norm(primary.snk), 'snk-primary equals NC primary-element').toEqual(norm(primary.nc));
 			await runAxe(page, 'accent-light-log');
 		} finally {
 			resetAccentColor();

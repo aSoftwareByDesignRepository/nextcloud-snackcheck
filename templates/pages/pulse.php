@@ -2,7 +2,9 @@
 $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'] ?? []);
 ?>
 <section class="snk-section" aria-label="<?php p($l->t('Kitchen pulse')); ?>">
-	<nav class="snk-filter-bar" aria-label="<?php p($l->t('Category filter')); ?>">
+	<section class="snk-quick-filters" aria-labelledby="snk-pulse-cat-label">
+		<p class="snk-quick-filters__label" id="snk-pulse-cat-label"><?php p($l->t('Category')); ?></p>
+		<nav class="snk-filter-bar" aria-labelledby="snk-pulse-cat-label">
 		<?php foreach ($cats as $c): ?>
 			<?php
 			$label = match ($c) {
@@ -22,7 +24,8 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 				href="<?php p($href); ?>"
 				<?php if ($cat === $c) { ?>aria-current="true"<?php } ?>><?php p($label); ?></a>
 		<?php endforeach; ?>
-	</nav>
+		</nav>
+	</section>
 
 	<article class="snk-card">
 		<header class="snk-card__header">
@@ -85,12 +88,50 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 				$actionsHtml = '';
 				include __DIR__ . '/../parts/snk-empty-state.php';
 				?>
-			<?php else: ?>
-				<ol class="snk-rank-list">
-					<?php foreach ($pulse['ranks'] as $r): ?>
-						<li><?php p($r['name']); ?> — <?php p($r['qty']); ?> × · <?php p(number_format($r['eurCents']/100, 2, ',', '.')); ?> €</li>
-					<?php endforeach; ?>
-				</ol>
+			<?php else:
+				$paceDays = (int)($_['paceWindowDays'] ?? 14);
+				if ($paceDays < 1) {
+					$paceDays = 14;
+				}
+				?>
+				<div class="snk-rank-panel">
+					<p class="snk-rank-panel__lead snk-muted"><?php p($l->t('Most logged in the last %s days.', [(string)$paceDays])); ?></p>
+					<ol class="snk-rank-list">
+						<?php
+						$place = 0;
+						foreach ($pulse['ranks'] as $r):
+							$place += 1;
+							$name = (string)($r['name'] ?? '');
+							$qty = (int)($r['qty'] ?? 0);
+							$eurCents = (int)($r['eurCents'] ?? 0);
+							$share = (float)($r['qtySharePct'] ?? 0.0);
+							$shareWidth = max(0, min(100, (int)round($share)));
+							$eurLabel = number_format($eurCents / 100, 2, ',', '.') . ' €';
+							$shareDecimals = abs($share - round($share)) < 0.05 ? 0 : 1;
+							$shareLabel = number_format($share, $shareDecimals, ',', '.');
+							?>
+							<li class="snk-rank<?php if ($place <= 3) { ?> snk-rank--top<?php } ?>">
+								<span class="snk-rank__place" aria-hidden="true"><?php p((string)$place); ?></span>
+								<div class="snk-rank__main">
+									<span class="snk-rank__name"><?php p($name); ?></span>
+									<div class="snk-rank__stats">
+										<span class="snk-rank__stat">
+											<strong><?php p((string)$qty); ?></strong>
+											<span class="snk-rank__stat-unit">×</span>
+										</span>
+										<span class="snk-rank__stat snk-rank__stat--money"><?php p($eurLabel); ?></span>
+										<?php if ($share > 0): ?>
+											<span class="snk-rank__stat snk-muted"><?php p($l->t('%s%% of logs', [$shareLabel])); ?></span>
+										<?php endif; ?>
+									</div>
+									<div class="snk-rank__bar" role="presentation" aria-hidden="true">
+										<span class="snk-rank__bar-fill" style="width: <?php p((string)$shareWidth); ?>%;"></span>
+									</div>
+								</div>
+							</li>
+						<?php endforeach; ?>
+					</ol>
+				</div>
 			<?php endif; ?>
 		</details>
 	</article>

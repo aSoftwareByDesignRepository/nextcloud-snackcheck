@@ -6,6 +6,7 @@ namespace OCA\SnackCheck\Service;
 
 use OCA\SnackCheck\Db\CatalogItemMapper;
 use OCA\SnackCheck\Db\ConsumptionLogMapper;
+use OCA\SnackCheck\Support\PeriodDisplay;
 
 /**
  * Anonymized BR aggregate — category/item totals only (US-OPP-L).
@@ -72,7 +73,7 @@ class BrAggregateService
 		$cats = array_values($byCategory);
 		usort($cats, static fn ($a, $b) => $b['qty'] <=> $a['qty']);
 		return [
-			'periodLabel' => $period->getLabel(),
+			'periodLabel' => PeriodDisplay::format((string)$period->getLabel()),
 			'byCategory' => $cats,
 			'byItem' => $items,
 		];

@@ -28,7 +28,10 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'Stock',
 			'In fridge',
 			'Target',
-			'quantity, colleague, company',
+			'quantity',
+			'Why? (short note)',
+			'At least 3 characters — e.g. Forgot badge',
+			'At least 3 characters — e.g. Guest visit',
 			'No snacks logged this period',
 			'Consumption changed a lot vs last period',
 			'Pick a site above before logging. Each kitchen has its own catalog.',
@@ -47,6 +50,14 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'Free',
 			'Log for a colleague',
 			'Find users',
+			'Find a colleague',
+			'Find a snack',
+			'Find a snack…',
+			'Type a name…',
+			'Selected colleague',
+			'Nobody yet — type a name above',
+			'Choose…',
+			'No one selected yet — search below',
 			'Matching users',
 			'Tap a field first',
 			'Colleague',
@@ -61,8 +72,21 @@ final class GermanPrimaryL10nContractTest extends TestCase
 			'Pick your kitchen above, then tap a snack here.',
 			'Adds the suggested quantity in one tap.',
 			'Choose… then search',
+			'Download payroll, then close when HR is ready.',
+			'Line sheets for',
+			'All kitchens',
+			'User payroll totals always include every kitchen. This only narrows line sheets.',
+			'Earlier periods — download again or reopen with a reason.',
 			'Monthly subsidy (€)',
 			'See My month',
+			'Most logged in the last %s days.',
+			'%s%% of logs',
+			'Change name, price, or picture. Extra fields stay under More options.',
+			'Choose picture',
+			'Replace picture',
+			'No picture yet',
+			'This is what payroll takes from your pay for this period.',
+			'Free items',
 		];
 	}
 
@@ -84,6 +108,7 @@ final class GermanPrimaryL10nContractTest extends TestCase
 		self::assertSame('Offen', $tr['Open']);
 		self::assertSame('Geschlossen', $tr['Closed']);
 		self::assertSame('Bewirtung', $tr['Hospitality']);
+		self::assertSame('Snack finden…', $tr['Find a snack…']);
 	}
 
 	public function testEnJsonContainsPrimaryUiKeys(): void

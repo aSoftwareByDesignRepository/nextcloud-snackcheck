@@ -6,6 +6,7 @@ namespace OCA\SnackCheck\Tests\Unit\Service;
 
 use OCA\SnackCheck\Db\CatalogItem;
 use OCA\SnackCheck\Db\CatalogItemMapper;
+use OCA\SnackCheck\Db\LockGate;
 use OCA\SnackCheck\Exception\DomainException;
 use OCA\SnackCheck\Service\AuditService;
 use OCA\SnackCheck\Service\CatalogService;
@@ -48,6 +49,7 @@ final class CatalogCopyAndUpdateTest extends TestCase
 			$this->createMock(AuditService::class),
 			$this->createMock(ITimeFactory::class),
 			$this->dbMock(),
+			$this->createMock(LockGate::class),
 		);
 		$this->expectException(DomainException::class);
 		$this->expectExceptionMessage('Target site must differ');
@@ -73,7 +75,7 @@ final class CatalogCopyAndUpdateTest extends TestCase
 		$audit->expects(self::atLeastOnce())->method('record');
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-08-10T12:00:00+00:00'));
-		$svc = new CatalogService($mapper, $audit, $time, $this->dbMock());
+		$svc = new CatalogService($mapper, $audit, $time, $this->dbMock(), $this->createMock(LockGate::class));
 		$copy = $svc->copyToSite(7, 2, 'admin');
 		self::assertSame(99, (int)$copy->getId());
 	}
@@ -94,7 +96,7 @@ final class CatalogCopyAndUpdateTest extends TestCase
 		});
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-08-10T12:00:00+00:00'));
-		$svc = new CatalogService($mapper, $this->createMock(AuditService::class), $time, $this->dbMock());
+		$svc = new CatalogService($mapper, $this->createMock(AuditService::class), $time, $this->dbMock(), $this->createMock(LockGate::class));
 		$svc->update(3, [
 			'name' => 'Water',
 			'priceCents' => 120,
@@ -116,7 +118,7 @@ final class CatalogCopyAndUpdateTest extends TestCase
 		});
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-08-10T12:00:00+00:00'));
-		$svc = new CatalogService($mapper, $this->createMock(AuditService::class), $time, $this->dbMock());
+		$svc = new CatalogService($mapper, $this->createMock(AuditService::class), $time, $this->dbMock(), $this->createMock(LockGate::class));
 		$svc->update(3, ['active' => false], 'mgr');
 	}
 }

@@ -13,3 +13,7 @@ coverage/
 .env
 .env.local
 e2e/.env
+
+# Playwright local auth (session cookies — never commit)
+.auth/
+build/

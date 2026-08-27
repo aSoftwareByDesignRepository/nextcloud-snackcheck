@@ -20,8 +20,11 @@ final class UsersPrivacyProxyContractTest extends TestCase
 		self::assertStringContainsString("!empty(\$_['privacyTotalsOnly'])", $users);
 		self::assertStringContainsString('Itemized lines hidden by privacy mode.', $users);
 		self::assertStringContainsString("!empty(\$_['canProxy'])", $users);
-		self::assertStringContainsString('data-snk-proxy-fields', $users);
-		self::assertStringContainsString('data-snk-action="log"', $users);
+		self::assertStringContainsString('snk-proxy-panel.php', $users);
+		$proxy = (string)file_get_contents($this->root() . '/templates/parts/snk-proxy-panel.php');
+		self::assertStringContainsString('data-snk-proxy-fields', $proxy);
+		self::assertStringContainsString('snk-log-tile.php', $users);
+		self::assertStringContainsString('data-snk-action="log"', (string)file_get_contents($this->root() . '/templates/parts/snk-log-tile.php'));
 		self::assertStringContainsString("value=\"proxy\"", $users);
 		self::assertStringContainsString('proxyItems', $users);
 		self::assertStringContainsString('Available even when privacy hides itemized lines.', $users);

@@ -21,12 +21,14 @@ final class SiteMultiSiteGuardsTest extends TestCase
 		SettingsService $settings,
 		?CatalogItemMapper $catalog = null,
 		?TerminalDeviceMapper $terminals = null,
+		?\OCA\SnackCheck\Service\TerminalDeviceService $terminalDevices = null,
 	): SiteService {
 		return new SiteService(
 			$mapper,
 			$settings,
 			$catalog ?? $this->createMock(CatalogItemMapper::class),
 			$terminals ?? $this->createMock(TerminalDeviceMapper::class),
+			$terminalDevices ?? $this->createMock(\OCA\SnackCheck\Service\TerminalDeviceService::class),
 			$this->createMock(ITimeFactory::class),
 			$this->createMock(\OCP\Lock\ILockingProvider::class),
 		);

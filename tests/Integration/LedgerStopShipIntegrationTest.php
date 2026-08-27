@@ -107,5 +107,6 @@ final class LedgerStopShipIntegrationTest extends TestCase
 			'mode' => 'self',
 		]);
 		self::assertSame(201, $created3['httpStatus']);
+		$catalog->softDelete((int)$item->getId(), 'admin');
 	}
 }

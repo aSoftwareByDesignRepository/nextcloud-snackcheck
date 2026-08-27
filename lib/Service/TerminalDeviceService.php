@@ -125,6 +125,33 @@ class TerminalDeviceService
 		}
 	}
 
+	/**
+	 * Aristoteles: deactivating a kitchen must free tablet seats under the same capacity gate.
+	 *
+	 * @return int number of devices revoked
+	 */
+	public function revokeAllBySite(int $siteId, string $actor): int
+	{
+		if ($siteId <= 0) {
+			return 0;
+		}
+		$this->db->beginTransaction();
+		try {
+			$this->lockGate->lock(self::CAPACITY_LOCK);
+			$revoked = 0;
+			foreach ($this->mapper->findActiveBySite($siteId) as $device) {
+				$device->setRevoked(1);
+				$this->mapper->update($device);
+				$revoked++;
+			}
+			$this->db->commit();
+			return $revoked;
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
+	}
+
 	public function trimToLimit(int $limit): int
 	{
 		$limit = max(0, $limit);

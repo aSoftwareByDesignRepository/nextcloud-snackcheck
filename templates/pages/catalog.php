@@ -25,6 +25,7 @@ $tagLabels = [
 		<table class="snk-table">
 			<thead>
 				<tr>
+					<th scope="col" class="snk-table__thumb"><?php p($l->t('Picture')); ?></th>
 					<th scope="col"><?php p($l->t('Name')); ?></th>
 					<th scope="col"><?php p($l->t('Price')); ?></th>
 					<th scope="col"><?php p($l->t('Category')); ?></th>
@@ -52,8 +53,23 @@ $tagLabels = [
 				$stockLabel = ($onHand === null && $par === null)
 					? '—'
 					: (($onHand ?? '—') . ' / ' . ($par ?? '—'));
+				$hasImage = \OCA\SnackCheck\Service\CatalogImageService::hasImage($item);
+				$thumbUrl = $hasImage
+					? $urlGenerator->linkToRoute('snackcheck.api.catalogImage', ['id' => (int)$item->getId()])
+						. '?v=' . rawurlencode((string)$item->getImageName())
+					: '';
+				$iconKey = \OCA\SnackCheck\Service\IconCatalog::forCategory($item->getCategory());
 			?>
 				<tr<?php if ((int)$item->getActive() !== 1) { ?> class="snk-muted"<?php } ?>>
+					<td class="snk-table__thumb">
+						<?php if ($hasImage): ?>
+							<img class="snk-catalog-thumb" src="<?php p($thumbUrl); ?>" alt="" width="40" height="40" loading="lazy" />
+						<?php else: ?>
+							<span class="snk-catalog-thumb snk-catalog-thumb--icon" aria-hidden="true">
+								<?php print_unescaped(\OCA\SnackCheck\Service\IconCatalog::render($iconKey)); ?>
+							</span>
+						<?php endif; ?>
+					</td>
 					<td>
 						<?php p($item->getName()); ?>
 						<?php if ((int)$item->getActive() !== 1): ?>
@@ -69,48 +85,62 @@ $tagLabels = [
 					?></td>
 					<td class="snk-muted"><?php p($item->getCategory() ?: '—'); ?></td>
 					<td title="<?php p($l->t('On hand / Target')); ?>"><?php p($stockLabel); ?></td>
-					<td>
-						<div class="snk-actions">
-							<button type="button"
-								class="snk-btn snk-btn--secondary"
-								data-snk-action="edit-item"
-								data-item-id="<?php p($item->getId()); ?>"
-								data-name="<?php p($item->getName()); ?>"
-								data-price-euro="<?php p($priceEuro); ?>"
-								data-category="<?php p($item->getCategory() ?: 'other'); ?>"
-								data-par="<?php p($item->getParLevel() ?? ''); ?>"
-								data-on-hand="<?php p($item->getOnHand() ?? ''); ?>"
-								data-tags="<?php p(implode(',', $tagList)); ?>"
-								data-active="<?php p((int)$item->getActive()); ?>"><?php p($l->t('Edit')); ?></button>
-						</div>
-						<details class="snk-row-more">
-							<summary><?php p($l->t('More')); ?></summary>
-							<div class="snk-actions">
+					<td class="snk-table__actions">
+						<?php
+						$itemName = (string)$item->getName();
+						$actionsLabel = $l->t('Actions for %s', [$itemName]);
+						?>
+						<div class="snk-row-actions" role="group" aria-label="<?php p($actionsLabel); ?>">
+							<div class="snk-row-actions__main">
 								<button type="button"
 									class="snk-btn snk-btn--primary"
 									data-snk-action="restock"
 									data-item-id="<?php p($item->getId()); ?>"
 									data-default-qty="1"
-									data-instant="1"><?php p($l->t('Restock +1')); ?></button>
+									data-instant="1"
+									title="<?php p($l->t('Adds 1 in one tap.')); ?>"><?php p($l->t('Restock +1')); ?></button>
 								<button type="button"
-									class="snk-btn"
-									data-snk-action="restock"
+									class="snk-btn snk-btn--secondary"
+									data-snk-action="edit-item"
 									data-item-id="<?php p($item->getId()); ?>"
-									data-default-qty="1"><?php p($l->t('Restock other amount…')); ?></button>
-								<?php if ($multiSite && $otherSites !== []): ?>
-									<button type="button"
-										class="snk-btn"
-										data-snk-action="copy-item"
-										data-item-id="<?php p($item->getId()); ?>"
-										data-name="<?php p($item->getName()); ?>"><?php p($l->t('Copy to site')); ?></button>
-								<?php endif; ?>
-								<?php if ((int)$item->getActive() === 1): ?>
-									<button type="button" class="snk-btn snk-btn--danger" data-snk-action="delete-item" data-item-id="<?php p($item->getId()); ?>"><?php p($l->t('Deactivate')); ?></button>
-								<?php endif; ?>
-								<a class="snk-btn snk-btn--secondary" href="<?php p($urlGenerator->linkToRouteAbsolute('snackcheck.page.shelf', ['itemId' => $item->getId()])); ?>"><?php p($l->t('Shelf link')); ?></a>
-								<a class="snk-btn snk-btn--secondary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.shelfQr', ['id' => $item->getId()])); ?>"><?php p($l->t('Download QR')); ?></a>
+									data-name="<?php p($itemName); ?>"
+									data-price-euro="<?php p($priceEuro); ?>"
+									data-category="<?php p($item->getCategory() ?: 'other'); ?>"
+									data-par="<?php p($item->getParLevel() ?? ''); ?>"
+									data-on-hand="<?php p($item->getOnHand() ?? ''); ?>"
+									data-tags="<?php p(implode(',', $tagList)); ?>"
+									data-active="<?php p((int)$item->getActive()); ?>"
+									data-has-image="<?php p($hasImage ? '1' : '0'); ?>"
+									data-image-url="<?php p($thumbUrl); ?>"><?php p($l->t('Edit')); ?></button>
+								<details class="snk-row-actions__more snk-row-more">
+									<summary><?php p($l->t('More')); ?></summary>
+									<div class="snk-row-actions__panel" role="group" aria-label="<?php p($l->t('More actions')); ?>">
+										<button type="button"
+											class="snk-row-actions__item"
+											data-snk-action="restock"
+											data-item-id="<?php p($item->getId()); ?>"
+											data-default-qty="1"><?php p($l->t('Restock other amount…')); ?></button>
+										<?php if ($multiSite && $otherSites !== []): ?>
+											<button type="button"
+												class="snk-row-actions__item"
+												data-snk-action="copy-item"
+												data-item-id="<?php p($item->getId()); ?>"
+												data-name="<?php p($itemName); ?>"><?php p($l->t('Copy to site')); ?></button>
+										<?php endif; ?>
+										<a class="snk-row-actions__item"
+											href="<?php p($urlGenerator->linkToRoute('snackcheck.page.shelf', ['itemId' => $item->getId()])); ?>"><?php p($l->t('Shelf link')); ?></a>
+										<a class="snk-row-actions__item"
+											href="<?php p($urlGenerator->linkToRoute('snackcheck.api.shelfQr', ['id' => $item->getId()])); ?>"><?php p($l->t('Download QR')); ?></a>
+										<?php if ((int)$item->getActive() === 1): ?>
+											<button type="button"
+												class="snk-row-actions__item snk-row-actions__item--danger"
+												data-snk-action="delete-item"
+												data-item-id="<?php p($item->getId()); ?>"><?php p($l->t('Deactivate')); ?></button>
+										<?php endif; ?>
+									</div>
+								</details>
 							</div>
-						</details>
+						</div>
 					</td>
 				</tr>
 			<?php endforeach; ?>
@@ -140,6 +170,11 @@ $tagLabels = [
 		<details class="snk-details">
 			<summary><?php p($l->t('More options')); ?></summary>
 			<p class="snk-muted"><?php p($l->t('Set price to 0 for complimentary (Free) items — logged for restock, excluded from payroll.')); ?></p>
+			<label class="snk-field">
+				<span><?php p($l->t('Picture (optional)')); ?></span>
+				<input name="image" type="file" accept="image/jpeg,image/png,image/webp" />
+			</label>
+			<p class="snk-muted"><?php p($l->t('JPEG, PNG or WebP — max 2 MB. Helps people spot snacks faster.')); ?></p>
 			<label class="snk-field">
 				<span><?php p($l->t('Category')); ?></span>
 				<select name="category">
@@ -175,48 +210,70 @@ $tagLabels = [
 		</div>
 	</article>
 
-	<dialog id="snk-edit-item-dialog" class="snk-dialog" aria-labelledby="snk-edit-item-title">
-		<form method="dialog" data-snk-form="catalog-update">
-			<h2 id="snk-edit-item-title" class="snk-h2"><?php p($l->t('Edit item')); ?></h2>
-			<input type="hidden" name="itemId" id="snk-edit-item-id" />
-			<label class="snk-field"><span><?php p($l->t('Name')); ?></span>
-				<input name="name" id="snk-edit-name" class="snk-input" required maxlength="120" />
-			</label>
-			<label class="snk-field"><span><?php p($l->t('Price (€)')); ?></span>
-				<input name="priceEuro" id="snk-edit-price" class="snk-input" inputmode="decimal" required />
-			</label>
-			<details class="snk-details">
-				<summary><?php p($l->t('More options')); ?></summary>
-				<label class="snk-field"><span><?php p($l->t('Category')); ?></span>
-					<select name="category" id="snk-edit-category" class="snk-select">
-						<option value="drink"><?php p($l->t('Drink')); ?></option>
-						<option value="snack"><?php p($l->t('Snack')); ?></option>
-						<option value="alcohol"><?php p($l->t('Alcohol')); ?></option>
-						<option value="other"><?php p($l->t('Other')); ?></option>
-					</select>
+	<dialog id="snk-edit-item-dialog" class="snk-dialog snk-dialog--edit" aria-labelledby="snk-edit-item-title" aria-describedby="snk-edit-item-desc">
+		<form method="dialog" data-snk-form="catalog-update" class="snk-dialog__form">
+			<header class="snk-dialog__head">
+				<h2 id="snk-edit-item-title" class="snk-h2"><?php p($l->t('Edit item')); ?></h2>
+				<p id="snk-edit-item-desc" class="snk-dialog__lead snk-muted"><?php p($l->t('Change name, price, or picture. Extra fields stay under More options.')); ?></p>
+			</header>
+			<div class="snk-dialog__body">
+				<input type="hidden" name="itemId" id="snk-edit-item-id" />
+				<label class="snk-field"><span><?php p($l->t('Name')); ?></span>
+					<input name="name" id="snk-edit-name" class="snk-input" required maxlength="120" data-snk-initial-focus autocomplete="off" />
 				</label>
-				<label class="snk-field"><span><?php p($l->t('On hand')); ?></span>
-					<input name="onHand" id="snk-edit-onhand" class="snk-input" type="number" min="0" />
+				<label class="snk-field"><span><?php p($l->t('Price (€)')); ?></span>
+					<input name="priceEuro" id="snk-edit-price" class="snk-input" inputmode="decimal" required />
 				</label>
-				<label class="snk-field"><span><?php p($l->t('Par level')); ?></span>
-					<input name="parLevel" id="snk-edit-par" class="snk-input" type="number" min="0" />
-				</label>
-				<fieldset class="snk-fieldset">
-					<legend><?php p($l->t('Diet / allergen tags')); ?></legend>
-					<?php foreach (['vegan'=>'Vegan','vegetarian'=>'Vegetarian','gluten_free'=>'Gluten-free','lactose_free'=>'Lactose-free','contains_nuts'=>'Contains nuts','contains_alcohol'=>'Contains alcohol'] as $val => $label): ?>
-						<label class="snk-check"><input type="checkbox" name="tags[]" value="<?php p($val); ?>" class="snk-edit-tag" data-tag="<?php p($val); ?>" /> <?php p($l->t($label)); ?></label>
-					<?php endforeach; ?>
-				</fieldset>
-				<label class="snk-field"><span><?php p($l->t('Active')); ?></span>
-					<select name="active" id="snk-edit-active" class="snk-select">
-						<option value="1"><?php p($l->t('Yes')); ?></option>
-						<option value="0"><?php p($l->t('No')); ?></option>
-					</select>
-				</label>
-			</details>
-			<div class="snk-actions">
-				<button type="submit" class="snk-btn snk-btn--primary" value="confirm"><?php p($l->t('Save')); ?></button>
+				<div class="snk-edit-photo" data-snk-edit-photo>
+					<span class="snk-edit-photo__label" id="snk-edit-photo-label"><?php p($l->t('Picture (optional)')); ?></span>
+					<div class="snk-edit-photo__row">
+						<div class="snk-edit-photo__frame" data-snk-edit-photo-preview data-has-preview="0" aria-labelledby="snk-edit-photo-label">
+							<img alt="" width="88" height="88" data-snk-edit-photo-img hidden />
+							<p class="snk-edit-photo__placeholder" data-snk-edit-photo-placeholder><?php p($l->t('No picture yet')); ?></p>
+						</div>
+						<div class="snk-edit-photo__controls">
+							<label class="snk-btn snk-btn--secondary snk-edit-photo__pick">
+								<span data-snk-edit-photo-pick-label><?php p($l->t('Choose picture')); ?></span>
+								<input class="snk-sr-only" name="image" id="snk-edit-image" type="file" accept="image/jpeg,image/png,image/webp" data-snk-edit-photo-input />
+							</label>
+							<button type="button" class="snk-btn snk-btn--secondary" data-snk-action="clear-item-image" hidden><?php p($l->t('Remove picture')); ?></button>
+							<p class="snk-muted snk-edit-photo__hint"><?php p($l->t('JPEG, PNG or WebP — max 2 MB.')); ?></p>
+						</div>
+					</div>
+				</div>
+				<details class="snk-details">
+					<summary><?php p($l->t('More options')); ?></summary>
+					<label class="snk-field"><span><?php p($l->t('Category')); ?></span>
+						<select name="category" id="snk-edit-category" class="snk-select">
+							<option value="drink"><?php p($l->t('Drink')); ?></option>
+							<option value="snack"><?php p($l->t('Snack')); ?></option>
+							<option value="alcohol"><?php p($l->t('Alcohol')); ?></option>
+							<option value="other"><?php p($l->t('Other')); ?></option>
+						</select>
+					</label>
+					<label class="snk-field"><span><?php p($l->t('On hand')); ?></span>
+						<input name="onHand" id="snk-edit-onhand" class="snk-input" type="number" min="0" />
+					</label>
+					<label class="snk-field"><span><?php p($l->t('Par level')); ?></span>
+						<input name="parLevel" id="snk-edit-par" class="snk-input" type="number" min="0" />
+					</label>
+					<fieldset class="snk-fieldset">
+						<legend><?php p($l->t('Diet / allergen tags')); ?></legend>
+						<?php foreach (['vegan'=>'Vegan','vegetarian'=>'Vegetarian','gluten_free'=>'Gluten-free','lactose_free'=>'Lactose-free','contains_nuts'=>'Contains nuts','contains_alcohol'=>'Contains alcohol'] as $val => $label): ?>
+							<label class="snk-check"><input type="checkbox" name="tags[]" value="<?php p($val); ?>" class="snk-edit-tag" data-tag="<?php p($val); ?>" /> <?php p($l->t($label)); ?></label>
+						<?php endforeach; ?>
+					</fieldset>
+					<label class="snk-field"><span><?php p($l->t('Active')); ?></span>
+						<select name="active" id="snk-edit-active" class="snk-select">
+							<option value="1"><?php p($l->t('Yes')); ?></option>
+							<option value="0"><?php p($l->t('No')); ?></option>
+						</select>
+					</label>
+				</details>
+			</div>
+			<div class="snk-dialog__foot snk-actions">
 				<button type="submit" class="snk-btn snk-btn--secondary" value="cancel"><?php p($l->t('Cancel')); ?></button>
+				<button type="submit" class="snk-btn snk-btn--primary" value="confirm"><?php p($l->t('Save')); ?></button>
 			</div>
 		</form>
 	</dialog>
@@ -264,8 +321,8 @@ $tagLabels = [
 			<p><?php p($l->t('Hide this item from logging? You can reactivate it later via Edit.')); ?></p>
 			<input type="hidden" name="itemId" id="snk-deactivate-item-id" />
 			<div class="snk-actions">
-				<button type="submit" class="snk-btn snk-btn--danger" value="confirm"><?php p($l->t('Deactivate')); ?></button>
 				<button type="submit" class="snk-btn snk-btn--secondary" value="cancel"><?php p($l->t('Cancel')); ?></button>
+				<button type="submit" class="snk-btn snk-btn--danger" value="confirm"><?php p($l->t('Deactivate')); ?></button>
 			</div>
 		</form>
 	</dialog>

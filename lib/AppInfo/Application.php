@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace OCA\SnackCheck\AppInfo;
 
 use OCA\SnackCheck\Command\UpgradeBackupCommand;
+use OCA\SnackCheck\Db\CatalogItemMapper;
 use OCA\SnackCheck\Repair\BackupBeforeUpdate;
 use OCA\SnackCheck\Repair\EnsureSnackCheckSchema;
 use OCA\SnackCheck\Repair\UninstallDropTables;
+use OCA\SnackCheck\Service\AuditService;
+use OCA\SnackCheck\Service\CatalogImageService;
 use OCA\SnackCheck\Service\UpgradeBackupService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\App\IAppManager;
+use OCP\Files\AppData\IAppDataFactory;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IDBConnection;
@@ -31,6 +36,15 @@ class Application extends App implements IBootstrap
 
 	public function register(IRegistrationContext $context): void
 	{
+		$context->registerService(CatalogImageService::class, static function ($c): CatalogImageService {
+			return new CatalogImageService(
+				$c->get(IDBConnection::class),
+				$c->get(IAppDataFactory::class)->get(Application::APP_ID),
+				$c->get(CatalogItemMapper::class),
+				$c->get(AuditService::class),
+				$c->get(ITimeFactory::class),
+			);
+		});
 		$context->registerService(EnsureSnackCheckSchema::class, function ($c): EnsureSnackCheckSchema {
 			return new EnsureSnackCheckSchema(
 				$c->get(IDBConnection::class),

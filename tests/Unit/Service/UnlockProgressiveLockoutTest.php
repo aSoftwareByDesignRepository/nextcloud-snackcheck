@@ -162,4 +162,16 @@ final class UnlockProgressiveLockoutTest extends TestCase
 			self::assertSame(17, $e->retryAfterSeconds);
 		}
 	}
+
+	public function testFailCounterTtlOutlivesMaxLockoutStep(): void
+	{
+		self::assertGreaterThanOrEqual(
+			2 * UnlockService::LOCKOUT_SCHEDULE_SECONDS[count(UnlockService::LOCKOUT_SCHEDULE_SECONDS) - 1],
+			UnlockService::FAIL_COUNTER_TTL_SECONDS
+		);
+		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Service/UnlockService.php');
+		self::assertStringContainsString('FAIL_COUNTER_TTL_SECONDS', $src);
+		self::assertStringNotContainsString('self::LOCKOUT_SECONDS * 2', $src);
+		self::assertStringContainsString('withDeviceFailLock', $src);
+	}
 }

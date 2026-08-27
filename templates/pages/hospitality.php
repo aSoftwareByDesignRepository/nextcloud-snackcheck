@@ -1,4 +1,9 @@
-<?php /** @var array $_ */ /** @var \OCP\IL10N $l */ $period = $_['period'] ?? null; ?>
+<?php
+/** @var array $_ */
+/** @var \OCP\IL10N $l */
+use OCA\SnackCheck\Support\PeriodDisplay;
+$period = $_['period'] ?? null;
+?>
 <section class="snk-section" aria-label="<?php p($l->t('Hospitality')); ?>">
 	<article class="snk-card">
 		<header class="snk-card__header">
@@ -7,7 +12,7 @@
 				<p class="snk-card__lead">
 					<?php p($l->t('Company user')); ?>: <strong><?php p($_['companyUserDisplay'] ?? ($_['companyUserId'] ?: '—')); ?></strong>
 					<?php if ($period): ?>
-						· <?php p($l->t('Period')); ?>: <?php p($period->getLabel()); ?>
+						· <?php p($l->t('Period')); ?>: <?php p(PeriodDisplay::format((string)$period->getLabel())); ?>
 					<?php endif; ?>
 				</p>
 			</div>
@@ -20,7 +25,7 @@
 				<select id="snk-hosp-period" name="periodId" onchange="this.form.submit()">
 					<?php foreach ($_['periods'] as $p): ?>
 						<option value="<?php p($p->getId()); ?>" <?php if ($period && (int)$period->getId() === (int)$p->getId()) p('selected'); ?>>
-							<?php p($p->getLabel()); ?> (<?php p($p->getState() === 'closed' ? $l->t('Closed') : $l->t('Open')); ?>)
+							<?php p(PeriodDisplay::format((string)$p->getLabel())); ?> (<?php p($p->getState() === 'closed' ? $l->t('Closed') : $l->t('Open')); ?>)
 						</option>
 					<?php endforeach; ?>
 				</select>

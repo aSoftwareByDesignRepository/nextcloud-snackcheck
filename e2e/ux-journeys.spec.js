@@ -18,13 +18,38 @@ test.describe('SnackCheck UX journeys', () => {
 		await expect(page.locator('#snk-page-title')).toBeVisible();
 		await expect(page.locator('#snk-log-lead, .snk-page-header__lead').first()).toBeVisible();
 
+		const modeBar = page.locator('.snk-mode-bar--surface');
 		const advanced = page.locator('#snk-log-advanced');
 		if (await advanced.count()) {
 			await expect(advanced).toBeVisible();
 			await expect(advanced).not.toHaveAttribute('open', '');
-			await advanced.locator('summary').click();
+			if (await modeBar.count()) {
+				await expect(modeBar).toBeVisible();
+				const colleagueChip = modeBar.locator('.snk-mode-chip').filter({ has: page.locator('input[value="proxy"]') });
+				if (await colleagueChip.count()) {
+					await colleagueChip.click();
+					const proxyPanel = page.locator('#snk-mode-proxy');
+					await expect(proxyPanel).toBeVisible();
+					await expect(proxyPanel).not.toHaveAttribute('hidden', '');
+					await expect(proxyPanel.locator('[data-snk-chip-activate]')).toHaveCount(0);
+					await expect(proxyPanel.locator('[data-snk-chip-auto]')).toBeVisible();
+					const proxySearch = proxyPanel.locator('[data-snk-user-search]');
+					await expect(proxySearch).toBeVisible();
+					await expect(proxySearch).toBeFocused();
+					await expect(proxyPanel.locator('#snk-proxy-reason')).toBeVisible();
+					await modeBar.locator('.snk-mode-chip').filter({ has: page.locator('input[value="self"]') }).click();
+					await expect(proxyPanel).toBeHidden();
+				}
+			}
+			const isOpen = await advanced.evaluate((el) => el instanceof HTMLDetailsElement && el.open);
+			if (!isOpen) {
+				await advanced.locator('summary').click();
+			}
 			await expect(page.locator('[data-snk-qty="1"]')).toBeVisible();
-			await expect(page.locator('input[data-snk-mode][value="self"]')).toBeChecked();
+			const selfMode = page.locator('input[data-snk-mode][value="self"]');
+			if (await selfMode.count()) {
+				await expect(selfMode).toBeChecked();
+			}
 		}
 
 		const tiles = page.locator('button.snk-tile[data-snk-action="log"]');
@@ -38,6 +63,54 @@ test.describe('SnackCheck UX journeys', () => {
 		if (hasTiles) {
 			const box = await tiles.first().boundingBox();
 			expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
+			await expect(tiles.first().locator('.snk-tile__media')).toBeVisible();
+			// Equal card sizes within the first group row (tolerance for subpixel).
+			const firstGroupTiles = page.locator('.snk-log-group').first().locator('button.snk-tile[data-snk-action="log"]');
+			const n = Math.min(await firstGroupTiles.count(), 4);
+			if (n >= 2) {
+				const heights = [];
+				const widths = [];
+				for (let i = 0; i < n; i++) {
+					const b = await firstGroupTiles.nth(i).boundingBox();
+					heights.push(b?.height ?? 0);
+					widths.push(b?.width ?? 0);
+				}
+				expect(Math.max(...heights) - Math.min(...heights), `tile heights=${heights.join(',')}`).toBeLessThanOrEqual(2);
+				expect(Math.max(...widths) - Math.min(...widths), `tile widths=${widths.join(',')}`).toBeLessThanOrEqual(2);
+			}
+			const groups = page.locator('.snk-log-group');
+			if ((await groups.count()) > 0) {
+				await expect(groups.first().locator('.snk-log-group__title')).toBeVisible();
+			}
+			const find = page.locator('[data-snk-log-find]');
+			if (await find.count()) {
+				await find.fill('zzzz-no-match-xyz');
+				await expect(page.locator('[data-snk-log-empty]')).toBeVisible();
+				await find.fill('');
+			}
+		}
+	});
+
+	test('Catalog: Restock +1 is always-visible primary', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog`);
+		const restock = page.locator('button[data-snk-action="restock"][data-instant="1"]');
+		const edit = page.locator('button[data-snk-action="edit-item"]');
+		if ((await restock.count()) > 0) {
+			await expect(restock.first()).toBeVisible();
+			await expect(edit.first()).toBeVisible();
+			const rowActions = page.locator('.snk-row-actions').first();
+			await expect(rowActions).toBeVisible();
+			const more = rowActions.locator('.snk-row-actions__more');
+			await expect(more).toBeVisible();
+			await expect(more).not.toHaveAttribute('open', '');
+			await more.locator('summary').click();
+			await expect(more).toHaveAttribute('open', '');
+			await expect(more.locator('.snk-row-actions__panel')).toBeVisible();
+			await expect(more.locator('[data-snk-action="restock"]').filter({ hasNot: page.locator('[data-instant]') })).toBeVisible();
+			const rBox = await restock.first().boundingBox();
+			expect(rBox?.height ?? 0).toBeGreaterThanOrEqual(40);
+			const eBox = await edit.first().boundingBox();
+			expect(eBox?.height ?? 0).toBeGreaterThanOrEqual(40);
 		}
 	});
 
@@ -85,11 +158,61 @@ test.describe('SnackCheck UX journeys', () => {
 		await expect(form.locator('select[name="category"]')).toBeHidden();
 	});
 
+	test('Catalog: edit dialog is centered with picture CTA', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog`);
+		const edit = page.locator('button[data-snk-action="edit-item"]').first();
+		if ((await edit.count()) === 0) {
+			test.skip();
+			return;
+		}
+		await edit.click();
+		const dlg = page.locator('#snk-edit-item-dialog');
+		await expect(dlg).toBeVisible();
+		await expect(dlg).toHaveAttribute('open', '');
+		const box = await dlg.boundingBox();
+		const vp = page.viewportSize();
+		expect(box).toBeTruthy();
+		expect(vp).toBeTruthy();
+		if (box && vp) {
+			const centerX = box.x + box.width / 2;
+			const centerY = box.y + box.height / 2;
+			expect(Math.abs(centerX - vp.width / 2)).toBeLessThan(vp.width * 0.12);
+			expect(Math.abs(centerY - vp.height / 2)).toBeLessThan(vp.height * 0.22);
+		}
+		await expect(dlg.locator('#snk-edit-name')).toBeFocused();
+		await expect(dlg.locator('[data-snk-edit-photo-pick-label]')).toBeVisible();
+		await expect(dlg.locator('#snk-edit-image')).toBeAttached();
+		await dlg.locator('button[value="cancel"]').click();
+		await expect(dlg).not.toHaveAttribute('open', '');
+	});
+
 	test('Settings: chip nav + card body; Access Save visible', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/access`);
 		await expect(page.locator('.snk-settings-nav')).toBeVisible();
+		await expect(page.locator('.snk-settings-nav__link[aria-current="page"]')).toBeVisible();
+		await expect(page.locator('#snk-page-title')).toBeVisible();
 		await expect(page.locator('.snk-card__body').first()).toBeVisible();
 		await expect(page.locator('form[data-snk-form="settings"]').first()).toBeVisible();
+		const sub = page.locator('.snk-nav__sublist .snk-nav__sublink');
+		if (await sub.count()) {
+			await expect(page.locator('.snk-nav__sublink[aria-current="page"]')).toBeVisible();
+		}
+		await page.locator('.snk-settings-nav__link').filter({ hasText: /Benefits|Leistungen/i }).first().click();
+		await expect(page).toHaveURL(/settings\/benefits/);
+		await expect(page.locator('#snk-hosp-enabled, #snk-benefits-form').first()).toBeVisible();
+	});
+
+	test('Settings license: register form + revoke wiring present', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/license`);
+		await expect(page.locator('form[data-snk-form="terminal"]')).toBeVisible();
+		await expect(page.locator('form[data-snk-form="license"]')).toBeVisible();
+		// List may be empty without SNK2 devices — contract is Register + JS revoke handler.
+		const revokeBtns = page.locator('[data-snk-action="revoke-terminal"]');
+		const count = await revokeBtns.count();
+		if (count > 0) {
+			await expect(revokeBtns.first()).toBeVisible();
+			await expect(page.locator('.snk-term-list')).toBeVisible();
+		}
 	});
 
 	test('Settings: directory picker is WAI-ARIA combobox with removable chips', async ({ page }) => {
@@ -137,6 +260,8 @@ test.describe('SnackCheck UX journeys', () => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/my-month`);
 		await expect(page.locator('.snk-hero')).toBeVisible();
 		await expect(page.locator('.snk-hero__value')).toBeVisible();
+		await expect(page.locator('.snk-hero__stats')).toBeVisible();
+		await expect(page.locator('.snk-hero__stat').first()).toBeVisible();
 		const emptyCta = page.locator('.snk-empty a.snk-btn, .snk-empty__actions a');
 		const table = page.locator('.snk-table');
 		expect((await emptyCta.count()) + (await table.count())).toBeGreaterThan(0);
@@ -146,6 +271,21 @@ test.describe('SnackCheck UX journeys', () => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/periods`);
 		await expect(page.locator('#app-content.snk-app--periods, #app-content.snk-app').first()).toBeVisible();
 		await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+		const panel = page.locator('[data-snk-period-panel]');
+		const locked = page.locator('.snk-callout--warn, [data-snk-action="open-next-period"]');
+		expect((await panel.count()) + (await locked.count())).toBeGreaterThan(0);
+		if (await panel.count()) {
+			await expect(panel.locator('.snk-period-panel__label')).toBeVisible();
+			await expect(panel.locator('[data-snk-action="payroll"]')).toBeVisible();
+			await expect(panel.locator('.snk-period-panel__danger [data-snk-action="close-period"]')).toBeVisible();
+			await expect(panel.locator('.snk-period-panel__danger')).toBeVisible();
+			// Successor labels must not look like day 35 of a month.
+			const labelText = await panel.locator('.snk-period-panel__label').innerText();
+			expect(labelText).not.toMatch(/^\d{4}-\d{2}-\d{2}$/);
+			if (labelText.includes('#')) {
+				expect(labelText).toMatch(/\(#\d+\)/);
+			}
+		}
 		const wrap = page.locator('.snk-table-wrap');
 		const empty = page.locator('.snk-empty');
 		expect((await wrap.count()) + (await empty.count())).toBeGreaterThanOrEqual(0);
@@ -155,8 +295,16 @@ test.describe('SnackCheck UX journeys', () => {
 	test('Users: proxy chrome or recovery CTAs', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/users`);
 		await expect(page.locator('#app-content.snk-app').first()).toBeVisible();
-		const recovery = page.locator('[data-snk-action="focus-site"], a:has-text("Catalog"), a:has-text("Katalog"), a:has-text("Periods"), a:has-text("Perioden"), button[data-snk-action="starter"], .snk-tile-grid, .snk-table');
-		await expect(recovery.first()).toBeVisible({ timeout: 10000 });
+		const proxyPanel = page.locator('#snk-mode-proxy');
+		if (await proxyPanel.count()) {
+			await expect(proxyPanel).toBeVisible();
+			await expect(proxyPanel.locator('[data-snk-chip-activate]')).toHaveCount(0);
+			await expect(proxyPanel.locator('[data-snk-user-search]')).toBeVisible();
+			await expect(proxyPanel.locator('#snk-proxy-reason')).toBeVisible();
+		} else {
+			const recovery = page.locator('[data-snk-action="focus-site"], a:has-text("Catalog"), a:has-text("Katalog"), a:has-text("Periods"), a:has-text("Perioden"), button[data-snk-action="starter"], .snk-tile-grid, .snk-table');
+			await expect(recovery.first()).toBeVisible({ timeout: 10000 });
+		}
 	});
 
 	test('Sites: never raw ID teaching + manager chips (or safe redirect)', async ({ page }) => {
@@ -221,6 +369,26 @@ test.describe('SnackCheck UX journeys', () => {
 		}
 	});
 
+	test('My month: PDF download is a statement with TOTAL', async ({ page, request }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/my-month`);
+		const pdfLink = page.locator('a.snk-btn--primary[href*="my-month/pdf"], a.snk-btn--primary[href*="my-month"][href*="pdf"]');
+		if ((await pdfLink.count()) === 0) {
+			test.skip();
+			return;
+		}
+		const href = await pdfLink.first().getAttribute('href');
+		expect(href).toBeTruthy();
+		const res = await page.request.get(href.startsWith('http') ? href : `${BASE}${href}`);
+		expect(res.ok()).toBeTruthy();
+		expect(res.headers()['content-type'] || '').toMatch(/pdf/i);
+		const body = await res.body();
+		const text = body.toString('latin1');
+		expect(text.startsWith('%PDF-1.4')).toBeTruthy();
+		expect(text).toContain('TOTAL TO DEDUCT');
+		expect(text).toContain('Total to deduct');
+		expect(text).toMatch(/\d+\.\d{2} EUR/);
+	});
+
 	test('Audit: table wrap or empty state', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/audit`);
 		await expect(page.locator('#app-content.snk-app').first()).toBeVisible();
@@ -238,6 +406,17 @@ test.describe('SnackCheck UX journeys', () => {
 		await expect(save).toBeVisible();
 		await expect(save).toBeEnabled();
 		await expect(page.locator('input[name="subsidyAllowanceEuro"]')).toBeVisible();
+	});
+
+	test('Log: mode bar sits above tiles when present', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/`);
+		const modeBar = page.locator('.snk-mode-bar--surface');
+		const tiles = page.locator('ul.snk-tile-grid');
+		if ((await modeBar.count()) > 0 && (await tiles.count()) > 0) {
+			const modeBox = await modeBar.boundingBox();
+			const tileBox = await tiles.first().boundingBox();
+			expect(modeBox && tileBox && modeBox.y < tileBox.y).toBeTruthy();
+		}
 	});
 
 	test('Log: tiles appear before More options', async ({ page }) => {

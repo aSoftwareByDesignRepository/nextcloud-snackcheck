@@ -19,27 +19,29 @@ final class SettingsSwitchUxContractTest extends TestCase
 
 	public function testHospitalitySyncUsesCheckedOnly(): void
 	{
-		$src = (string)file_get_contents($this->root() . '/templates/pages/settings.php');
-		self::assertStringContainsString('const on = !!en.checked;', $src);
-		self::assertStringNotContainsString('en.value === \'1\'', $src);
-		self::assertStringNotContainsString('en.checked || en.value', $src);
-		self::assertStringContainsString('id="snk-hosp-enabled"', $src);
-		self::assertStringContainsString('role="switch"', $src);
+		$benefits = (string)file_get_contents($this->root() . '/templates/parts/settings/benefits.php');
+		$privacy = (string)file_get_contents($this->root() . '/templates/parts/settings/privacy.php');
+		$digests = (string)file_get_contents($this->root() . '/templates/parts/settings/digests.php');
+		self::assertStringContainsString('const on = !!en.checked;', $benefits);
+		self::assertStringNotContainsString('en.value === \'1\'', $benefits);
+		self::assertStringNotContainsString('en.checked || en.value', $benefits);
+		self::assertStringContainsString('id="snk-hosp-enabled"', $benefits);
+		self::assertStringContainsString('role="switch"', $benefits);
 		self::assertMatchesRegularExpression(
 			'/<input type="hidden" name="hospitalityEnabled" value="0"\s*\/>/',
-			$src
+			$benefits
 		);
 		self::assertMatchesRegularExpression(
 			'/<input type="hidden" name="multiSiteEnabled" value="0"\s*\/>/',
-			$src
+			$benefits
 		);
 		self::assertMatchesRegularExpression(
 			'/<input type="hidden" name="privacyTotalsOnly" value="0"\s*\/>/',
-			$src
+			$privacy
 		);
 		self::assertMatchesRegularExpression(
 			'/<input type="hidden" name="personalDigestEnabled" value="0"\s*\/>/',
-			$src
+			$digests
 		);
 	}
 

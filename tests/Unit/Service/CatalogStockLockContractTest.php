@@ -6,6 +6,7 @@ namespace OCA\SnackCheck\Tests\Unit\Service;
 
 use OCA\SnackCheck\Db\CatalogItem;
 use OCA\SnackCheck\Db\CatalogItemMapper;
+use OCA\SnackCheck\Db\LockGate;
 use OCA\SnackCheck\Exception\DomainException;
 use OCA\SnackCheck\Service\AuditService;
 use OCA\SnackCheck\Service\CatalogService;
@@ -56,7 +57,7 @@ final class CatalogStockLockContractTest extends TestCase
 		$audit = $this->createMock(AuditService::class);
 		$audit->expects(self::once())->method('record')->with('admin', 'catalog.restock', 'catalog_item', '42', ['add' => 5]);
 
-		$svc = new CatalogService($mapper, $audit, $time, $this->dbExpectingTxn());
+		$svc = new CatalogService($mapper, $audit, $time, $this->dbExpectingTxn(), $this->createMock(LockGate::class));
 		$out = $svc->restock(42, 5, 'admin');
 		self::assertSame(15, (int)$out->getOnHand());
 	}
@@ -72,6 +73,7 @@ final class CatalogStockLockContractTest extends TestCase
 			$this->createMock(AuditService::class),
 			$this->createMock(ITimeFactory::class),
 			$db,
+			$this->createMock(LockGate::class),
 		);
 		$this->expectException(DomainException::class);
 		$svc->restock(42, 0, 'admin');
@@ -93,6 +95,7 @@ final class CatalogStockLockContractTest extends TestCase
 			$this->createMock(AuditService::class),
 			$time,
 			$this->dbExpectingTxn(),
+			$this->createMock(LockGate::class),
 		);
 		$out = $svc->softDelete(42, 'admin');
 		self::assertSame(0, (int)$out->getActive());
@@ -114,6 +117,7 @@ final class CatalogStockLockContractTest extends TestCase
 			$this->createMock(AuditService::class),
 			$time,
 			$this->dbExpectingTxn(),
+			$this->createMock(LockGate::class),
 		);
 		self::assertSame(20, (int)$svc->setOnHand(42, 20, 'admin')->getOnHand());
 	}

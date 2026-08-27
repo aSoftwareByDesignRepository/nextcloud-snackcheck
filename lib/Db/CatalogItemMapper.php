@@ -69,4 +69,13 @@ class CatalogItemMapper extends QBMapper
 		return (int)$qb->executeQuery()->fetchOne();
 	}
 
+	/** Includes soft-deactivated rows — starter must not re-seed duplicate names. */
+	public function countBySite(int $siteId): int
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select($qb->func()->count('*'))->from($this->getTableName())
+			->where($qb->expr()->eq('site_id', $qb->createNamedParameter($siteId)));
+		return (int)$qb->executeQuery()->fetchOne();
+	}
+
 }

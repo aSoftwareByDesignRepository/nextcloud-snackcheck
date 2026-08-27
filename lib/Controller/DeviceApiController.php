@@ -7,6 +7,7 @@ namespace OCA\SnackCheck\Controller;
 use OCA\SnackCheck\Exception\DomainException;
 use OCA\SnackCheck\Exception\PaymentRequiredException;
 use OCA\SnackCheck\Service\AccessControlService;
+use OCA\SnackCheck\Service\CatalogImageService;
 use OCA\SnackCheck\Service\CatalogService;
 use OCA\SnackCheck\Service\ConsumptionLogService;
 use OCA\SnackCheck\Service\LicenseService;
@@ -20,6 +21,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IRequest;
@@ -38,6 +40,7 @@ class DeviceApiController extends Controller
 		private readonly TerminalDeviceService $terminals,
 		private readonly LicenseService $license,
 		private readonly CatalogService $catalog,
+		private readonly CatalogImageService $catalogImages,
 		private readonly PeriodService $periods,
 		private readonly SiteService $sites,
 		private readonly UnlockService $unlock,
@@ -119,6 +122,7 @@ class DeviceApiController extends Controller
 			if ($token !== '') {
 				try {
 					$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
+					$this->assertLiveAppAccess($session['userId']);
 					$favoriteIds = array_fill_keys(
 						$this->logs->lastItemIdsForUser($session['userId'], (int)$device->getSiteId(), 5),
 						true
@@ -150,6 +154,7 @@ class DeviceApiController extends Controller
 					'allergenTags' => $tags,
 					'favorite' => isset($favoriteIds[$id]),
 					'active' => ((int)$i->getActive()) === 1,
+					'hasImage' => CatalogImageService::hasImage($i),
 				];
 			}
 			$body = [
@@ -163,6 +168,26 @@ class DeviceApiController extends Controller
 			}
 			$res = new JSONResponse($body);
 			$res->addHeader('ETag', $etag);
+			return $res;
+		} catch (\Throwable $e) {
+			return $this->deviceFail($e);
+		}
+	}
+
+	#[PublicPage]
+	#[NoCSRFRequired]
+	public function catalogImage(int $id): DataDisplayResponse|JSONResponse
+	{
+		try {
+			$device = $this->authenticateDevice();
+			$item = $this->catalog->get($id);
+			if ((int)$item->getSiteId() !== (int)$device->getSiteId()) {
+				throw new DomainException('not_found', 'Item not found', 404);
+			}
+			$blob = $this->catalogImages->read($id);
+			$res = new DataDisplayResponse($blob['content']);
+			$res->addHeader('Content-Type', $blob['mime']);
+			$res->cacheFor(86_400);
 			return $res;
 		} catch (\Throwable $e) {
 			return $this->deviceFail($e);
@@ -209,6 +234,7 @@ class DeviceApiController extends Controller
 			$body = $this->jsonBody();
 			$token = (string)($body['unlockToken'] ?? $this->request->getParam('unlockToken') ?? '');
 			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
+			$this->assertLiveAppAccess($session['userId']);
 			// Device 120/min already applied in authenticateDevice (COMPANION §7.5).
 			// CORE §9.7 also requires per-user 60 logs/min on the tablet path.
 			$this->rateLimit->assertUserLog($session['userId']);
@@ -258,6 +284,7 @@ class DeviceApiController extends Controller
 			$body = $this->jsonBody();
 			$token = (string)($body['unlockToken'] ?? $this->request->getParam('unlockToken') ?? '');
 			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
+			$this->assertLiveAppAccess($session['userId']);
 			// Argus MF: tablet undo is site-scoped — never void another kitchen's ledger row.
 			$this->logs->selfUndo($id, $session['userId'], (int)$device->getSiteId());
 			return new JSONResponse(['ok' => true, 'id' => $id]);
@@ -274,6 +301,7 @@ class DeviceApiController extends Controller
 			$device = $this->authenticateDevice();
 			$token = (string)($this->request->getHeader('X-Unlock-Token') ?: $this->request->getParam('unlockToken') ?? '');
 			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
+			$this->assertLiveAppAccess($session['userId']);
 			// Live ACL — do not trust session.isKitchenAdmin for the full unlock TTL.
 			if (!$this->isLiveKitchenAdmin($session['userId'], (int)$device->getSiteId())) {
 				throw new DomainException('permission_denied', 'Kitchen admin required', 403);
@@ -354,6 +382,15 @@ class DeviceApiController extends Controller
 		if ($device === null) {
 			throw new DomainException('no_device', 'Device not found', 401);
 		}
+		// Inactive / missing kitchen: same closed oracle as revoked token (no site probe).
+		try {
+			$this->sites->get((int)$device->getSiteId());
+		} catch (DomainException $e) {
+			if ($e->errorCode === 'not_found') {
+				throw new DomainException('no_device', 'Device not found', 401);
+			}
+			throw $e;
+		}
 		if (!$this->license->isTerminalPlanActive()) {
 			throw new PaymentRequiredException('license_required');
 		}
@@ -365,6 +402,16 @@ class DeviceApiController extends Controller
 		// COMPANION §7.5: device-wide 120/min before handler work.
 		$this->rateLimit->assertDeviceApi((string)$device->getId());
 		return $device;
+	}
+
+	/**
+	 * Live access door — unlock TTL must not outlive ACL revoke (same closed oracle as verify).
+	 */
+	private function assertLiveAppAccess(string $userId): void
+	{
+		if (!$this->access->canAccessApp($userId)) {
+			throw new DomainException('unlock_invalid', 'Unlock invalid', 401);
+		}
 	}
 
 	/** Live kitchen-admin check — never rely solely on unlock-session cache for privileged modes. */

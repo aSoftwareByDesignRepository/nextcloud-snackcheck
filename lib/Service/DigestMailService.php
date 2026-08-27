@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\SnackCheck\Service;
 
 use OCA\SnackCheck\Db\ConsumptionLogMapper;
+use OCA\SnackCheck\Support\PeriodDisplay;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -122,7 +123,7 @@ class DigestMailService
 			$body = $this->l10n->t(
 				'Period %1$s — to deduct: %2$s EUR (gross %3$s, subsidy %4$s). Review: %5$s',
 				[
-					$period->getLabel(),
+					PeriodDisplay::format((string)$period->getLabel()),
 					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['deduct_cents']),
 					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['gross_cents']),
 					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['subsidy_cents']),

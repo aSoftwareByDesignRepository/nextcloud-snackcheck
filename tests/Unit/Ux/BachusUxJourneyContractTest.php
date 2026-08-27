@@ -32,9 +32,13 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('data-instant="1"', $src);
 		self::assertStringContainsString('Restock +1', $src);
 		self::assertStringContainsString('Restock other amount', $src);
-		// Instant Restock +1 lives under More — Edit is the only always-visible row action.
+		// Bachus: Restock +1 is the always-visible primary; Edit secondary; other under More.
 		self::assertMatchesRegularExpression(
-			'/snk-row-more[\s\S]{0,400}data-instant="1"[\s\S]{0,120}Restock \+1/',
+			'/snk-btn--primary[\s\S]{0,200}data-instant="1"[\s\S]{0,120}Restock \+1/',
+			$src
+		);
+		self::assertMatchesRegularExpression(
+			'/data-instant="1"[\s\S]{0,400}data-snk-action="edit-item"/',
 			$src
 		);
 	}
@@ -97,7 +101,7 @@ final class BachusUxJourneyContractTest extends TestCase
 			$catalog
 		);
 		self::assertMatchesRegularExpression(
-			'/snk-row-more[\s\S]{0,400}snk-btn--primary[\s\S]{0,160}data-snk-action="restock"[\s\S]{0,200}Restock \+1/',
+			'/snk-btn--primary[\s\S]{0,200}data-snk-action="restock"[\s\S]{0,200}data-instant="1"[\s\S]{0,120}Restock \+1/',
 			$catalog
 		);
 		self::assertStringNotContainsString("\$l->t('Tags')", $catalog);
@@ -154,12 +158,44 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('data-snk-qty', $log);
 		self::assertStringContainsString('[1, 2, 3, 5]', $log);
 		self::assertStringContainsString('data-snk-mode', $log);
-		self::assertStringContainsString('snk-mode-proxy', $log);
+		self::assertStringContainsString('snk-proxy-panel.php', $log);
 		self::assertStringContainsString('snk-mode-hospitality', $log);
-		self::assertStringContainsString('quantity, colleague, company', $log);
-		// Progressive disclosure: qty lives inside collapsed details below tiles.
+		self::assertStringContainsString('snk-mode-bar--surface', $log);
+		self::assertStringContainsString('quantity', $log);
+		self::assertStringContainsString('data-snk-log-find', $log);
+		self::assertStringContainsString('snk-log-group', $log);
+		$tile = (string)file_get_contents($this->root() . '/templates/parts/snk-log-tile.php');
+		self::assertStringContainsString('snk-tile__media', $tile);
+		self::assertStringContainsString('snk-log-tile.php', $log);
+		$proxy = (string)file_get_contents($this->root() . '/templates/parts/snk-proxy-panel.php');
+		self::assertStringContainsString('snk-mode-proxy', $proxy);
+		self::assertStringContainsString('$autoReady = true', $proxy);
+		self::assertStringContainsString('Find a colleague', $proxy);
+		self::assertStringContainsString('data-snk-search-scope="access"', $proxy);
+		self::assertStringContainsString('snk-filter-panel', $proxy);
+		self::assertStringContainsString('snk-mode-panel--embedded', $proxy);
+		self::assertStringContainsString('snk-proxy-pick__step', $proxy);
+		self::assertStringNotContainsString('Choose… then search', $proxy);
+		self::assertStringContainsString('snk-filter-panel', $log);
+		self::assertStringContainsString('snk-quick-filters', $log);
+		$users = (string)file_get_contents($this->root() . '/templates/pages/users.php');
+		self::assertStringContainsString('$embedded = true', $users);
+		$pulse = (string)file_get_contents($this->root() . '/templates/pages/pulse.php');
+		self::assertStringContainsString('snk-quick-filters', $pulse);
+		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		self::assertStringContainsString('.snk-filter-panel', $css);
+		self::assertStringContainsString('border-inline-start: 4px solid var(--snk-primary)', $css);
+		self::assertStringContainsString('.snk-quick-filters', $css);
+		self::assertStringContainsString('.snk-mode-panel--embedded', $css);
+		self::assertDoesNotMatchRegularExpression(
+			'/\.snk-filter-bar\s*\{[^}]*border-left:\s*4px/',
+			$css
+		);
+		$chip = (string)file_get_contents($this->root() . '/templates/parts/snk-chip-field.php');
+		self::assertStringContainsString('data-snk-chip-auto', $chip);
+		// Progressive disclosure: who-for → mode panels → tiles → qty inside More options.
 		self::assertMatchesRegularExpression(
-			'/<ul class="snk-tile-grid"[\s\S]*<details[^>]*snk-log-advanced[\s\S]*snk-qty-chip[\s\S]*<\/details>/',
+			'/snk-mode-bar--surface[\s\S]*snk-proxy-panel\.php[\s\S]*snk-tile-grid[\s\S]*<details[^>]*snk-log-advanced[\s\S]*snk-qty-chip[\s\S]*<\/details>/',
 			$log
 		);
 		self::assertMatchesRegularExpression(
@@ -169,12 +205,16 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringNotContainsString('data-snk-form="proxy-log"', $log);
 		self::assertStringNotContainsString('data-snk-form="hospitality-log"', $log);
 		self::assertStringNotContainsString('<select name="itemId"', $log);
+		self::assertStringNotContainsString('Open Periods', $log);
 
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
 		self::assertStringContainsString('snkLogQty', $js);
 		self::assertStringContainsString('currentLogMode', $js);
 		self::assertStringContainsString("mode === 'proxy'", $js);
 		self::assertStringContainsString("mode === 'hospitality'", $js);
+		self::assertStringContainsString('activateChipTarget(chips[0])', $js);
+		self::assertStringContainsString('data-snk-log-find', $js);
+		self::assertStringContainsString('uploadCatalogImage', $js);
 		self::assertStringContainsString('aria-busy', $js);
 		self::assertStringContainsString('flashTile', $js);
 		self::assertStringContainsString('mode: mode', $js);
@@ -203,7 +243,14 @@ final class BachusUxJourneyContractTest extends TestCase
 			$src
 		);
 		self::assertStringContainsString('snk-btn--danger', $src);
-		self::assertStringContainsString('dialog.snk-dialog:not([open])', (string)file_get_contents($this->root() . '/css/app.css'));
+		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		self::assertStringContainsString('dialog.snk-dialog:not([open])', $css);
+		// NC reset kills dialog margin — open dialogs must re-center explicitly.
+		self::assertStringContainsString('margin: auto !important', $css);
+		self::assertMatchesRegularExpression('/dialog\.snk-dialog\[open\]\s*\{[^}]*inset:\s*0/s', $css);
+		self::assertStringContainsString('snk-dialog--edit', $src);
+		self::assertStringContainsString('data-snk-initial-focus', $src);
+		self::assertStringContainsString('Choose picture', $src);
 	}
 
 	public function testPulseTopUpFirstAndRanksCollapsed(): void
@@ -223,6 +270,11 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('In fridge', $src);
 		self::assertStringContainsString('Target', $src);
 		self::assertStringNotContainsString('Shopping list', $src);
+		self::assertStringContainsString('snk-rank-panel', $src);
+		self::assertStringContainsString('snk-rank__place', $src);
+		self::assertStringContainsString('snk-rank__bar', $src);
+		self::assertStringContainsString('paceWindowDays', $src);
+		self::assertStringContainsString('qtySharePct', $src);
 	}
 
 	public function testErrorsAreHumanizedNotRawCodes(): void
@@ -256,14 +308,26 @@ final class BachusUxJourneyContractTest extends TestCase
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/pages/mymonth.php');
 		self::assertMatchesRegularExpression(
-			'/!empty\(\$_\[\'lines\'\]\)[\s\S]{0,200}Download PDF/',
+			'/\$hasLines\s*\):\s*\?>[\s\S]*?Download PDF/',
 			$src
 		);
+		self::assertStringContainsString('snk-hero__stats', $src);
+		self::assertStringContainsString('snk-hero__stat', $src);
+		self::assertStringContainsString('aria-labelledby="snk-hero-deduct-label"', $src);
+		self::assertStringNotContainsString('snk-hero__meta', $src);
+		// PDF must not render in the empty-state branch.
+		self::assertDoesNotMatchRegularExpression(
+			'/Nothing logged this month yet[\s\S]*Download PDF/',
+			$src
+		);
+		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		self::assertStringContainsString('.snk-hero__stats', $css);
+		self::assertStringContainsString('.snk-hero__stat', $css);
 	}
 
 	public function testBenefitsSaveNeverBrickWalls(): void
 	{
-		$src = (string)file_get_contents($this->root() . '/templates/pages/settings.php');
+		$src = (string)file_get_contents($this->root() . '/templates/parts/settings/benefits.php');
 		self::assertStringContainsString('save.disabled = false', $src);
 		self::assertStringNotContainsString('save.disabled = block', $src);
 		$js = (string)file_get_contents($this->root() . '/js/app.js');

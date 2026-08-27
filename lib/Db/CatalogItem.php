@@ -21,6 +21,8 @@ class CatalogItem extends Entity
 	protected $stockUpdatedBy;
 	protected $category;
 	protected $tagsJson;
+	protected $imageName;
+	protected $imageMime;
 	protected $createdAt;
 	protected $updatedAt;
 

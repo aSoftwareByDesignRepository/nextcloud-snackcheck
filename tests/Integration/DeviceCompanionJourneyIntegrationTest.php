@@ -107,5 +107,6 @@ final class DeviceCompanionJourneyIntegrationTest extends TestCase
 		$unpair = $terminals->revoke($deviceId, 'device:' . $deviceId);
 		self::assertTrue($unpair['ok']);
 		self::assertNull($terminals->resolveToken('Bearer ' . $token), 'revoked token must not authenticate');
+		$catalog->softDelete((int)$item->getId(), 'admin');
 	}
 }

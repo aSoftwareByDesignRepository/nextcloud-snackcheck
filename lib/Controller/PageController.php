@@ -15,16 +15,20 @@ use OCA\SnackCheck\Service\LicenseService;
 use OCA\SnackCheck\Service\PayrollExportService;
 use OCA\SnackCheck\Service\PeriodService;
 use OCA\SnackCheck\Service\PulseService;
+use OCA\SnackCheck\Service\SettingsSectionCatalog;
 use OCA\SnackCheck\Service\SettingsService;
 use OCA\SnackCheck\Service\SiteService;
 use OCA\SnackCheck\Service\SubsidyService;
 use OCA\SnackCheck\Service\TerminalDeviceService;
+use OCA\SnackCheck\Support\PeriodDisplay;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\NotFoundResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
@@ -55,6 +59,8 @@ class PageController extends Controller
 		private readonly AuditService $audit,
 		private readonly AdminTotalsService $adminTotals,
 		private readonly BrAggregateService $brAggregate,
+		private readonly SettingsSectionCatalog $settingsSections,
+		private readonly IL10N $l10n,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -90,29 +96,10 @@ class PageController extends Controller
 		$items = $sitePickRequired ? [] : $this->catalog->listActive($siteId);
 		$canHosp = $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($user);
 		$open = $this->periods->findOpen();
+		$mapped = $this->mapLogItems($items);
 		return $this->page('log', [
-			'items' => array_map(function ($i) {
-				$tags = [];
-				$raw = $i->getTagsJson();
-				if (is_string($raw) && $raw !== '') {
-					try {
-						$decoded = json_decode($raw, true, 8, JSON_THROW_ON_ERROR);
-						if (is_array($decoded)) {
-							$tags = array_values(array_filter($decoded, 'is_string'));
-						}
-					} catch (\JsonException) {
-						$tags = [];
-					}
-				}
-				return [
-					'id' => $i->getId(),
-					'name' => $i->getName(),
-					'priceCents' => $i->getPriceCents(),
-					'category' => $i->getCategory(),
-					'tags' => $tags,
-					'free' => ((int)$i->getPriceCents()) === 0,
-				];
-			}, $items),
+			'items' => $mapped,
+			'itemGroups' => $this->groupLogItems($mapped),
 			'siteId' => $siteId,
 			'sitePickRequired' => $sitePickRequired,
 			'canProxy' => $siteId > 0 && $this->access->canManageSite($user, $siteId),
@@ -163,7 +150,7 @@ class PageController extends Controller
 				'voided' => false,
 				'name' => $l->getItemNameSnap(),
 				'qty' => $l->getQty(),
-				'createdAt' => $l->getCreatedAt()?->format('c'),
+				'createdAt' => $l->getCreatedAt()?->format('Y-m-d H:i'),
 				'id' => $l->getId(),
 				'free' => $free,
 				'siteName' => $multiSite ? ($siteMap[(int)$l->getSiteId()] ?? '') : '',
@@ -171,7 +158,7 @@ class PageController extends Controller
 		}
 		$calc = $this->subsidy->computeForUser($this->settings->getSubsidyAllowanceCents(), $lineArr);
 		return $this->page('mymonth', [
-			'periodLabel' => $period->getLabel(),
+			'periodLabel' => PeriodDisplay::format((string)$period->getLabel()),
 			'periodClosed' => $period->getState() !== 'open',
 			'lines' => $lineArr,
 			'freeQty' => $freeQty,
@@ -222,6 +209,7 @@ class PageController extends Controller
 			'pulse' => $data,
 			'category' => $category !== '' ? $category : 'all',
 			'categories' => ['all', 'drink', 'snack', 'alcohol', 'other'],
+			'paceWindowDays' => $this->settings->getPaceWindowDays(),
 		]);
 	}
 
@@ -394,28 +382,7 @@ class PageController extends Controller
 		$canProxy = $siteId > 0 && !$sitePickRequired && $this->access->canManageSite($user, $siteId);
 		$proxyItems = [];
 		if ($canProxy && !$periodClosed) {
-			$proxyItems = array_map(static function ($i) {
-				$tags = [];
-				$raw = $i->getTagsJson();
-				if (is_string($raw) && $raw !== '') {
-					try {
-						$decoded = json_decode($raw, true, 8, JSON_THROW_ON_ERROR);
-						if (is_array($decoded)) {
-							$tags = array_values(array_filter($decoded, 'is_string'));
-						}
-					} catch (\JsonException) {
-						$tags = [];
-					}
-				}
-				return [
-					'id' => $i->getId(),
-					'name' => $i->getName(),
-					'priceCents' => $i->getPriceCents(),
-					'category' => $i->getCategory(),
-					'tags' => $tags,
-					'free' => ((int)$i->getPriceCents()) === 0,
-				];
-			}, $this->catalog->listActive($siteId));
+			$proxyItems = $this->mapLogItems($this->catalog->listActive($siteId));
 		}
 		return $this->page('users', array_merge(
 			$this->adminTotals->buildForOpenPeriod(null, $siteIds),
@@ -475,25 +442,38 @@ class PageController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function settings(string $section = 'access'): TemplateResponse|RedirectResponse
+	public function settings(string $section = 'access'): TemplateResponse|RedirectResponse|NotFoundResponse
 	{
 		$user = $this->requireUser();
 		$this->access->assertAppAdmin($user);
-		$allowed = ['access','pulse','privacy','benefits','unlock','license','support','digests'];
 		if ($section === 'periods') {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('snackcheck.page.periods'));
 		}
 		if ($section === 'sites') {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('snackcheck.page.sites'));
 		}
-		if (!in_array($section, $allowed, true)) {
-			$section = 'access';
+		if (!$this->settingsSections->isSection($section)) {
+			return new NotFoundResponse();
 		}
 		$all = $this->settings->getAll();
 		$hospIds = $this->hospAllow->listUserIds();
 		$companyUid = trim((string)($all['hospitalityCompanyUserId'] ?? ''));
+
+		$sectionLabels = [];
+		$sectionUrls = [];
+		foreach (SettingsSectionCatalog::SECTIONS as $sectionId) {
+			$sectionLabels[$sectionId] = $this->settingsSections->navLabel($this->l10n, $sectionId);
+			$sectionUrls[$sectionId] = $this->urlGenerator->linkToRoute('snackcheck.page.settings', ['section' => $sectionId]);
+		}
+
 		return $this->page('settings', [
 			'section' => $section,
+			'settingsSection' => $section,
+			'settingsSectionLabels' => $sectionLabels,
+			'urls' => ['settingsSections' => $sectionUrls],
+			'pageTitle' => $this->settingsSections->label($this->l10n, $section),
+			'pageHelp' => $this->settingsSections->help($this->l10n, $section),
+			'pageIcon' => 'settings',
 			'settings' => $all,
 			'hospAllowlist' => $hospIds,
 			'accessUserChips' => $this->userChips(is_array($all['accessUsers'] ?? null) ? $all['accessUsers'] : []),
@@ -612,6 +592,73 @@ class PageController extends Controller
 			$nav[] = ['id' => 'hospitality', 'label' => 'Hospitality', 'route' => 'snackcheck.page.hospitality', 'group' => 'money', 'icon' => 'coffee', 'hint' => 'Company treats'];
 		}
 		return $nav;
+	}
+
+	/**
+	 * @param list<\OCA\SnackCheck\Db\CatalogItem> $items
+	 * @return list<array{id:int,name:string,priceCents:int,category:?string,tags:list<string>,free:bool,hasImage:bool,imageUrl:?string,icon:string}>
+	 */
+	private function mapLogItems(array $items): array
+	{
+		$out = [];
+		foreach ($items as $i) {
+			$tags = [];
+			$raw = $i->getTagsJson();
+			if (is_string($raw) && $raw !== '') {
+				try {
+					$decoded = json_decode($raw, true, 8, JSON_THROW_ON_ERROR);
+					if (is_array($decoded)) {
+						$tags = array_values(array_filter($decoded, 'is_string'));
+					}
+				} catch (\JsonException) {
+					$tags = [];
+				}
+			}
+			$hasImage = \OCA\SnackCheck\Service\CatalogImageService::hasImage($i);
+			$imageUrl = null;
+			if ($hasImage) {
+				$imageUrl = $this->urlGenerator->linkToRoute('snackcheck.api.catalogImage', ['id' => (int)$i->getId()])
+					. '?v=' . rawurlencode((string)$i->getImageName());
+			}
+			$out[] = [
+				'id' => (int)$i->getId(),
+				'name' => (string)$i->getName(),
+				'priceCents' => (int)$i->getPriceCents(),
+				'category' => $i->getCategory(),
+				'tags' => $tags,
+				'free' => ((int)$i->getPriceCents()) === 0,
+				'hasImage' => $hasImage,
+				'imageUrl' => $imageUrl,
+				'icon' => \OCA\SnackCheck\Service\IconCatalog::forCategory($i->getCategory()),
+			];
+		}
+		return $out;
+	}
+
+	/**
+	 * @param list<array{id:int,name:string,priceCents:int,category:?string,tags:list<string>,free:bool,hasImage:bool,imageUrl:?string,icon:string}> $items
+	 * @return list<array{category:string,items:list<array{id:int,name:string,priceCents:int,category:?string,tags:list<string>,free:bool,hasImage:bool,imageUrl:?string,icon:string}>}>
+	 */
+	private function groupLogItems(array $items): array
+	{
+		$buckets = [];
+		foreach ($items as $item) {
+			$cat = (string)($item['category'] ?? '');
+			if ($cat === '' || !in_array($cat, CatalogService::CATEGORIES, true)) {
+				$cat = 'other';
+			}
+			if (!isset($buckets[$cat])) {
+				$buckets[$cat] = [];
+			}
+			$buckets[$cat][] = $item;
+		}
+		$groups = [];
+		foreach (CatalogService::CATEGORIES as $cat) {
+			if (!empty($buckets[$cat])) {
+				$groups[] = ['category' => $cat, 'items' => $buckets[$cat]];
+			}
+		}
+		return $groups;
 	}
 
 	private function requireUser(): string

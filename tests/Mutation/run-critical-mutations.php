@@ -187,8 +187,18 @@ assertTrue(
 		&& str_contains($catalogTpl, 'edit-item')
 		&& str_contains($catalogTpl, 'catalog-update')
 		&& str_contains($catalogTpl, 'name="parLevel"')
-		&& str_contains($catalogTpl, 'copy-item'),
-	'catalog UI exposes edit + par/onHand + copy-to-site'
+		&& str_contains($catalogTpl, 'copy-item')
+		&& str_contains($catalogTpl, 'snk-dialog--edit')
+		&& str_contains($catalogTpl, 'Choose picture')
+		&& str_contains($catalogTpl, 'data-snk-initial-focus'),
+	'catalog UI exposes edit + par/onHand + copy-to-site + centered edit chrome'
+);
+$dialogCss = file_get_contents($root . '/css/app.css');
+assertTrue(
+	is_string($dialogCss)
+		&& str_contains($dialogCss, 'margin: auto !important')
+		&& preg_match('/dialog\.snk-dialog\[open\]\s*\{[^}]*inset:\s*0/s', $dialogCss) === 1,
+	'dialog open state re-centers (NC margin reset)'
 );
 
 $digestSvc = file_get_contents($root . '/lib/Service/DigestMailService.php');
@@ -223,6 +233,8 @@ assertTrue(
 		&& str_contains($uxPulse, 'In fridge') && !str_contains($uxPulse, 'snk-details" open')
 		&& str_contains($uxPulse, 'snk-details--flush')
 		&& str_contains($uxPulse, "\$icon = 'fridge'")
+		&& str_contains($uxPulse, 'snk-rank-panel')
+		&& str_contains($uxPulse, 'snk-rank__place')
 		&& !str_contains($uxPulse, 'Nothing needs topping up.'),
 	'pulse UX: restock + plain fridge language; ranks collapsed; family empty icons'
 );
@@ -233,9 +245,12 @@ assertTrue(
 		&& str_contains($uxCss, '--snk-radius-md: 12px')
 		&& str_contains($uxCss, '--snk-radius-lg: var(--border-radius-large, 16px)')
 		&& str_contains($uxCss, '.snk-card__body > .snk-empty')
+		&& str_contains($uxCss, '.snk-filter-panel')
+		&& str_contains($uxCss, '.snk-quick-filters')
+		&& str_contains($uxCss, '.snk-mode-panel--embedded')
 		&& !preg_match('/\.snk-filter-bar\s*\{[^}]*border-left:\s*4px/', $uxCss)
 		&& !preg_match('/\.snk-empty\s*\{[^}]*color:\s*var\(--snk-muted\)/', $uxCss),
-	'pulse chrome: family radii + nested empty strip + pill filters (no callout bar)'
+	'pulse chrome: family radii + filter-panel/quick-pills; no callout pill bar'
 );
 $uxJs = file_get_contents($root . '/js/app.js');
 assertTrue(
@@ -341,7 +356,7 @@ assertTrue(
 		&& !preg_match('/\.snk-btn__sub\s*\{[^}]*opacity:\s*0\.92/', $uxCssBtn),
 	'Restock sub-label keeps full contrast (no opacity fade)'
 );
-$uxSettings = file_get_contents($root . '/templates/pages/settings.php');
+$uxSettings = file_get_contents($root . '/templates/parts/settings/benefits.php');
 assertTrue(
 	is_string($uxSettings)
 		&& str_contains($uxSettings, 'save.disabled = false')
@@ -439,7 +454,7 @@ $deviceCreateLog = file_get_contents($root . '/lib/Controller/DeviceApiControlle
 assertTrue(
 	is_string($deviceCreateLog)
 		&& preg_match('/function createLog[\s\S]{0,700}assertUserLog\(\$session\[\'userId\'\]\)/', $deviceCreateLog) === 1
-		&& preg_match('/function authenticateDevice[\s\S]{0,900}assertDeviceApi/', $deviceCreateLog) === 1,
+		&& preg_match('/function authenticateDevice[\s\S]{0,1400}assertDeviceApi/', $deviceCreateLog) === 1,
 	'device createLog user RL + authenticateDevice 120/min API RL (§9.7 / §7.5)'
 );
 $unlockSrc = file_get_contents($root . '/lib/Service/UnlockService.php');
@@ -580,11 +595,14 @@ assertTrue(
 	'shelf QR enforces site ACL (Argus BOLA)'
 );
 $usersTpl = file_get_contents($root . '/templates/pages/users.php');
+$proxyTpl = file_get_contents($root . '/templates/parts/snk-proxy-panel.php');
 assertTrue(
 	is_string($usersTpl)
-		&& str_contains($usersTpl, 'data-snk-proxy-fields')
+		&& str_contains($usersTpl, 'snk-proxy-panel.php')
 		&& str_contains($usersTpl, 'proxyItems')
-		&& str_contains($usersTpl, 'privacyTotalsOnly'),
+		&& str_contains($usersTpl, 'privacyTotalsOnly')
+		&& is_string($proxyTpl)
+		&& str_contains($proxyTpl, 'data-snk-proxy-fields'),
 	'Users page keeps proxy form under privacy (AC-35)'
 );
 $pageUsers = file_get_contents($root . '/lib/Controller/PageController.php');
@@ -724,8 +742,27 @@ assertTrue(
 	is_string($unlockSrcProg)
 		&& str_contains($unlockSrcProg, 'LOCKOUT_SCHEDULE_SECONDS')
 		&& str_contains($unlockSrcProg, 'tier:')
+		&& str_contains($unlockSrcProg, 'FAIL_COUNTER_TTL_SECONDS')
+		&& str_contains($unlockSrcProg, 'withDeviceFailLock')
+		&& !str_contains($unlockSrcProg, 'LOCKOUT_SECONDS * 2')
 		&& preg_match('/remove\(\'tier:\'\s*\.\s*\$deviceKey\)/', $unlockSrcProg) === 1,
 	'progressive unlock lockout schedule + tier clear on success (Argus SF-02)'
+);
+assertTrue(
+	is_string($mainChrome)
+		&& !str_contains($mainChrome, 'snk-nav-toggle')
+		&& !str_contains($mainChrome, 'data-snk-nav-toggle'),
+	'design-system: no custom burger — NC #app-navigation-toggle owns mobile nav'
+);
+$catalogStarter = file_get_contents($root . '/lib/Service/CatalogService.php');
+$appJsStarter = file_get_contents($root . '/js/app.js');
+assertTrue(
+	is_string($catalogStarter)
+		&& str_contains($catalogStarter, 'catalog_starter:')
+		&& str_contains($catalogStarter, 'lockGate->lock')
+		&& is_string($appJsStarter)
+		&& preg_match("/action === 'starter'[\s\S]{0,400}starterBody\.siteId/", $appJsStarter) === 1,
+	'starter catalog is site-scoped + LockGate serialized'
 );
 $deviceFail = file_get_contents($root . '/lib/Controller/DeviceApiController.php');
 assertTrue(
@@ -754,8 +791,10 @@ $lockBind = file_get_contents($root . '/lib/Controller/DeviceApiController.php')
 assertTrue(
 	is_string($lockBind)
 		&& preg_match('/function lockSession[\s\S]{0,400}invalidateUnlockToken\(\$token,\s*\(string\)\$device->getId\(\)\)/', $lockBind) === 1
-		&& preg_match('/function createLog[\s\S]{0,1200}isLiveKitchenAdmin/', $lockBind) === 1
-		&& preg_match('/function colleagues[\s\S]{0,500}isLiveKitchenAdmin/', $lockBind) === 1,
+		&& preg_match('/function createLog[\s\S]{0,1400}assertLiveAppAccess/', $lockBind) === 1
+		&& preg_match('/function createLog[\s\S]{0,1400}isLiveKitchenAdmin/', $lockBind) === 1
+		&& preg_match('/function colleagues[\s\S]{0,500}assertLiveAppAccess/', $lockBind) === 1
+		&& preg_match('/function colleagues[\s\S]{0,700}isLiveKitchenAdmin/', $lockBind) === 1,
 	'device lockSession binds token; proxy/colleagues re-check live ACL'
 );
 $pageCsrf = file_get_contents($root . '/lib/Controller/PageController.php');
@@ -774,6 +813,39 @@ assertTrue(
 		&& str_contains($cssDisabled, 'body[data-theme-light-highcontrast]')
 		&& str_contains($cssDisabled, '--snk-radius-md: 12px'),
 	'disabled tiles avoid low-contrast opacity fade (WCAG)'
+);
+$siteDeact = file_get_contents($root . '/lib/Service/SiteService.php');
+$termRevokeSite = file_get_contents($root . '/lib/Service/TerminalDeviceService.php');
+$deviceAuthSite = file_get_contents($root . '/lib/Controller/DeviceApiController.php');
+assertTrue(
+	is_string($siteDeact)
+		&& str_contains($siteDeact, 'revokeAllBySite')
+		&& is_string($termRevokeSite)
+		&& preg_match('/function revokeAllBySite[\s\S]{0,400}CAPACITY_LOCK/', $termRevokeSite) === 1
+		&& is_string($deviceAuthSite)
+		&& preg_match('/function authenticateDevice[\s\S]{0,900}sites->get\(/', $deviceAuthSite) === 1
+		&& preg_match('/function assertLiveAppAccess[\s\S]{0,300}canAccessApp/', $deviceAuthSite) === 1,
+	'inactive site kills Device API + revoke-on-deactivate + live unlock ACL (Aristoteles P0/P1)'
+);
+$logAllergen = file_get_contents($root . '/templates/parts/snk-log-tile.php');
+$settingsTermUi = file_get_contents($root . '/templates/parts/settings/license.php');
+$appJsRevoke = file_get_contents($root . '/js/app.js');
+$unlockUnique = file_get_contents($root . '/lib/Service/UnlockService.php');
+$starterCount = file_get_contents($root . '/lib/Service/CatalogService.php');
+assertTrue(
+	is_string($logAllergen)
+		&& str_contains($logAllergen, 'contains_nuts')
+		&& str_contains($logAllergen, '$ariaParts')
+		&& is_string($settingsTermUi)
+		&& str_contains($settingsTermUi, 'revoke-terminal')
+		&& is_string($appJsRevoke)
+		&& str_contains($appJsRevoke, "action === 'revoke-terminal'")
+		&& str_contains($appJsRevoke, 'button[value="cancel"]')
+		&& is_string($unlockUnique)
+		&& str_contains($unlockUnique, 'REASON_UNIQUE_CONSTRAINT_VIOLATION')
+		&& is_string($starterCount)
+		&& str_contains($starterCount, 'countBySite'),
+	'allergen tile a11y + terminal revoke UI + PIN unique race + starter countBySite'
 );
 
 exit($failures === 0 ? 0 : 1);

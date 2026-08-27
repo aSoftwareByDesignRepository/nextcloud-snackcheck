@@ -51,7 +51,7 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 		$css = (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('background: var(--snk-primary)', $css);
 		self::assertStringContainsString('.snk-badge::before', $css);
-		self::assertStringContainsString('border-left-width: 5px', $css);
+		self::assertStringContainsString('border-inline-start-width: 5px', $css);
 		self::assertStringContainsString('max-width: none', $css);
 		self::assertStringNotContainsString('max-width: 72rem', $css);
 		self::assertStringContainsString('#app-navigation.snk-nav', $css);
@@ -132,6 +132,15 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 			'/\.snk-empty\s*\{[^}]*color:\s*var\(--snk-muted\)/',
 			$css
 		);
+		// §3.6c: filter-panel accent + quick-pills strip + embedded mode (no box-in-box).
+		self::assertStringContainsString('.snk-filter-panel', $css);
+		self::assertStringContainsString('border-inline-start: 4px solid var(--snk-primary)', $css);
+		self::assertStringContainsString('.snk-quick-filters', $css);
+		self::assertStringContainsString('.snk-mode-panel--embedded', $css);
+		self::assertStringContainsString('.snk-mode-panel[hidden]', $css);
+		self::assertStringContainsString('display: none !important', $css);
+		$ds = (string)file_get_contents(dirname($this->root(), 3) . '/planning/design-system/DESIGN-SYSTEM.md');
+		self::assertStringContainsString('### 3.6c Three filter / context recipes', $ds);
 	}
 
 	public function testToastAnnouncesToLiveRegions(): void
@@ -140,5 +149,66 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 		self::assertStringContainsString('function announce(', $js);
 		self::assertStringContainsString('snk-alert-region', $js);
 		self::assertStringContainsString('toast(userFacingError(e), null, true)', $js);
+	}
+
+	public function testUsesNextcloudNavToggleNotCustomBurger(): void
+	{
+		$main = (string)file_get_contents($this->root() . '/templates/main.php');
+		$js = (string)file_get_contents($this->root() . '/js/app.js');
+		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		self::assertStringNotContainsString('snk-nav-toggle', $main);
+		self::assertStringNotContainsString('data-snk-nav-toggle', $main);
+		self::assertStringNotContainsString('initNavToggle', $js);
+		self::assertStringNotContainsString('snk-nav--open', $js);
+		self::assertDoesNotMatchRegularExpression(
+			'/#app-navigation-toggle[^{]*\{[^}]*display:\s*none\s*!important/',
+			$css
+		);
+		self::assertStringNotContainsString('snk-nav-toggle', $css);
+	}
+
+	public function testSiteScopeLabelNotBoundToNonLabelableSpan(): void
+	{
+		$main = (string)file_get_contents($this->root() . '/templates/main.php');
+		self::assertStringContainsString('id="snk-site-scope-label"', $main);
+		self::assertStringContainsString('aria-labelledby="snk-site-scope-label"', $main);
+	}
+
+	public function testAppStoreListingAssetsPresent(): void
+	{
+		$root = $this->root();
+		self::assertFileExists($root . '/Makefile');
+		self::assertFileExists($root . '/SECURITY.md');
+		self::assertFileExists($root . '/LICENSE');
+		$info = (string)file_get_contents($root . '/appinfo/info.xml');
+		self::assertStringContainsString('<category>organization</category>', $info);
+		self::assertStringContainsString('<category>tools</category>', $info);
+		self::assertStringNotContainsString('<category>productivity</category>', $info);
+		self::assertStringContainsString('nextcloud-snackcheck', $info);
+		$shots = [
+			'snackcheck-screenshot-01-log.png',
+			'snackcheck-screenshot-02-my-month.png',
+			'snackcheck-screenshot-03-catalog.png',
+			'snackcheck-screenshot-04-pulse.png',
+			'snackcheck-screenshot-05-periods.png',
+			'snackcheck-screenshot-06-users.png',
+			'snackcheck-screenshot-07-settings.png',
+		];
+		foreach ($shots as $name) {
+			$path = $root . '/screenshots/' . $name;
+			self::assertFileExists($path, $name);
+			self::assertGreaterThan(20_000, filesize($path), $name);
+			self::assertStringContainsString(
+				'raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/' . $name,
+				$info
+			);
+		}
+		self::assertFileExists($root . '/e2e/capture-store-screenshots.spec.js');
+		$pw = (string)file_get_contents($root . '/playwright.config.js');
+		self::assertStringContainsString("name: 'chromium-store'", $pw);
+		$sec = (string)file_get_contents($root . '/SECURITY.md');
+		self::assertStringContainsString('info@software-by-design.de', $sec);
+		self::assertStringNotContainsString('Cursor', $sec);
+		self::assertStringNotContainsString('cursor', strtolower($sec));
 	}
 }

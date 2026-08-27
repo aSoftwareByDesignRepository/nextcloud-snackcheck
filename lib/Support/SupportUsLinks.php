@@ -114,6 +114,21 @@ final class SupportUsLinks {
 	}
 
 	/**
+	 * License purchase / renew mailto for the Official tablet licenses settings page.
+	 */
+	public function licenseMailto(string $languageCode): string {
+		$subject = $this->isGermanLocale($languageCode)
+			? $this->appDisplayName . ': Küchen-Tablet-Lizenz'
+			: $this->appDisplayName . ': kitchen tablet license';
+		return $this->mailtoWithSubject($subject);
+	}
+
+	/** Marketing / products home (new-tab CTA on the license page). */
+	public function productsUrl(): string {
+		return self::SITE_ORIGIN . '/';
+	}
+
+	/**
 	 * Dedicated support page when published; always https under SITE_ORIGIN.
 	 * Deep-links to #packages so admins land on invoiceable SKUs / list prices.
 	 */

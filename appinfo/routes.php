@@ -35,6 +35,7 @@ return [
 		['name' => 'api#downloadPayroll', 'url' => '/api/periods/{id}/payroll', 'verb' => 'GET'],
 		['name' => 'api#downloadHospitality', 'url' => '/api/periods/{id}/hospitality-export', 'verb' => 'GET'],
 		['name' => 'api#applyLicense', 'url' => '/api/admin/license', 'verb' => 'POST'],
+		['name' => 'api#clearLicense', 'url' => '/api/admin/license', 'verb' => 'DELETE'],
 		['name' => 'api#registerTerminal', 'url' => '/api/admin/license/terminals', 'verb' => 'POST'],
 		['name' => 'api#revokeTerminal', 'url' => '/api/admin/license/terminals/revoke', 'verb' => 'POST'],
 		['name' => 'api#saveSettings', 'url' => '/api/admin/settings', 'verb' => 'POST'],

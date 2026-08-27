@@ -138,6 +138,15 @@ final class SupportUsLinksTest extends TestCase {
 		self::assertSame('info@software-by-design.de', $links->contactEmail());
 		self::assertSame('mailto:info@software-by-design.de', $links->contactMailto());
 		self::assertSame('Software by Design GbR', $links->vendorName());
+		self::assertSame('https://nextcloud.software-by-design.de/', $links->productsUrl());
+	}
+
+	public function testLicenseMailtoSubjects(): void {
+		$links = new SupportUsLinks('SnackCheck');
+		$de = $links->licenseMailto('de');
+		$en = $links->licenseMailto('en');
+		self::assertStringContainsString(rawurlencode('SnackCheck: Küchen-Tablet-Lizenz'), $de);
+		self::assertStringContainsString(rawurlencode('SnackCheck: kitchen tablet license'), $en);
 	}
 
 	public function testAbsoluteHttpsLicenseUrlAccepted(): void {

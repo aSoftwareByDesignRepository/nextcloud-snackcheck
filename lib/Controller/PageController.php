@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\SnackCheck\Controller;
 
+use OCA\SnackCheck\Config\InstanceId;
 use OCA\SnackCheck\Db\ConsumptionLogMapper as LogMapper;
 use OCA\SnackCheck\Db\HospAllowMapper;
 use OCA\SnackCheck\Service\AccessControlService;
@@ -62,6 +63,7 @@ class PageController extends Controller
 		private readonly BrAggregateService $brAggregate,
 		private readonly SettingsSectionCatalog $settingsSections,
 		private readonly IL10N $l10n,
+		private readonly InstanceId $instanceId,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -500,6 +502,17 @@ class PageController extends Controller
 			'terminalUsed' => $this->terminals->getActiveCount(),
 			'sites' => $this->sites->listActive(),
 		];
+		if ($section === 'license') {
+			$lang = method_exists($this->l10n, 'getLanguageCode') ? (string)$this->l10n->getLanguageCode() : 'en';
+			$supportLinks = new SupportUsLinks(
+				'SnackCheck',
+				true,
+				$this->urlGenerator->linkToRouteAbsolute('snackcheck.page.settings', ['section' => 'license']) . '#snk-license-key',
+			);
+			$payload['productsUrl'] = $supportLinks->productsUrl();
+			$payload['licenseRenewMailto'] = $supportLinks->licenseMailto($lang);
+			$payload['instanceId'] = $this->instanceId->get();
+		}
 		if ($section === 'support') {
 			$payload['supportUsLinks'] = new SupportUsLinks(
 				'SnackCheck',

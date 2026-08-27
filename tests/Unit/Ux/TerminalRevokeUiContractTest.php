@@ -23,14 +23,22 @@ final class TerminalRevokeUiContractTest extends TestCase
 		self::assertStringContainsString('data-snk-action="revoke-terminal"', $src);
 		self::assertStringContainsString("\$_['terminals']", $src);
 		self::assertStringContainsString('Revoke a tablet if it is lost', $src);
+		self::assertStringContainsString('What this license does', $src);
+		self::assertStringContainsString('SupportUsLinks::SITE_ORIGIN', $src);
+		self::assertStringContainsString('productsUrl', $src);
+		self::assertStringContainsString('data-snk-action="clear-license"', $src);
+		self::assertStringContainsString('Ask for a license', $src);
 	}
 
-	public function testJsWiresRevokeToExistingApi(): void
+	public function testJsWiresRevokeAndClearLicense(): void
 	{
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
 		self::assertStringContainsString("action === 'revoke-terminal'", $js);
 		self::assertStringContainsString('/api/admin/license/terminals/revoke', $js);
 		self::assertStringContainsString('deviceId', $js);
+		self::assertStringContainsString("action === 'clear-license'", $js);
+		self::assertStringContainsString("api('DELETE'", $js);
+		self::assertStringContainsString('/api/admin/license', $js);
 		// Danger dialogs focus Cancel first.
 		self::assertStringContainsString('button[value="cancel"]', $js);
 	}

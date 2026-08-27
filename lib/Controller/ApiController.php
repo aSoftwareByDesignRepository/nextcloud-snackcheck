@@ -310,6 +310,19 @@ class ApiController extends Controller
 	}
 
 	#[NoAdminRequired]
+	public function clearLicense(): JSONResponse
+	{
+		try {
+			$user = $this->uid();
+			$this->access->assertAppAdmin($user);
+			$cleared = $this->enforcement->clearCommercialState();
+			return $this->ok(['cleared' => $cleared]);
+		} catch (\Throwable $e) {
+			return $this->fromDomain($e);
+		}
+	}
+
+	#[NoAdminRequired]
 	public function registerTerminal(): JSONResponse
 	{
 		try {

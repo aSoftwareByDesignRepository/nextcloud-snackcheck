@@ -141,7 +141,22 @@ class LicenseService
 
 	public function clearLicense(): void
 	{
-		$this->licenseStateMapper->deleteAll();
+		try {
+			$this->locking->acquireLock(self::APPLY_LOCK, ILockingProvider::LOCK_EXCLUSIVE);
+		} catch (LockedException) {
+			$this->logger->warning('SNK2 license clear busy');
+			throw new \OCA\SnackCheck\Exception\DomainException(
+				'license_busy',
+				'License update in progress. Try again in a moment.',
+				409
+			);
+		}
+		try {
+			$this->licenseStateMapper->deleteAll();
+			$this->logger->info('SNK2 license cleared');
+		} finally {
+			$this->locking->releaseLock(self::APPLY_LOCK, ILockingProvider::LOCK_EXCLUSIVE);
+		}
 	}
 
 	public function hasStoredLicense(): bool

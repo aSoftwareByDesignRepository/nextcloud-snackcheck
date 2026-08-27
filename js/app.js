@@ -1413,6 +1413,16 @@
 					deviceId: btn.getAttribute('data-device-id') || '',
 				});
 				window.location.reload();
+			} else if (action === 'clear-license') {
+				const okClearLic = await snkConfirm(
+					t('Remove this license? Kitchen tablets stop working immediately. The web app stays free.', 'Remove this license? Kitchen tablets stop working immediately. The web app stays free.'),
+					t('Remove license', 'Remove license'),
+					{ danger: true }
+				);
+				if (!okClearLic) return;
+				await api('DELETE', OC.generateUrl('/apps/snackcheck/api/admin/license'));
+				toast(t('License removed', 'License removed'));
+				window.location.reload();
 			}
 		} catch (e) {
 			toast(userFacingError(e), null, true);

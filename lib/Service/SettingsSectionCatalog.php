@@ -91,7 +91,8 @@ final class SettingsSectionCatalog
 			'digests' => $l->t('Emails'),
 			'unlock' => $l->t('Unlock PIN / QR'),
 			'license' => $l->t('License'),
-			'support' => $l->t('Support & us'),
+			/* Short chip label — page H1 still uses “Support & us”. */
+			'support' => $l->t('Support'),
 			default => $l->t('Settings'),
 		};
 	}
@@ -108,7 +109,7 @@ final class SettingsSectionCatalog
 			'pulse' => $l->t('How many days the overview uses for snacks and restock.'),
 			'digests' => $l->t('Optional emails before month end and weekly restock reminders.'),
 			'unlock' => $l->t('PIN or QR so people can unlock the kitchen tablet. Keep secrets offline.'),
-			'license' => $l->t('Apply an SNK2 key and register or revoke kitchen tablets.'),
+			'license' => $l->t('The web app stays free. An SNK2 key unlocks kitchen tablets for your organisation.'),
 			'support' => '',
 			default => '',
 		};

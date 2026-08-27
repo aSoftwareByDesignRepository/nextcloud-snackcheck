@@ -78,7 +78,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 	</article>
 
 	<article class="snk-card">
-		<details class="snk-details snk-details--flush">
+		<details class="snk-details snk-details--flush"<?php if (empty($pulse['ranks'])) { ?> open<?php } ?>>
 			<summary><?php p($l->t("What's popular")); ?></summary>
 			<?php if (empty($pulse['ranks'])): ?>
 				<?php

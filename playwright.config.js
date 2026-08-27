@@ -54,7 +54,7 @@ module.exports = defineConfig({
 		{
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
-			testIgnore: /capture-store-screenshots\.spec\.js/,
+			testIgnore: /capture-store-screenshots\.spec\.js|capture-ux-audit\.spec\.js/,
 		},
 		{
 			name: 'chromium-store',
@@ -64,6 +64,26 @@ module.exports = defineConfig({
 				deviceScaleFactor: 1,
 			},
 			testMatch: /capture-store-screenshots\.spec\.js/,
+		},
+		{
+			name: 'chromium-ux-audit',
+			use: {
+				...devices['Desktop Chrome'],
+				viewport: { width: 1440, height: 900 },
+				deviceScaleFactor: 1,
+			},
+			testMatch: /capture-ux-audit\.spec\.js/,
+		},
+		{
+			name: 'chromium-ux-audit-mobile',
+			use: {
+				...devices['Desktop Chrome'],
+				viewport: { width: 390, height: 844 },
+				deviceScaleFactor: 2,
+				isMobile: true,
+				hasTouch: true,
+			},
+			testMatch: /capture-ux-audit\.spec\.js/,
 		},
 	],
 });

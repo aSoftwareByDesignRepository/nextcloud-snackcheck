@@ -114,12 +114,16 @@ test.describe('SnackCheck UX journeys', () => {
 		}
 	});
 
-	test('Pulse: Top-up card owns Restock CTA; ranks stay collapsed', async ({ page }) => {
+	test('Pulse: Top-up card owns Restock CTA; empty popular section opens', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse`);
-		await expect(page.getByRole('heading', { name: /top-up|auffüllen|nachfüllen/i }).first()).toBeVisible();
-		const ranks = page.locator('details.snk-details').filter({ hasText: /selling|verkauft|läuft/i });
+		await expect(page.locator('.snk-card__title').filter({ hasText: /restock|auffüll|nachfüll|top-up/i }).first()).toBeVisible();
+		const ranks = page.locator('details.snk-details--flush').first();
 		if (await ranks.count()) {
-			await expect(ranks.first()).not.toHaveAttribute('open', '');
+			const hasRows = await page.locator('.snk-rank-list .snk-rank').count();
+			if (hasRows === 0) {
+				await expect(ranks).toHaveAttribute('open', '');
+				await expect(ranks.locator('.snk-empty__title')).toBeVisible();
+			}
 		}
 		const restock = page.locator('button[data-snk-action="restock"][data-instant="1"]');
 		if (await restock.count()) {
@@ -197,15 +201,19 @@ test.describe('SnackCheck UX journeys', () => {
 		if (await sub.count()) {
 			await expect(page.locator('.snk-nav__sublink[aria-current="page"]')).toBeVisible();
 		}
-		await page.locator('.snk-settings-nav__link').filter({ hasText: /Benefits|Leistungen/i }).first().click();
+		await page.locator('.snk-settings-nav__link').filter({ hasText: /Subsidy|Zuschuss|Benefits|Leistungen/i }).first().click();
 		await expect(page).toHaveURL(/settings\/benefits/);
 		await expect(page.locator('#snk-hosp-enabled, #snk-benefits-form').first()).toBeVisible();
 	});
 
 	test('Settings license: register form + revoke wiring present', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/license`);
+		await expect(page.locator('#snk-license-intro-title')).toBeVisible();
+		await expect(page.locator('a.snk-license-cta__link[href^="https://"][href*="software-by-design.de"]')).toBeVisible();
+		await expect(page.locator('a.snk-license-cta__link[href^="mailto:"]')).toBeVisible();
 		await expect(page.locator('form[data-snk-form="terminal"]')).toBeVisible();
 		await expect(page.locator('form[data-snk-form="license"]')).toBeVisible();
+		await expect(page.locator('#snk-license-key')).toBeVisible();
 		// List may be empty without SNK2 devices — contract is Register + JS revoke handler.
 		const revokeBtns = page.locator('[data-snk-action="revoke-terminal"]');
 		const count = await revokeBtns.count();

@@ -1,7 +1,15 @@
-/node_modules/
-/.auth/
-/e2e/.env
-/test-results/
-/playwright-report/
-/blob-report/
+# Dependencies
+node_modules/
+vendor/
+
+# Test / tooling artifacts
 .phpunit.result.cache
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# Env
+.env
+.env.local
+e2e/.env

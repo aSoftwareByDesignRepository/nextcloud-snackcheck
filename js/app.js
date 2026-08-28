@@ -599,6 +599,11 @@
 		}
 	}
 	function findUserSearchNear(el) {
+		const field = el && el.closest ? el.closest('[data-snk-chip-field]') : null;
+		if (field && field.classList.contains('snk-chip-field--inline')) {
+			const inField = field.querySelector('[data-snk-user-search]');
+			if (inField) return inField;
+		}
 		const form = el && el.closest ? el.closest('form') : null;
 		const section = el && el.closest
 			? (el.closest('.snk-proxy-pick')
@@ -630,6 +635,16 @@
 		return document.querySelector('[data-snk-user-results]');
 	}
 	function resolveChipTargetForSearch(searchInput) {
+		const field = searchInput.closest('[data-snk-chip-field]');
+		if (field) {
+			const chip = field.querySelector('.snk-chip-target');
+			if (chip) {
+				if (chip.getAttribute('data-snk-active') !== '1') {
+					activateChipTarget(chip);
+				}
+				return chip;
+			}
+		}
 		const active = activeChipTarget();
 		if (active) return active;
 		// Chip targets sit beside the search box — never scope to .snk-chip-search alone.
@@ -808,6 +823,9 @@
 				setActiveOption(0);
 			}
 
+			input.addEventListener('focus', function () {
+				resolveChipTargetForSearch(input);
+			});
 			input.addEventListener('input', function () {
 				clearTimeout(timer);
 				inflight += 1;

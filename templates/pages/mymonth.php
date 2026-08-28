@@ -1,16 +1,15 @@
 <?php
 /** @var array $_ */
 /** @var \OCP\IL10N $l */
-$fmtEuro = static function (int $cents): string {
-	return number_format($cents / 100, 2, ',', '.') . ' €';
-};
+use OCA\SnackCheck\Service\MyMonthStatementPresenter;
+
+$presenter = new MyMonthStatementPresenter();
 $deductCents = (int)($_['deductCents'] ?? 0);
-$grossCents = (int)($_['grossCents'] ?? 0);
-$subsidyCents = (int)($_['subsidyCents'] ?? 0);
-$freeQty = (int)($_['freeQty'] ?? 0);
+$fmtEuro = static fn (int $cents): string => $presenter->formatEuroWeb($cents);
+$breakdownRows = array_values($_['breakdownRows'] ?? []);
 $hasLines = !empty($_['lines']);
 ?>
-<section class="snk-section" aria-label="<?php p($l->t('My month')); ?>">
+<section class="snk-section snk-section--mymonth" aria-label="<?php p($l->t('My month')); ?>">
 	<?php if (!empty($_['periodClosed'])): ?>
 		<div class="snk-callout snk-callout--warn" role="status">
 			<p><?php p($l->t('Showing the last closed period. Logging is locked until the next period opens.')); ?></p>
@@ -22,32 +21,34 @@ $hasLines = !empty($_['lines']);
 		</div>
 	<?php endif; ?>
 
-	<article class="snk-hero" aria-labelledby="snk-hero-deduct-label">
-		<div class="snk-hero__main">
-			<p id="snk-hero-deduct-label" class="snk-hero__label"><?php p($l->t('To deduct')); ?></p>
-			<p class="snk-hero__value" data-snk-hero-value><?php p($fmtEuro($deductCents)); ?></p>
-			<p class="snk-hero__hint snk-muted"><?php p($l->t('This is what payroll takes from your pay for this period.')); ?></p>
-		</div>
-		<dl class="snk-hero__stats">
-			<div class="snk-hero__stat">
-				<dt><?php p($l->t('Gross')); ?></dt>
-				<dd><?php p($fmtEuro($grossCents)); ?></dd>
-			</div>
-			<div class="snk-hero__stat">
-				<dt><?php p($l->t('Subsidy')); ?></dt>
-				<dd><?php p($fmtEuro($subsidyCents)); ?></dd>
-			</div>
-			<?php if ($freeQty > 0): ?>
-				<div class="snk-hero__stat">
-					<dt><?php p($l->t('Free items')); ?></dt>
-					<dd><?php p((string)$freeQty); ?></dd>
-				</div>
-			<?php endif; ?>
-		</dl>
+	<article class="snk-statement" aria-labelledby="snk-statement-title">
+		<header class="snk-statement__hero">
+			<h2 id="snk-statement-title" class="snk-statement__label"><?php p($l->t('To deduct')); ?></h2>
+			<p class="snk-statement__amount" data-snk-hero-value><?php p($fmtEuro($deductCents)); ?></p>
+			<p class="snk-statement__lead snk-muted"><?php p($l->t('This is what payroll takes from your pay for this period.')); ?></p>
+		</header>
+
 		<?php if ($hasLines): ?>
-			<div class="snk-hero__actions">
-				<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.downloadMyMonthPdf')); ?>"><?php p($l->t('Download PDF')); ?></a>
+			<div class="snk-statement__breakdown" role="group" aria-label="<?php p($l->t('How this adds up')); ?>">
+				<h3 class="snk-statement__breakdown-title"><?php p($l->t('How this adds up')); ?></h3>
+				<dl class="snk-money-list">
+					<?php foreach ($breakdownRows as $row): ?>
+						<div class="snk-money-list__row">
+							<dt><?php p($row['label']); ?></dt>
+							<dd><?php p($row['value']); ?></dd>
+						</div>
+					<?php endforeach; ?>
+					<div class="snk-money-list__row snk-money-list__row--total">
+						<dt><?php p($l->t('To deduct')); ?></dt>
+						<dd><?php p($fmtEuro($deductCents)); ?></dd>
+					</div>
+				</dl>
 			</div>
+
+			<footer class="snk-statement__actions">
+				<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.downloadMyMonthPdf')); ?>"><?php p($l->t('Download PDF for payroll')); ?></a>
+				<p class="snk-statement__actions-hint snk-muted"><?php p($l->t('Share this PDF with HR if they ask for proof.')); ?></p>
+			</footer>
 		<?php endif; ?>
 	</article>
 
@@ -62,36 +63,39 @@ $hasLines = !empty($_['lines']);
 		include __DIR__ . '/../parts/snk-empty-state.php';
 		?>
 	<?php else: ?>
-		<article class="snk-card snk-card--table-solo">
-			<div class="snk-table-wrap">
-				<table class="snk-table">
-				<caption class="snk-sr-only"><?php p($l->t('Your consumption this period')); ?></caption>
-				<thead>
-					<tr>
-						<th scope="col"><?php p($l->t('Item')); ?></th>
-						<?php if (!empty($_['multiSite'])): ?>
-						<th scope="col"><?php p($l->t('Site')); ?></th>
-						<?php endif; ?>
-						<th scope="col"><?php p($l->t('Qty')); ?></th>
-						<th scope="col"><?php p($l->t('Total')); ?></th>
-						<th scope="col"><?php p($l->t('When')); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ($_['lines'] as $line): ?>
+		<section class="snk-subsection" aria-labelledby="snk-mymonth-items-title">
+			<h2 id="snk-mymonth-items-title" class="snk-subsection__title"><?php p($l->t('Your consumption this period')); ?></h2>
+			<article class="snk-card snk-card--table-solo">
+				<div class="snk-table-wrap">
+					<table class="snk-table">
+					<caption class="snk-sr-only"><?php p($l->t('Your consumption this period')); ?></caption>
+					<thead>
 						<tr>
-							<td><?php p($line['name']); ?><?php if (!empty($line['free'])): ?> <span class="snk-badge"><?php p($l->t('Free')); ?></span><?php endif; ?></td>
+							<th scope="col"><?php p($l->t('Item')); ?></th>
 							<?php if (!empty($_['multiSite'])): ?>
-							<td class="snk-muted"><?php p($line['siteName'] ?? ''); ?></td>
+							<th scope="col"><?php p($l->t('Site')); ?></th>
 							<?php endif; ?>
-							<td><?php p($line['qty']); ?></td>
-							<td><?php if (!empty($line['free'])): ?><?php p($l->t('Free')); ?><?php else: ?><?php p($fmtEuro((int)$line['line_total_cents'])); ?><?php endif; ?></td>
-							<td class="snk-muted snk-tabular"><?php p($line['createdAt'] ?? ''); ?></td>
+							<th scope="col" class="snk-table__num"><?php p($l->t('Qty')); ?></th>
+							<th scope="col" class="snk-table__num"><?php p($l->t('Total')); ?></th>
+							<th scope="col"><?php p($l->t('When')); ?></th>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-			</div>
-		</article>
+					</thead>
+					<tbody>
+						<?php foreach ($_['lines'] as $line): ?>
+							<tr>
+								<td><?php p($line['name']); ?><?php if (!empty($line['free'])): ?> <span class="snk-badge"><?php p($l->t('Free')); ?></span><?php endif; ?></td>
+								<?php if (!empty($_['multiSite'])): ?>
+								<td class="snk-muted"><?php p($line['siteName'] ?? ''); ?></td>
+								<?php endif; ?>
+								<td class="snk-table__num"><?php p($line['qty']); ?></td>
+								<td class="snk-table__num"><?php if (!empty($line['free'])): ?><?php p($l->t('Free')); ?><?php else: ?><?php p($fmtEuro((int)$line['line_total_cents'])); ?><?php endif; ?></td>
+								<td class="snk-muted snk-tabular"><?php p($line['createdAt'] ?? ''); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+				</div>
+			</article>
+		</section>
 	<?php endif; ?>
 </section>

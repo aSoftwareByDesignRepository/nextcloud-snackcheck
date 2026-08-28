@@ -16,6 +16,7 @@ use OCA\SnackCheck\Service\CatalogService;
 use OCA\SnackCheck\Service\ConsumptionLogService;
 use OCA\SnackCheck\Service\LicenseEnforcementService;
 use OCA\SnackCheck\Service\LicenseService;
+use OCA\SnackCheck\Service\MyMonthStatementPresenter;
 use OCA\SnackCheck\Service\PayrollExportService;
 use OCA\SnackCheck\Service\PeriodService;
 use OCA\SnackCheck\Service\PulseService;
@@ -37,6 +38,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -74,6 +76,8 @@ class ApiController extends Controller
 		private readonly BrAggregateService $brAggregate,
 		private readonly ComplimentaryExportService $complimentary,
 		private readonly ShelfQrService $shelfQr,
+		private readonly IL10N $l10n,
+		private readonly MyMonthStatementPresenter $myMonthStatement,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -477,6 +481,13 @@ class ApiController extends Controller
 					$allowUpdate = $this->requireExistingUsers($allowUpdate);
 					$projectedAllow = $allowUpdate;
 				}
+			}
+
+			$projectedAccessMode = $accessMode ?? $this->settings->getAccessMode();
+			$projectedAccessUsers = $accessUsers ?? $this->settings->getAccessUsers();
+			$projectedAccessGroups = $accessGroups ?? $this->settings->getAccessGroups();
+			if ($projectedAccessMode === 'listed' && $projectedAccessUsers === [] && $projectedAccessGroups === []) {
+				return $this->fail('validation_failed', 422, 'Add at least one allowed user or group in Restricted mode');
 			}
 
 			// --- apply (no validation returns after this point) ---
@@ -908,8 +919,8 @@ class ApiController extends Controller
 					'siteName' => $multiSite ? ($siteMap[(int)$l->getSiteId()] ?? '') : '',
 				];
 			}
-			$calc = $this->subsidy->computeForUser($this->settings->getSubsidyAllowanceCents(), $lineArr);
-			$eur = static fn (int $cents): string => PayrollExportService::centsToEur($cents) . ' EUR';
+			$subsidyAllowanceCents = $this->settings->getSubsidyAllowanceCents();
+			$calc = $this->subsidy->computeForUser($subsidyAllowanceCents, $lineArr);
 			$displayUser = $user;
 			$sessionUser = $this->userSession->getUser();
 			if ($sessionUser !== null) {
@@ -919,60 +930,19 @@ class ApiController extends Controller
 				}
 			}
 			$periodLabel = PeriodDisplay::format((string)$period->getLabel());
-
-			if ($multiSite) {
-				$columns = ['Item', 'Site', 'Qty', 'Amount', 'When'];
-				$colWidths = [0.34, 0.16, 0.10, 0.20, 0.20];
-			} else {
-				$columns = ['Item', 'Qty', 'Amount', 'When'];
-				$colWidths = [0.46, 0.12, 0.22, 0.20];
-			}
-
-			$rows = [];
-			foreach ($lineArr as $row) {
-				$cells = [(string)$row['name']];
-				if ($multiSite) {
-					$cells[] = (string)$row['siteName'];
-				}
-				$cells[] = (string)(int)$row['qty'];
-				$cells[] = !empty($row['free']) ? 'Free' : $eur((int)$row['line_total_cents']);
-				$cells[] = (string)$row['createdAt'];
-				$rows[] = $cells;
-			}
-
-			$gross = $eur((int)$calc['gross_cents']);
-			$subsidy = $eur((int)$calc['subsidy_cents']);
-			$deduct = $eur((int)$calc['deduct_cents']);
-
-			$note = 'Amounts in EUR. Free items are logged for restock and are not charged.';
-			if ($freeQty > 0) {
-				$note .= ' Free items in this period: ' . $freeQty . '.';
-			}
-
-			$pdf = SimplePdfBuilder::buildStatement([
-				'brand' => 'SnackCheck',
-				'title' => 'My month — payroll preview',
-				'meta' => [
-					['Period', $periodLabel],
-					['Person', $displayUser],
-					['Generated', (new \DateTimeImmutable('now'))->format('Y-m-d H:i')],
-				],
-				'summary' => [
-					['label' => 'Gross', 'value' => $gross],
-					['label' => 'Subsidy', 'value' => $subsidy],
-					['label' => 'Total to deduct', 'value' => $deduct, 'strong' => true],
-				],
-				'tableTitle' => 'Logged items',
-				'columns' => $columns,
-				'colWidths' => $colWidths,
-				'rows' => $rows,
-				'totals' => [
-					['label' => 'Gross', 'value' => $gross],
-					['label' => 'Subsidy', 'value' => $subsidy],
-					['label' => 'TOTAL TO DEDUCT', 'value' => $deduct, 'strong' => true],
-				],
-				'note' => $note,
-			]);
+			$pdf = SimplePdfBuilder::buildStatement($this->myMonthStatement->buildPdfDocument(
+				$this->l10n,
+				$periodLabel,
+				$displayUser,
+				(new \DateTimeImmutable('now'))->format('Y-m-d H:i'),
+				$lineArr,
+				(int)$calc['gross_cents'],
+				(int)$calc['subsidy_cents'],
+				(int)$calc['deduct_cents'],
+				$subsidyAllowanceCents,
+				$freeQty,
+				$multiSite,
+			));
 			return new DataDownloadResponse($pdf, 'snackcheck-my-month.pdf', 'application/pdf');
 		} catch (\Throwable $e) {
 			return $this->fromDomain($e);

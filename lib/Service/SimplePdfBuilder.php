@@ -46,6 +46,10 @@ final class SimplePdfBuilder
 	 *   brand?: string,
 	 *   title: string,
 	 *   meta?: list<array{0:string,1:string}>,
+	 *   keyFigure?: array{label:string,value:string,details?:list<string>},
+	 *   breakdown?: list<array{label:string,value:string}>,
+	 *   totalLine?: array{label:string,value:string},
+	 *   emptyItemsText?: string,
 	 *   summary?: list<array{label:string,value:string,strong?:bool}>,
 	 *   tableTitle?: string,
 	 *   columns?: list<string>,
@@ -61,6 +65,13 @@ final class SimplePdfBuilder
 		$title = trim((string)($doc['title'] ?? 'Statement'));
 		/** @var list<array{0:string,1:string}> $meta */
 		$meta = array_values($doc['meta'] ?? []);
+		/** @var array{label:string,value:string,details?:list<string>}|null $keyFigure */
+		$keyFigure = isset($doc['keyFigure']) && is_array($doc['keyFigure']) ? $doc['keyFigure'] : null;
+		/** @var list<array{label:string,value:string}> $breakdown */
+		$breakdown = array_values($doc['breakdown'] ?? []);
+		/** @var array{label:string,value:string}|null $totalLine */
+		$totalLine = isset($doc['totalLine']) && is_array($doc['totalLine']) ? $doc['totalLine'] : null;
+		$emptyItemsText = trim((string)($doc['emptyItemsText'] ?? 'No items in this period.'));
 		/** @var list<array{label:string,value:string,strong?:bool}> $summary */
 		$summary = array_values($doc['summary'] ?? []);
 		$tableTitle = trim((string)($doc['tableTitle'] ?? 'Items'));
@@ -109,18 +120,20 @@ final class SimplePdfBuilder
 			}
 		};
 
-		$drawTableHeader = static function () use (&$state, $columns, $colWidths, $contentWidth): void {
+		$cellPad = 4.0;
+
+		$drawTableHeader = static function () use (&$state, $columns, $colWidths, $contentWidth, $cellPad): void {
+			$rowTop = $state['y'] + 4.0;
+			$state['ops'] .= self::fillRect(self::MARGIN_L, $rowTop - 13.0, $contentWidth, 16.0, 0.93);
 			$x = self::MARGIN_L;
 			foreach ($columns as $i => $col) {
 				$w = $contentWidth * $colWidths[$i];
-				$alignRight = $i === count($columns) - 1
-					|| strcasecmp($col, 'Qty') === 0
-					|| strcasecmp($col, 'Amount') === 0;
-				$label = self::clip($col, (int)max(6, floor($w / 6)));
+				$alignRight = self::columnAlignsRight($col);
+				$label = self::clip($col, (int)max(6, floor(($w - ($cellPad * 2.0)) / 5.8)));
 				if ($alignRight) {
-					$state['ops'] .= self::textRight($x + $w, $state['y'], $label, 9, true);
+					$state['ops'] .= self::textRight($x + $w - $cellPad, $state['y'], $label, 9, true);
 				} else {
-					$state['ops'] .= self::textAt($x, $state['y'], $label, 9, true);
+					$state['ops'] .= self::textAt($x + $cellPad, $state['y'], $label, 9, true);
 				}
 				$x += $w;
 			}
@@ -142,15 +155,84 @@ final class SimplePdfBuilder
 
 		foreach ($meta as $pair) {
 			$ensure(16.0);
-			$state['ops'] .= self::textAt(self::MARGIN_L, $state['y'], self::clip((string)$pair[0], 28) . ':', 10, true);
-			$state['ops'] .= self::textAt(self::MARGIN_L + 92.0, $state['y'], self::clip((string)$pair[1], 70), 10, false);
+			$label = self::clip((string)$pair[0], 24);
+			$value = self::clip((string)$pair[1], 72);
+			$state['ops'] .= self::textAt(self::MARGIN_L, $state['y'], $label . ':', 10, true);
+			$state['ops'] .= self::textAt(self::MARGIN_L + 88.0, $state['y'], $value, 10, false);
 			$state['y'] -= 14.0;
 		}
 		if ($meta !== []) {
-			$state['y'] -= 6.0;
+			$state['y'] -= 4.0;
 		}
 
-		if ($summary !== []) {
+		if ($keyFigure !== null && trim((string)($keyFigure['label'] ?? '')) !== '') {
+			$boxRows = $breakdown;
+			$rowCount = count($boxRows) + ($totalLine !== null ? 1 : 0);
+			$boxH = 56.0 + ($rowCount > 0 ? 8.0 + ($rowCount * 15.0) + 6.0 : 0.0);
+			$ensure($boxH + 16.0);
+			$boxBottom = $state['y'] - $boxH + 8.0;
+			$state['ops'] .= self::fillRect(self::MARGIN_L, $boxBottom, $contentWidth, $boxH, 0.97);
+			$state['ops'] .= self::strokeRect(self::MARGIN_L, $boxBottom, $contentWidth, $boxH);
+			$state['ops'] .= self::textAt(
+				self::MARGIN_L + 14.0,
+				$state['y'] - 2.0,
+				self::clip((string)$keyFigure['label'], 48),
+				9,
+				true
+			);
+			$state['ops'] .= self::textRight(
+				self::MARGIN_L + $contentWidth - 14.0,
+				$state['y'] - 20.0,
+				self::clip((string)($keyFigure['value'] ?? ''), 24),
+				22,
+				true
+			);
+			$state['y'] -= 34.0;
+			if ($boxRows !== []) {
+				$state['ops'] .= self::hline($state['y'], 0.78);
+				$state['y'] -= 14.0;
+			}
+			foreach ($boxRows as $row) {
+				$state['ops'] .= self::textAt(
+					self::MARGIN_L + 14.0,
+					$state['y'],
+					self::clip((string)$row['label'], 44),
+					10,
+					false
+				);
+				$state['ops'] .= self::textRight(
+					self::MARGIN_L + $contentWidth - 14.0,
+					$state['y'],
+					self::clip((string)$row['value'], 24),
+					10,
+					false
+				);
+				$state['y'] -= 15.0;
+			}
+			if ($totalLine !== null) {
+				$state['y'] -= 2.0;
+				$state['ops'] .= self::hline($state['y'], 0.55);
+				$state['y'] -= 14.0;
+				$state['ops'] .= self::textAt(
+					self::MARGIN_L + 14.0,
+					$state['y'],
+					self::clip((string)$totalLine['label'], 44),
+					10,
+					true
+				);
+				$state['ops'] .= self::textRight(
+					self::MARGIN_L + $contentWidth - 14.0,
+					$state['y'],
+					self::clip((string)$totalLine['value'], 24),
+					11,
+					true
+				);
+				$state['y'] -= 12.0;
+			}
+			$state['y'] -= 14.0;
+		}
+
+		if ($summary !== [] && $keyFigure === null) {
 			$cardH = 16.0 + (count($summary) * 16.0) + 10.0;
 			$ensure($cardH + 8.0);
 			$state['ops'] .= self::fillRect(self::MARGIN_L, $state['y'] - $cardH + 8.0, $contentWidth, $cardH, 0.94);
@@ -179,16 +261,14 @@ final class SimplePdfBuilder
 			$state['y'] -= 14.0;
 		}
 
-		$ensure(40.0);
+		$ensure(36.0);
 		$state['ops'] .= self::textAt(self::MARGIN_L, $state['y'], $tableTitle, 11, true);
-		$state['y'] -= 8.0;
-		$state['ops'] .= self::hline($state['y']);
-		$state['y'] -= 16.0;
+		$state['y'] -= 10.0;
 		$drawTableHeader();
 
 		if ($rows === []) {
 			$ensure(16.0);
-			$state['ops'] .= self::textAt(self::MARGIN_L, $state['y'], 'No items in this period.', 10, false);
+			$state['ops'] .= self::textAt(self::MARGIN_L, $state['y'], self::clip($emptyItemsText, 90), 10, false);
 			$state['y'] -= 18.0;
 		} else {
 			foreach ($rows as $row) {
@@ -212,35 +292,35 @@ final class SimplePdfBuilder
 				for ($i = 0; $i < $cellCount; $i++) {
 					$w = $contentWidth * $colWidths[$i];
 					$raw = (string)($row[$i] ?? '');
-					$maxChars = (int)max(4, floor($w / 5.4));
+					$maxChars = (int)max(4, floor(($w - ($cellPad * 2.0)) / 5.2));
 					$cell = self::clip($raw, $maxChars);
-					$alignRight = $i === $cellCount - 1
-						|| strcasecmp($columns[$i], 'Qty') === 0
-						|| strcasecmp($columns[$i], 'Amount') === 0;
+					$alignRight = self::columnAlignsRight($columns[$i]);
 					if ($alignRight) {
-						$state['ops'] .= self::textRight($x + $w, $state['y'], $cell, 10, false);
+						$state['ops'] .= self::textRight($x + $w - $cellPad, $state['y'], $cell, 10, false);
 					} else {
-						$state['ops'] .= self::textAt($x, $state['y'], $cell, 10, false);
+						$state['ops'] .= self::textAt($x + $cellPad, $state['y'], $cell, 10, false);
 					}
 					$x += $w;
 				}
-				$state['y'] -= 15.0;
+				$state['y'] -= 6.0;
+				$state['ops'] .= self::hline($state['y'], 0.82);
+				$state['y'] -= 10.0;
 				$state['fresh'] = false;
 			}
 		}
 
-		if ($totals !== []) {
-			$blockH = 12.0 + (count($totals) * 18.0) + 8.0;
-			$ensure($blockH + 10.0);
-			$state['y'] -= 6.0;
+		if ($totals !== [] && $keyFigure === null) {
+			$blockH = 10.0 + (count($totals) * 16.0) + 6.0;
+			$ensure($blockH + 8.0);
+			$state['y'] -= 4.0;
 			$state['ops'] .= self::hline($state['y']);
-			$state['y'] -= 16.0;
+			$state['y'] -= 14.0;
 			foreach ($totals as $row) {
 				$strong = !empty($row['strong']);
-				$size = $strong ? 12 : 10;
+				$size = $strong ? 11 : 10;
 				if ($strong) {
-					$state['ops'] .= self::fillRect(self::MARGIN_L, $state['y'] - 6.0, $contentWidth, 20.0, 0.90);
-					$state['ops'] .= self::strokeRect(self::MARGIN_L, $state['y'] - 6.0, $contentWidth, 20.0);
+					$state['ops'] .= self::fillRect(self::MARGIN_L, $state['y'] - 5.0, $contentWidth, 18.0, 0.94);
+					$state['ops'] .= self::strokeRect(self::MARGIN_L, $state['y'] - 5.0, $contentWidth, 18.0);
 				}
 				$pad = $strong ? 10.0 : 0.0;
 				$state['ops'] .= self::textAt(
@@ -257,7 +337,7 @@ final class SimplePdfBuilder
 					$size,
 					true
 				);
-				$state['y'] -= $strong ? 22.0 : 15.0;
+				$state['y'] -= $strong ? 20.0 : 14.0;
 			}
 		}
 
@@ -377,10 +457,16 @@ final class SimplePdfBuilder
 		return strlen(self::toLatin1($text)) * $size * $factor;
 	}
 
-	private static function hline(float $y): string
+	private static function columnAlignsRight(string $column): bool
+	{
+		$key = strtolower(trim($column));
+		return in_array($key, ['qty', 'amount', 'total'], true);
+	}
+
+	private static function hline(float $y, float $gray = 0.65): string
 	{
 		$x2 = self::PAGE_W - self::MARGIN_R;
-		return sprintf("0.65 G %.2F %.2F m %.2F %.2F l S 0 G\n", self::MARGIN_L, $y, $x2, $y);
+		return sprintf("%.2F G %.2F %.2F m %.2F %.2F l S 0 G\n", $gray, self::MARGIN_L, $y, $x2, $y);
 	}
 
 	private static function fillRect(float $x, float $y, float $w, float $h, float $gray): string

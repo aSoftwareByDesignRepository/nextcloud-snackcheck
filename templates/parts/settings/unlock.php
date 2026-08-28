@@ -2,9 +2,6 @@
 /**
  * Settings · unlock PIN / QR for kitchen tablets
  *
- * Shared directory search feeds the single-user chip fields in the PIN and QR
- * forms. Secrets are never echoed after save (JS clears the inputs).
- *
  * @var array $_
  * @var \OCP\IL10N $l
  */
@@ -14,19 +11,7 @@
 	<p class="snk-callout__text"><?php p($l->t('Give someone a PIN and/or a QR sticker so they can unlock the fridge tablet. Never send these secrets in chat or email.')); ?></p>
 </div>
 
-<section class="snk-settings-block" aria-labelledby="snk-unlock-find-title">
-	<h2 id="snk-unlock-find-title" class="snk-settings-block__legend"><?php p($l->t('Find people')); ?></h2>
-	<p class="snk-muted snk-settings-block__hint"><?php p($l->t('Tap Choose… under PIN or QR below, then type a name here.')); ?></p>
-	<div class="snk-chip-search snk-chip-search--settings">
-		<label class="snk-field" for="snk-unlock-user-search">
-			<span><?php p($l->t('Find users')); ?> — <span class="snk-muted" data-snk-chip-hint><?php p($l->t('Choose… then search')); ?></span></span>
-			<input id="snk-unlock-user-search" class="snk-input" type="search" data-snk-user-search data-snk-search-scope="directory" autocomplete="off" aria-controls="snk-unlock-user-results" placeholder="<?php p($l->t('Type a name…')); ?>" />
-		</label>
-		<ul id="snk-unlock-user-results" class="snk-user-results" data-snk-user-results role="listbox" aria-label="<?php p($l->t('Matching people')); ?>" aria-live="polite"></ul>
-	</div>
-</section>
-
-<p id="snk-unlock-choice-lead" class="snk-unlock-choice-lead"><?php p($l->t('Choose how they unlock — PIN, QR code, or both.')); ?></p>
+<p id="snk-unlock-choice-lead" class="snk-unlock-choice-lead"><?php p($l->t('Choose how they unlock — PIN, QR code, or both. Search for the person in each form.')); ?></p>
 
 <div class="snk-settings-methods" role="group" aria-labelledby="snk-unlock-choice-lead">
 	<form class="snk-form snk-form--settings snk-settings-block snk-settings-method snk-settings-method--pin" data-snk-form="unlock-pin" aria-labelledby="snk-unlock-pin-title">
@@ -44,6 +29,7 @@
 			$picker = 'users';
 			$single = true;
 			$required = true;
+			$inlineSearch = true;
 			$listLabel = $l->t('Person for PIN');
 			$chips = [];
 			$fieldId = 'snk-unlock-pin-user';
@@ -90,6 +76,7 @@
 			$picker = 'users';
 			$single = true;
 			$required = true;
+			$inlineSearch = true;
 			$listLabel = $l->t('Person for QR');
 			$chips = [];
 			$fieldId = 'snk-unlock-qr-user';

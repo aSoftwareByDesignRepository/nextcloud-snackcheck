@@ -121,7 +121,9 @@ final class SettingsSectionCatalogContractTest extends TestCase
 		self::assertStringContainsString('snk-settings-block', $access);
 		self::assertStringContainsString('snk-callout--info', $access);
 		self::assertStringContainsString('snk-form--settings', $access);
-		self::assertStringContainsString('Who may open the app — not who runs the kitchen.', $access);
+		self::assertStringContainsString('snk-access-roster', $access);
+		self::assertStringContainsString('snk-access-restricted', $access);
+		self::assertStringContainsString('Door access', $access);
 		$unlock = (string)file_get_contents($dir . '/unlock.php');
 		self::assertStringContainsString('snk-callout--info', $unlock);
 		self::assertStringContainsString('Unlock for kitchen tablets', $unlock);
@@ -136,7 +138,7 @@ final class SettingsSectionCatalogContractTest extends TestCase
 		self::assertStringContainsString('autocomplete="new-password"', $unlock);
 		self::assertStringNotContainsString('snk-settings-split', $unlock);
 		$chip = (string)file_get_contents($this->root() . '/templates/parts/snk-chip-field.php');
-		self::assertStringContainsString('No one selected yet — tap Choose… then search', $chip);
+		self::assertStringContainsString('Nobody selected yet — search above', $chip);
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
 		self::assertStringContainsString("kind === 'unlock-pin'", $js);
 		self::assertStringContainsString('pinInput.value = \'\'', $js);

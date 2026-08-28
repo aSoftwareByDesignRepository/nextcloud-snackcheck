@@ -225,7 +225,9 @@ test.describe('SnackCheck UX journeys', () => {
 
 	test('Settings: directory picker is WAI-ARIA combobox with removable chips', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/access`);
-		const search = page.locator('[data-snk-user-search][data-snk-search-scope="directory"]').first();
+		const field = page.locator('[data-snk-chip-field].snk-chip-field--inline').first();
+		await expect(field).toBeVisible();
+		const search = field.locator('[data-snk-user-search]');
 		await expect(search).toBeVisible();
 		await expect(search).toHaveAttribute('role', 'combobox');
 		await expect(search).toHaveAttribute('aria-autocomplete', 'list');
@@ -234,12 +236,9 @@ test.describe('SnackCheck UX journeys', () => {
 		expect(listId).toBeTruthy();
 		await expect(page.locator(`#${listId}`)).toHaveAttribute('role', 'listbox');
 
-		const field = page.locator('[data-snk-chip-field]').first();
 		await expect(field.locator('[data-snk-chip-list]')).toBeAttached();
 		await expect(field.locator('.snk-chip-target[type="hidden"]')).toBeAttached();
-		const addBtn = field.locator('[data-snk-chip-activate]');
-		await addBtn.click();
-		await expect(search).toBeFocused();
+		await search.focus();
 		await expect(field).toHaveClass(/is-active/);
 
 		await search.fill('ad');
@@ -264,14 +263,16 @@ test.describe('SnackCheck UX journeys', () => {
 		await expect(search).toHaveAttribute('aria-expanded', 'false');
 	});
 
-	test('My month: hero deduct + empty recovery or table', async ({ page }) => {
+	test('My month: statement amount + breakdown or empty recovery', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/my-month`);
-		await expect(page.locator('.snk-hero')).toBeVisible();
-		await expect(page.locator('.snk-hero__value')).toBeVisible();
-		await expect(page.locator('.snk-hero__stats')).toBeVisible();
-		await expect(page.locator('.snk-hero__stat').first()).toBeVisible();
+		await expect(page.locator('.snk-statement')).toBeVisible();
+		await expect(page.locator('.snk-statement__amount')).toBeVisible();
+		const breakdown = page.locator('.snk-money-list');
 		const emptyCta = page.locator('.snk-empty a.snk-btn, .snk-empty__actions a');
 		const table = page.locator('.snk-table');
+		if (await breakdown.count()) {
+			await expect(breakdown.first()).toBeVisible();
+		}
 		expect((await emptyCta.count()) + (await table.count())).toBeGreaterThan(0);
 	});
 
@@ -392,8 +393,14 @@ test.describe('SnackCheck UX journeys', () => {
 		const body = await res.body();
 		const text = body.toString('latin1');
 		expect(text.startsWith('%PDF-1.4')).toBeTruthy();
-		expect(text).toContain('TOTAL TO DEDUCT');
-		expect(text).toContain('Total to deduct');
+		expect(text).toContain('SnackCheck');
+		// PDF strings follow the signed-in user's locale (admin may be de, en, …).
+		expect(text).toMatch(
+			/TOTAL TO DEDUCT|ABZUG GESAMT|TOTALE DA DETRARRE|TOTAL À DÉDUIRE|TOTAL A DESCONTAR|TOTALT ATT DRA AV|TOTAAL AF TE TREKKEN|ŁĄCZNIE DO POTRĄCENIA|TOTALT TIL TREKK|I ALT AT TRÆKKE/
+		);
+		expect(text).toMatch(
+			/To deduct|Abzuziehen|Da detrarre|À déduire|A descontar|Att dra av|Af te trekken|Do potrącenia|Til trekk|At trække/
+		);
 		expect(text).toMatch(/\d+\.\d{2} EUR/);
 	});
 

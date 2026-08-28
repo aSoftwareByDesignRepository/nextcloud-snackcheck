@@ -31,6 +31,17 @@ final class SaveSettingsValidateFirstContractTest extends TestCase
 		self::assertStringContainsString('function parseEuroToCents', $src);
 	}
 
+	public function testRestrictedAccessValidatedBeforeWrites(): void
+	{
+		$src = (string)file_get_contents($this->root() . '/lib/Controller/ApiController.php');
+		self::assertStringContainsString('Add at least one allowed user or group in Restricted mode', $src);
+		$failPos = strpos($src, 'Add at least one allowed user or group in Restricted mode');
+		$accessWrite = strpos($src, 'setAccessMode($accessMode)');
+		self::assertNotFalse($failPos);
+		self::assertNotFalse($accessWrite);
+		self::assertLessThan($accessWrite, $failPos);
+	}
+
 	public function testCssRestockSubHasNoOpacityFade(): void
 	{
 		$css = (string)file_get_contents($this->root() . '/css/app.css');

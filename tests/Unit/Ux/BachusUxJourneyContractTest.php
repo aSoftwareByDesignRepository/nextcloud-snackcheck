@@ -169,9 +169,9 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('snk-log-tile.php', $log);
 		$proxy = (string)file_get_contents($this->root() . '/templates/parts/snk-proxy-panel.php');
 		self::assertStringContainsString('snk-mode-proxy', $proxy);
-		self::assertStringContainsString('$autoReady = true', $proxy);
-		self::assertStringContainsString('Find a colleague', $proxy);
-		self::assertStringContainsString('data-snk-search-scope="access"', $proxy);
+		self::assertStringContainsString('$inlineSearch = true', $proxy);
+		self::assertStringNotContainsString('Find a colleague', $proxy);
+		self::assertStringContainsString('$searchScope = \'access\'', $proxy);
 		self::assertStringContainsString('snk-filter-panel', $proxy);
 		self::assertStringContainsString('snk-mode-panel--embedded', $proxy);
 		self::assertStringContainsString('snk-proxy-pick__step', $proxy);
@@ -311,9 +311,10 @@ final class BachusUxJourneyContractTest extends TestCase
 			'/\$hasLines\s*\):\s*\?>[\s\S]*?Download PDF/',
 			$src
 		);
-		self::assertStringContainsString('snk-hero__stats', $src);
-		self::assertStringContainsString('snk-hero__stat', $src);
-		self::assertStringContainsString('aria-labelledby="snk-hero-deduct-label"', $src);
+		self::assertStringContainsString('snk-statement', $src);
+		self::assertStringContainsString('snk-money-list', $src);
+		self::assertStringContainsString('aria-labelledby="snk-statement-title"', $src);
+		self::assertStringContainsString('How this adds up', $src);
 		self::assertStringNotContainsString('snk-hero__meta', $src);
 		// PDF must not render in the empty-state branch.
 		self::assertDoesNotMatchRegularExpression(
@@ -321,8 +322,8 @@ final class BachusUxJourneyContractTest extends TestCase
 			$src
 		);
 		$css = (string)file_get_contents($this->root() . '/css/app.css');
-		self::assertStringContainsString('.snk-hero__stats', $css);
-		self::assertStringContainsString('.snk-hero__stat', $css);
+		self::assertStringContainsString('.snk-statement', $css);
+		self::assertStringContainsString('.snk-money-list', $css);
 	}
 
 	public function testBenefitsSaveNeverBrickWalls(): void

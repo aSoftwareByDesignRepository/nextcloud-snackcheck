@@ -33,41 +33,38 @@ $subsidyEuro = number_format($subsidyCents / 100, 2, '.', '');
 			</label>
 		</div>
 		<div id="snk-hosp-fields" class="snk-settings-block__nested" <?php if (empty($s['hospitalityEnabled'])) { ?>hidden<?php } ?>>
-			<p class="snk-muted snk-settings-block__hint"><?php p($l->t('Tap Add… on a list, then search below.')); ?></p>
-			<div class="snk-chip-search snk-chip-search--settings">
-				<label class="snk-field" for="snk-benefits-user-search">
-					<span><?php p($l->t('Find users')); ?> — <span class="snk-muted" data-snk-chip-hint><?php p($l->t('Choose… then search')); ?></span></span>
-					<input id="snk-benefits-user-search" class="snk-input" type="search" data-snk-user-search data-snk-search-scope="directory" autocomplete="off" aria-controls="snk-benefits-user-results" placeholder="<?php p($l->t('Type a name…')); ?>" />
-				</label>
-				<ul id="snk-benefits-user-results" class="snk-user-results" data-snk-user-results role="listbox" aria-label="<?php p($l->t('Matching people')); ?>" aria-live="polite"></ul>
-			</div>
-			<div class="snk-field" role="group" aria-labelledby="snk-hosp-company-label">
-				<span class="snk-field__label" id="snk-hosp-company-label"><?php p($l->t('Company user')); ?></span>
-				<?php
-				$name = 'hospitalityCompanyUserId';
-				$value = (string)($s['hospitalityCompanyUserId'] ?? '');
-				$picker = 'users';
-				$single = true;
-				$required = false;
-				$listLabel = $l->t('Company user');
-				$chips = $_['hospCompanyChips'] ?? [];
-				$fieldId = 'snk-hosp-company';
-				include __DIR__ . '/../snk-chip-field.php';
-				?>
-			</div>
-			<div class="snk-field" role="group" aria-labelledby="snk-hosp-allow-label">
-				<span class="snk-field__label" id="snk-hosp-allow-label"><?php p($l->t('Allowlist')); ?></span>
-				<?php
-				$name = 'hospitalityAllowedUserIds';
-				$value = implode(',', $_['hospAllowlist'] ?? []);
-				$picker = 'users';
-				$single = false;
-				$required = false;
-				$listLabel = $l->t('Hospitality allowlist');
-				$chips = $_['hospAllowChips'] ?? [];
-				$fieldId = 'snk-hosp-allow';
-				include __DIR__ . '/../snk-chip-field.php';
-				?>
+			<p class="snk-muted snk-settings-block__hint"><?php p($l->t('Search in each box below — picks go into that list only.')); ?></p>
+			<div class="snk-access-roster snk-access-roster--stack">
+				<div class="snk-access-roster__item">
+					<h3 class="snk-access-roster__title" id="snk-hosp-company-label"><?php p($l->t('Company user')); ?></h3>
+					<?php
+					$name = 'hospitalityCompanyUserId';
+					$value = (string)($s['hospitalityCompanyUserId'] ?? '');
+					$picker = 'users';
+					$single = true;
+					$required = false;
+					$inlineSearch = true;
+					$listLabel = $l->t('Company user');
+					$chips = $_['hospCompanyChips'] ?? [];
+					$fieldId = 'snk-hosp-company';
+					include __DIR__ . '/../snk-chip-field.php';
+					?>
+				</div>
+				<div class="snk-access-roster__item">
+					<h3 class="snk-access-roster__title" id="snk-hosp-allow-label"><?php p($l->t('Allowlist')); ?></h3>
+					<?php
+					$name = 'hospitalityAllowedUserIds';
+					$value = implode(',', $_['hospAllowlist'] ?? []);
+					$picker = 'users';
+					$single = false;
+					$required = false;
+					$inlineSearch = true;
+					$listLabel = $l->t('Hospitality allowlist');
+					$chips = $_['hospAllowChips'] ?? [];
+					$fieldId = 'snk-hosp-allow';
+					include __DIR__ . '/../snk-chip-field.php';
+					?>
+				</div>
 			</div>
 			<p id="snk-hosp-save-hint" class="snk-callout snk-callout--warn" role="status" <?php
 				$hospOn = !empty($s['hospitalityEnabled']);

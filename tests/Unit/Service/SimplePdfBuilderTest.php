@@ -19,7 +19,7 @@ final class SimplePdfBuilderTest extends TestCase
 		self::assertStringContainsString('/Count 1', $pdf);
 	}
 
-	public function testStatementIncludesTotalToDeductAndSummary(): void
+	public function testStatementUsesKeyFigureBreakdownAndTotalLine(): void
 	{
 		$pdf = SimplePdfBuilder::buildStatement([
 			'brand' => 'SnackCheck',
@@ -28,45 +28,74 @@ final class SimplePdfBuilderTest extends TestCase
 				['Period', '2026-08'],
 				['Person', 'Alex'],
 			],
-			'summary' => [
-				['label' => 'Gross', 'value' => '1.20 EUR'],
-				['label' => 'Subsidy', 'value' => '0.00 EUR'],
-				['label' => 'Total to deduct', 'value' => '1.20 EUR', 'strong' => true],
+			'keyFigure' => [
+				'label' => 'To deduct',
+				'value' => '1.20 EUR',
+			],
+			'breakdown' => [
+				['label' => 'What you logged', 'value' => '1.20 EUR'],
+			],
+			'totalLine' => [
+				'label' => 'TOTAL TO DEDUCT',
+				'value' => '1.20 EUR',
 			],
 			'tableTitle' => 'Logged items',
-			'columns' => ['Item', 'Qty', 'Amount'],
-			'colWidths' => [0.6, 0.15, 0.25],
+			'columns' => ['Item', 'Qty', 'Amount', 'When'],
+			'colWidths' => [0.38, 0.08, 0.18, 0.36],
 			'rows' => [
-				['Coffee', '2', '1.20 EUR'],
-				['Water', '1', 'Free'],
-			],
-			'totals' => [
-				['label' => 'Gross', 'value' => '1.20 EUR'],
-				['label' => 'Subsidy', 'value' => '0.00 EUR'],
-				['label' => 'TOTAL TO DEDUCT', 'value' => '1.20 EUR', 'strong' => true],
+				['Coffee', '2', '1.20 EUR', '2026-08-27 15:50'],
+				['Water', '1', 'Free', '2026-08-27 15:48'],
 			],
 			'note' => 'Amounts in EUR.',
 		]);
 		self::assertStringStartsWith('%PDF-1.4', $pdf);
+		self::assertStringContainsString('To deduct', $pdf);
+		self::assertStringContainsString('What you logged', $pdf);
 		self::assertStringContainsString('TOTAL TO DEDUCT', $pdf);
-		self::assertStringContainsString('Total to deduct', $pdf);
 		self::assertStringContainsString('1.20 EUR', $pdf);
 		self::assertStringContainsString('Coffee', $pdf);
+		self::assertStringContainsString('When', $pdf);
+		self::assertStringNotContainsString('Summary', $pdf);
 		self::assertStringContainsString('Helvetica-Bold', $pdf);
 		self::assertStringContainsString('Page 1 of 1', $pdf);
 	}
 
-	public function testEmptyRowsStillEmitTotalBlock(): void
+	public function testLegacySummaryAndTotalsStillRender(): void
+	{
+		$pdf = SimplePdfBuilder::buildStatement([
+			'title' => 'Legacy',
+			'summary' => [
+				['label' => 'Gross', 'value' => '1.00 EUR'],
+			],
+			'totals' => [
+				['label' => 'TOTAL TO DEDUCT', 'value' => '1.00 EUR', 'strong' => true],
+			],
+			'rows' => [],
+		]);
+		self::assertStringContainsString('Summary', $pdf);
+		self::assertStringContainsString('TOTAL TO DEDUCT', $pdf);
+	}
+
+	public function testEmptyRowsStillEmitKeyFigure(): void
 	{
 		$pdf = SimplePdfBuilder::buildStatement([
 			'title' => 'My month',
-			'rows' => [],
-			'totals' => [
-				['label' => 'TOTAL TO DEDUCT', 'value' => '0.00 EUR', 'strong' => true],
+			'keyFigure' => [
+				'label' => 'To deduct',
+				'value' => '0.00 EUR',
 			],
+			'breakdown' => [
+				['label' => 'What you logged', 'value' => '0.00 EUR'],
+			],
+			'totalLine' => [
+				'label' => 'TOTAL TO DEDUCT',
+				'value' => '0.00 EUR',
+			],
+			'emptyItemsText' => 'No items in this period.',
+			'rows' => [],
 		]);
 		self::assertStringContainsString('No items in this period.', $pdf);
-		self::assertStringContainsString('TOTAL TO DEDUCT', $pdf);
+		self::assertStringContainsString('To deduct', $pdf);
 		self::assertStringContainsString('0.00 EUR', $pdf);
 	}
 
@@ -74,16 +103,24 @@ final class SimplePdfBuilderTest extends TestCase
 	{
 		$rows = [];
 		for ($i = 1; $i <= 80; $i++) {
-			$rows[] = ['Item ' . $i, (string)$i, number_format($i / 100, 2, '.', '') . ' EUR'];
+			$rows[] = ['Item ' . $i, (string)$i, number_format($i / 100, 2, '.', '') . ' EUR', '2026-08-27 12:00'];
 		}
 		$pdf = SimplePdfBuilder::buildStatement([
 			'title' => 'My month',
-			'columns' => ['Item', 'Qty', 'Amount'],
-			'colWidths' => [0.6, 0.15, 0.25],
-			'rows' => $rows,
-			'totals' => [
-				['label' => 'TOTAL TO DEDUCT', 'value' => '32.40 EUR', 'strong' => true],
+			'keyFigure' => [
+				'label' => 'To deduct',
+				'value' => '32.40 EUR',
 			],
+			'breakdown' => [
+				['label' => 'What you logged', 'value' => '32.40 EUR'],
+			],
+			'totalLine' => [
+				'label' => 'TOTAL TO DEDUCT',
+				'value' => '32.40 EUR',
+			],
+			'columns' => ['Item', 'Qty', 'Amount', 'When'],
+			'colWidths' => [0.38, 0.08, 0.18, 0.36],
+			'rows' => $rows,
 		]);
 		self::assertMatchesRegularExpression('/\/Count [2-9]/', $pdf);
 		self::assertStringContainsString('Page 1 of ', $pdf);

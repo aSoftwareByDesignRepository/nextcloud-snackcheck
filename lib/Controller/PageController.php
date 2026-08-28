@@ -13,6 +13,7 @@ use OCA\SnackCheck\Service\AuditService;
 use OCA\SnackCheck\Service\BrAggregateService;
 use OCA\SnackCheck\Service\CatalogService;
 use OCA\SnackCheck\Service\LicenseService;
+use OCA\SnackCheck\Service\MyMonthStatementPresenter;
 use OCA\SnackCheck\Service\PayrollExportService;
 use OCA\SnackCheck\Service\PeriodService;
 use OCA\SnackCheck\Service\PulseService;
@@ -63,6 +64,7 @@ class PageController extends Controller
 		private readonly BrAggregateService $brAggregate,
 		private readonly SettingsSectionCatalog $settingsSections,
 		private readonly IL10N $l10n,
+		private readonly MyMonthStatementPresenter $myMonthStatement,
 		private readonly InstanceId $instanceId,
 	) {
 		parent::__construct($appName, $request);
@@ -125,7 +127,10 @@ class PageController extends Controller
 				'freeQty' => 0,
 				'grossCents' => 0,
 				'subsidyCents' => 0,
+				'subsidyAllowanceCents' => $this->settings->getSubsidyAllowanceCents(),
 				'deductCents' => 0,
+				'showSubsidyStat' => false,
+				'breakdownRows' => [],
 				'multiSite' => $this->settings->isMultiSiteEnabled(),
 			]);
 		}
@@ -159,15 +164,22 @@ class PageController extends Controller
 				'siteName' => $multiSite ? ($siteMap[(int)$l->getSiteId()] ?? '') : '',
 			];
 		}
-		$calc = $this->subsidy->computeForUser($this->settings->getSubsidyAllowanceCents(), $lineArr);
+		$subsidyAllowanceCents = $this->settings->getSubsidyAllowanceCents();
+		$calc = $this->subsidy->computeForUser($subsidyAllowanceCents, $lineArr);
+		$grossCents = (int)$calc['gross_cents'];
+		$subsidyCents = (int)$calc['subsidy_cents'];
+		$deductCents = (int)$calc['deduct_cents'];
 		return $this->page('mymonth', [
 			'periodLabel' => PeriodDisplay::format((string)$period->getLabel()),
 			'periodClosed' => $period->getState() !== 'open',
 			'lines' => $lineArr,
 			'freeQty' => $freeQty,
-			'grossCents' => $calc['gross_cents'],
-			'subsidyCents' => $calc['subsidy_cents'],
-			'deductCents' => $calc['deduct_cents'],
+			'grossCents' => $grossCents,
+			'subsidyCents' => $subsidyCents,
+			'subsidyAllowanceCents' => $subsidyAllowanceCents,
+			'deductCents' => $deductCents,
+			'showSubsidyStat' => $this->myMonthStatement->showSubsidy($subsidyAllowanceCents, $subsidyCents),
+			'breakdownRows' => $this->myMonthStatement->breakdownRows($this->l10n, $grossCents, $subsidyCents, $subsidyAllowanceCents),
 			'multiSite' => $multiSite,
 		]);
 	}

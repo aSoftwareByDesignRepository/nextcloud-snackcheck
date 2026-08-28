@@ -1,10 +1,6 @@
 <?php
 /**
- * Colleague proxy pick — search first, then reason (Bachus: one job, no Choose ritual).
- *
- * When $embedded is true (Users page card already provides the frame), do NOT wrap in
- * another bordered panel (DESIGN-SYSTEM principle 14 / §3.6c).
- * When standalone (Log mode switch), use the family filter-panel chrome (§3.6b/c).
+ * Colleague proxy pick — inline search on the selected colleague field (Bachus).
  *
  * @var \OCP\IL10N $l
  * @var int|string $siteId
@@ -41,33 +37,10 @@ $hiddenAttr = !empty($proxyPanelHidden) ? ' hidden' : '';
 <?php endif; ?>
 		<div class="snk-proxy-pick" data-snk-proxy-fields>
 			<input type="hidden" name="siteId" value="<?php p($siteId); ?>" />
-			<div class="snk-proxy-pick__step snk-proxy-pick__search snk-chip-search">
-				<p class="snk-proxy-pick__step-label" id="<?php p($fieldId); ?>-search-label">
-					<span class="snk-proxy-pick__step-n" aria-hidden="true">1</span>
-					<?php p($l->t('Find a colleague')); ?>
-				</p>
-				<label class="snk-field">
-					<span class="snk-sr-only"><?php p($l->t('Find a colleague')); ?></span>
-					<input type="search"
-						class="snk-input"
-						data-snk-user-search
-						data-snk-search-scope="access"
-						autocomplete="off"
-						placeholder="<?php p($l->t('Type a name…')); ?>"
-						aria-labelledby="<?php p($fieldId); ?>-search-label"
-						aria-controls="<?php p($resultsId); ?>" />
-				</label>
-				<ul id="<?php p($resultsId); ?>"
-					class="snk-user-results"
-					data-snk-user-results
-					role="listbox"
-					aria-label="<?php p($l->t('Matching people')); ?>"
-					aria-live="polite"></ul>
-			</div>
 			<div class="snk-proxy-pick__step snk-proxy-pick__who" role="group" aria-labelledby="<?php p($fieldId); ?>-label">
 				<p class="snk-proxy-pick__step-label" id="<?php p($fieldId); ?>-label">
-					<span class="snk-proxy-pick__step-n" aria-hidden="true">2</span>
-					<?php p($l->t('Selected colleague')); ?>
+					<span class="snk-proxy-pick__step-n" aria-hidden="true">1</span>
+					<?php p($l->t('Colleague')); ?>
 				</p>
 				<?php
 				$name = 'targetUserId';
@@ -77,14 +50,18 @@ $hiddenAttr = !empty($proxyPanelHidden) ? ' hidden' : '';
 				$required = true;
 				$listLabel = $l->t('Selected colleague');
 				$chips = [];
+				$inlineSearch = true;
 				$autoReady = true;
+				$searchScope = 'access';
 				include __DIR__ . '/snk-chip-field.php';
+				$inlineSearch = false;
 				$autoReady = false;
+				$searchScope = 'directory';
 				?>
 			</div>
 			<div class="snk-proxy-pick__step snk-proxy-pick__why">
 				<p class="snk-proxy-pick__step-label" id="<?php p($reasonHintId); ?>-label">
-					<span class="snk-proxy-pick__step-n" aria-hidden="true">3</span>
+					<span class="snk-proxy-pick__step-n" aria-hidden="true">2</span>
 					<?php p($l->t('Why? (short note)')); ?>
 				</p>
 				<label class="snk-field">

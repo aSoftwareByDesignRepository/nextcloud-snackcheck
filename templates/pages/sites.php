@@ -24,20 +24,21 @@
 				</header>
 				<div class="snk-card__body">
 				<form class="snk-form" data-snk-form="site-update" data-site-id="<?php p($site['id']); ?>">
-					<label class="snk-field">
-						<span><?php p($l->t('Managers')); ?></span>
+					<div class="snk-field" role="group" aria-labelledby="snk-site-managers-label-<?php p((string)(int)$site['id']); ?>">
+						<span class="snk-field__label" id="snk-site-managers-label-<?php p((string)(int)$site['id']); ?>"><?php p($l->t('Managers')); ?></span>
 						<?php
 						$name = 'managerUids';
 						$value = implode(',', $site['managers'] ?? []);
 						$picker = 'users';
 						$single = false;
 						$required = false;
+						$inlineSearch = true;
 						$listLabel = $l->t('Managers');
 						$chips = $site['managerChips'] ?? [];
 						$fieldId = 'snk-site-managers-' . (int)$site['id'];
 						include __DIR__ . '/../parts/snk-chip-field.php';
 						?>
-					</label>
+					</div>
 					<button type="submit" class="snk-btn snk-btn--primary"><?php p($l->t('Save managers')); ?></button>
 				</form>
 				<div class="snk-actions">
@@ -56,13 +57,6 @@
 		<?php endforeach; ?>
 	</ul>
 	<?php endif; ?>
-	<div class="snk-chip-search">
-		<label class="snk-field">
-			<span><?php p($l->t('Find users')); ?> — <span class="snk-muted" data-snk-chip-hint><?php p($l->t('Choose… then search')); ?></span></span>
-			<input type="search" data-snk-user-search data-snk-search-scope="directory" autocomplete="off" aria-controls="snk-sites-user-results" />
-		</label>
-		<ul id="snk-sites-user-results" class="snk-user-results" data-snk-user-results role="listbox" aria-label="<?php p($l->t('Matching people')); ?>" aria-live="polite"></ul>
-	</div>
 	<article class="snk-card">
 		<header class="snk-card__header">
 			<div class="snk-card__header-text">
@@ -80,20 +74,21 @@
 			<span><?php p($l->t('Code')); ?></span>
 			<input name="code" required maxlength="40" pattern="[A-Za-z0-9_-]+" />
 		</label>
-		<label class="snk-field">
-			<span><?php p($l->t('Managers')); ?></span>
+		<div class="snk-field" role="group" aria-labelledby="snk-site-create-managers-label">
+			<span class="snk-field__label" id="snk-site-create-managers-label"><?php p($l->t('Managers')); ?></span>
 			<?php
 			$name = 'managerUids';
 			$value = '';
 			$picker = 'users';
 			$single = false;
 			$required = false;
+			$inlineSearch = true;
 			$listLabel = $l->t('Managers');
 			$chips = [];
 			$fieldId = 'snk-site-create-managers';
 			include __DIR__ . '/../parts/snk-chip-field.php';
 			?>
-		</label>
+		</div>
 		<button type="submit" class="snk-btn snk-btn--primary"><?php p($l->t('Create site')); ?></button>
 	</form>
 		</div>

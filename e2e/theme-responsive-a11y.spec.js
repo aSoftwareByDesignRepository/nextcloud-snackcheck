@@ -88,6 +88,7 @@ async function assertThemeTokensResolved(page) {
 			ncPrimary: bodyCs.getPropertyValue('--color-primary-element').trim(),
 			bodyPrimary: bodyCs.getPropertyValue('--snk-primary').trim(),
 			bodyMuted: bodyCs.getPropertyValue('--snk-muted').trim(),
+			productStage: bodyCs.getPropertyValue('--snk-product-stage').trim(),
 			rootRadiusMd: rootCs.getPropertyValue('--snk-radius-md').trim(),
 			rootTouch: rootCs.getPropertyValue('--snk-touch').trim(),
 			bgSoft: cs.getPropertyValue('--snk-bg-soft').trim() || bodyCs.getPropertyValue('--snk-bg-soft').trim(),
@@ -119,6 +120,7 @@ async function assertThemeTokensResolved(page) {
 	expect(tokens.text, 'snk-text').not.toEqual('');
 	expect(tokens.primary, 'snk-primary').not.toEqual('');
 	expect(tokens.muted, 'snk-muted').not.toEqual('');
+	expect(tokens.productStage, '--snk-product-stage').not.toEqual('');
 	expect(tokens.tintInfo, 'tint-info must resolve').not.toEqual('');
 	expect(tokens.tintSuccess, 'tint-success must resolve').not.toEqual('');
 	expect(tokens.dangerFill, 'danger-fill must resolve').not.toEqual('');
@@ -140,6 +142,38 @@ async function assertThemeTokensResolved(page) {
 			|| parseFloat(tokens.shellMax) >= 2000,
 		`default shell must not be a fixed 72rem/1200px lock (got ${tokens.shellMax})`,
 	).toBeTruthy();
+}
+
+/**
+ * Log tile product wells must follow NC theme tokens — never a hardcoded white slab in dark mode.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} theme
+ */
+async function assertProductStageThemeAware(page, theme) {
+	const result = await page.evaluate(() => {
+		const media = document.querySelector('#app-content.snk-app .snk-tile__media');
+		const bodyCs = getComputedStyle(document.body);
+		if (!media) {
+			return { skip: true };
+		}
+		const mediaCs = getComputedStyle(media);
+		return {
+			skip: false,
+			stageToken: bodyCs.getPropertyValue('--snk-product-stage').trim(),
+			mediaBg: mediaCs.backgroundColor,
+		};
+	});
+	if (result.skip) {
+		return;
+	}
+	expect(result.stageToken, '--snk-product-stage must resolve').not.toEqual('');
+	expect(result.mediaBg, 'tile media background').not.toEqual('');
+	if (theme === 'dark' || theme === 'dark-highcontrast') {
+		expect(
+			result.mediaBg,
+			`dark theme product stage must not be pure white (got ${result.mediaBg})`,
+		).not.toMatch(/^rgb\(255,\s*255,\s*255\)$/);
+	}
 }
 
 /**
@@ -229,6 +263,7 @@ test.describe('SnackCheck theme × viewport a11y matrix', () => {
 				await expect(page.locator('#app-content.snk-app').first()).toBeVisible();
 
 				await assertThemeTokensResolved(page);
+				await assertProductStageThemeAware(page, theme);
 				await assertChromeTouchTargets(page);
 				await expectNoHorizontalOverflow(page, `${theme}/${route.id}@1280`);
 

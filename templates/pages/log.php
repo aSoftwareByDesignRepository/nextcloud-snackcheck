@@ -162,7 +162,7 @@ foreach ($itemGroups as $g) {
 			</div>
 		<?php endif; ?>
 
-		<div id="snk-log-catalog" data-snk-log-catalog>
+		<div id="snk-log-catalog" data-snk-log-catalog<?php if (!empty($_['periodClosed'])) { ?> data-period-closed="1"<?php } ?>>
 			<p class="snk-muted snk-log-empty-filter" data-snk-log-empty hidden role="status"><?php p($l->t('No snacks match that search.')); ?></p>
 			<?php
 			$siteId = (int)($_['siteId'] ?? 0);

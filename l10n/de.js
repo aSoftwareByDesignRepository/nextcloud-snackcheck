@@ -499,6 +499,7 @@ OC.L10N.register(
 	"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server." : "Diese Lizenz ist an eine andere Nextcloud-Instanz gebunden. SNK2-Schlüssel auf diesem Server erneut einspielen.",
 	"This license is not active. Apply a valid SNK2 key." : "Diese Lizenz ist nicht aktiv. Gültigen SNK2-Schlüssel einspielen.",
 	"This page controls the front door only. Kitchen managers and site roles are configured elsewhere." : "Diese Seite steuert nur die Zugangstür. Küchenleiter und Standortrollen werden woanders konfiguriert.",
+	"This snack cannot be logged right now." : "Dieser Snack kann gerade nicht gebucht werden.",
 	"To deduct" : "Abzuziehen",
 	"Toggle mobile menu" : "Mobilmenü umschalten",
 	"Token ready — copy it below" : "Token bereit — unten kopieren",

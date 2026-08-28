@@ -90,6 +90,18 @@ final class ThemeAndResponsiveContractTest extends TestCase
 		self::assertStringContainsString('safe-area-inset-left', $css);
 		self::assertStringContainsString('overflow-x: clip', $css);
 		self::assertStringContainsString('minmax(0, 1fr)', $css);
+		self::assertMatchesRegularExpression(
+			'/\.snk-page-header__main\s*\{[\s\S]*?grid-template-columns:\s*56px minmax\(0,\s*1fr\) auto/',
+			$css
+		);
+		self::assertMatchesRegularExpression(
+			'/\.snk-page-header__text\s*\{[\s\S]*?min-width:\s*0/',
+			$css
+		);
+		self::assertMatchesRegularExpression(
+			'/\.snk-page-header__text h1\s*\{[\s\S]*?overflow-wrap:\s*anywhere/',
+			$css
+		);
 		self::assertStringContainsString('max-height: min(90dvh', $css);
 		self::assertStringContainsString('@media (forced-colors: active)', $css);
 		// Equal tracks: 2-up below 768; single column only on very narrow phones.
@@ -143,6 +155,12 @@ final class ThemeAndResponsiveContractTest extends TestCase
 		self::assertStringContainsString('--snk-radius-md: 12px', $css);
 		self::assertStringContainsString('--snk-radius-lg: var(--border-radius-large, 16px)', $css);
 		self::assertStringContainsString('--snk-radius-pill: 999px', $css);
-		self::assertStringContainsString('--snk-surface-muted:', $css);
+		self::assertStringContainsString('--snk-product-stage:', $css);
+		self::assertMatchesRegularExpression(
+			'/\.snk-tile__media\s*\{[^}]*background:\s*var\(--snk-product-stage\)/',
+			$css
+		);
+		self::assertStringNotContainsString('background: #ffffff', $css);
+		self::assertStringNotContainsString('background: #fff', $css);
 	}
 }

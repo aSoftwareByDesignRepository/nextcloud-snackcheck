@@ -498,6 +498,7 @@
         "This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.": "Deze licentie is gekoppeld aan een andere Nextcloud-instantie. Pas de SNK2-sleutel opnieuw toe op deze server.",
         "This license is not active. Apply a valid SNK2 key.": "Deze licentie is niet actief. Een geldige SNK2-sleutel toepassen.",
         "This page controls the front door only. Kitchen managers and site roles are configured elsewhere.": "Deze pagina regelt alleen de toegangsdeur. Keukenbeheerders en sitrollen stel je elders in.",
+        "This snack cannot be logged right now.": "Deze snack kan nu niet worden geboekt.",
         "To deduct": "Aftrekken",
         "Toggle mobile menu": "Mobiel menu schakelen",
         "Token ready — copy it below": "Kopieer het hieronder",

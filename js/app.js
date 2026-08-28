@@ -152,8 +152,13 @@
 			return;
 		}
 		el.hidden = false;
+		el.classList.remove('snk-toast--ok', 'snk-toast--error');
+		el.classList.add(assertive ? 'snk-toast--error' : 'snk-toast--ok');
+		el.setAttribute('role', assertive ? 'alert' : 'status');
+		el.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
 		el.textContent = '';
 		const span = document.createElement('span');
+		span.className = 'snk-toast__text';
 		span.textContent = msg;
 		el.appendChild(span);
 		if (undoId) {
@@ -172,8 +177,32 @@
 			if (!el.querySelector('[data-snk-action="undo"]')) {
 				el.hidden = true;
 				el.textContent = '';
+				el.classList.remove('snk-toast--ok', 'snk-toast--error');
 			}
-		}, undoId ? 62000 : 5000);
+		}, undoId ? 62000 : 6000);
+	}
+	function logTileItemName(btn) {
+		if (!btn) return '';
+		const nameEl = btn.querySelector('.snk-tile__name');
+		return nameEl ? String(nameEl.textContent || '').trim() : '';
+	}
+	function blockedLogFeedback(btn) {
+		const reason = btn.getAttribute('data-snk-block-reason')
+			|| (document.querySelector('[data-snk-log-catalog][data-period-closed="1"]') ? 'period' : '');
+		if (reason === 'period') {
+			toast(
+				t('Period closed. Ask a kitchen admin to open the next period before logging.', 'Period closed. Ask a kitchen admin to open the next period before logging.'),
+				null,
+				true
+			);
+			const openBtn = document.querySelector('[data-snk-action="open-next-period"]');
+			if (openBtn && typeof openBtn.focus === 'function') {
+				openBtn.focus();
+			}
+		} else {
+			toast(t('This snack cannot be logged right now.', 'This snack cannot be logged right now.'), null, true);
+		}
+		flashTile(btn, false);
 	}
 	const snkDialogTriggers = typeof WeakMap === 'function' ? new WeakMap() : null;
 	function openSnkDialog(dlg, trigger) {
@@ -1162,6 +1191,12 @@
 		const btn = ev.target.closest('[data-snk-action]');
 		if (!btn) return;
 		const action = btn.getAttribute('data-snk-action');
+		if (action === 'log' && btn.getAttribute('aria-disabled') === 'true') {
+			ev.preventDefault();
+			blockedLogFeedback(btn);
+			return;
+		}
+		if (btn.disabled) return;
 		try {
 			btn.disabled = true;
 			if (action === 'log') {
@@ -1169,6 +1204,7 @@
 				btn.setAttribute('aria-busy', 'true');
 				const mode = currentLogMode();
 				const qty = snkLogQty >= 1 ? snkLogQty : 1;
+				const itemName = logTileItemName(btn);
 				const payload = {
 					itemId: Number(btn.getAttribute('data-item-id')),
 					siteId: Number(btn.getAttribute('data-site-id')),
@@ -1214,10 +1250,16 @@
 				}
 				try {
 					const data = await post(OC.generateUrl('/apps/snackcheck/api/logs'), payload);
-					const label = mode === 'proxy'
+					let label = mode === 'proxy'
 						? t('Proxy logged', 'Proxy logged')
 						: (mode === 'hospitality' ? t('Booked on company', 'Booked on company') : t('Logged', 'Logged'));
-					toast((data.data && data.data.replay) ? t('OK (replay)', 'OK (replay)') : label, data.data && data.data.id);
+					if (data.data && data.data.replay) {
+						label = t('OK (replay)', 'OK (replay)');
+					}
+					if (itemName) {
+						label = label + ' — ' + itemName;
+					}
+					toast(label, data.data && data.data.id);
 					flashTile(btn, true);
 				} catch (logErr) {
 					flashTile(btn, false);

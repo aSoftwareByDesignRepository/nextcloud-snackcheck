@@ -127,7 +127,7 @@ include __DIR__ . '/common/navigation.php';
 			}
 			?>
 			</div>
-			<div id="snk-toast" class="snk-toast" role="status" aria-live="polite" data-undo-label="<?php p($l->t('Undo')); ?>" hidden></div>
 		</main>
 	</div>
+	<div id="snk-toast" class="snk-toast" role="status" aria-live="polite" data-undo-label="<?php p($l->t('Undo')); ?>" hidden></div>
 </div>

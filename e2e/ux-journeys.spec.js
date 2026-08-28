@@ -91,6 +91,24 @@ test.describe('SnackCheck UX journeys', () => {
 		}
 	});
 
+	test('Log: tile tap shows toast feedback', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/`);
+		const blocked = page.locator('button.snk-tile[data-snk-action="log"][aria-disabled="true"]').first();
+		const active = page.locator('button.snk-tile[data-snk-action="log"]:not([aria-disabled="true"])').first();
+		const toast = page.locator('#snk-toast');
+		if (await blocked.count()) {
+			await blocked.click({ force: true });
+			await expect(toast).toBeVisible();
+			await expect(toast).toHaveClass(/snk-toast--error/);
+			return;
+		}
+		if (await active.count()) {
+			await active.click();
+			await expect(toast).toBeVisible({ timeout: 10000 });
+			await expect(toast).toHaveClass(/snk-toast--ok/);
+		}
+	});
+
 	test('Catalog: Restock +1 is always-visible primary', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog`);
 		const restock = page.locator('button[data-snk-action="restock"][data-instant="1"]');

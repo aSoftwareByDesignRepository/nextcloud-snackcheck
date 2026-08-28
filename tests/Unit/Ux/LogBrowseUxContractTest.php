@@ -34,19 +34,29 @@ final class LogBrowseUxContractTest extends TestCase
 		self::assertStringContainsString('snk-tile__media', $tile);
 		self::assertStringContainsString('snk-tile__img', $tile);
 		self::assertStringContainsString('IconCatalog::forCategory', $tile);
-		self::assertStringContainsString('.snk-tile__media', $css);
+		self::assertMatchesRegularExpression('/\.snk-tile__media\s*\{[^}]*background:\s*var\(--snk-product-stage\)/', $css);
 		self::assertStringContainsString('.snk-log-group__title', $css);
 		// Equal card footprint: li fills row; button fills li; media/name/tags reserved.
 		self::assertStringContainsString('.snk-tile-grid > li', $css);
 		self::assertStringContainsString('repeat(3, minmax(0, 1fr))', $css);
 		self::assertStringContainsString('width: 100% !important', $css);
 		self::assertMatchesRegularExpression('/\.snk-tile\s*\{[^}]*height:\s*100%/', $css);
-		self::assertMatchesRegularExpression('/\.snk-tile__media\s*\{[^}]*height:\s*3\.5rem/', $css);
-		self::assertMatchesRegularExpression('/\.snk-tile__name\s*\{[^}]*min-height:\s*calc\(1\.25em \* 2\)/', $css);
+		self::assertMatchesRegularExpression('/\.snk-tile__media\s*\{[^}]*aspect-ratio:\s*1/', $css);
+		self::assertMatchesRegularExpression('/\.snk-tile__media\s*\{[^}]*min-height:\s*5rem/', $css);
+		self::assertMatchesRegularExpression('/\.snk-tile__name\s*\{[^}]*min-height:\s*calc\(1\.3em \* 2\)/', $css);
+		self::assertStringContainsString('snk-tile__figure', $tile);
+		self::assertStringContainsString('snk-tile__foot', $tile);
+		self::assertStringContainsString('snk-tag--hazard', $tile);
+		self::assertStringNotContainsString('grayscale', $css);
 		self::assertMatchesRegularExpression('/\.snk-tile__tags\s*\{[^}]*min-height:\s*1\.5rem/', $css);
-		self::assertStringContainsString('data-snk-log-find', $js);
+		self::assertStringContainsString('blockedLogFeedback', $js);
+		self::assertStringContainsString('data-snk-block-reason="period"', $tile);
+		self::assertStringNotContainsString('disabled aria-disabled', $tile);
+		self::assertStringContainsString('.snk-toast--ok', $css);
+		self::assertStringContainsString('position: fixed', $css);
 		self::assertStringContainsString('uploadCatalogImage', $js);
 		self::assertStringContainsString('snk-tile__tags', $tile);
+		self::assertStringContainsString('snk-tile__price--free', $tile);
 		self::assertStringContainsString('aria-hidden="true"', $tile);
 		// Category meta text must not clutter every tile when groups exist.
 		self::assertStringNotContainsString('snk-tile__meta', $tile);

@@ -499,6 +499,7 @@ OC.L10N.register(
 	"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server." : "This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.",
 	"This license is not active. Apply a valid SNK2 key." : "This license is not active. Apply a valid SNK2 key.",
 	"This page controls the front door only. Kitchen managers and site roles are configured elsewhere." : "This page controls the front door only. Kitchen managers and site roles are configured elsewhere.",
+	"This snack cannot be logged right now." : "This snack cannot be logged right now.",
 	"To deduct" : "To deduct",
 	"Toggle mobile menu" : "Toggle mobile menu",
 	"Token ready — copy it below" : "Token ready — copy it below",

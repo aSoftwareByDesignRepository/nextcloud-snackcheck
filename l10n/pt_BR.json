@@ -498,6 +498,7 @@
         "This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.": "Esta licença está ligada a outra instância Nextcloud. Reaplicar a sua chave SNK2 neste servidor.",
         "This license is not active. Apply a valid SNK2 key.": "Esta licença não está ativa. Aplicar uma chave SNK2 válida.",
         "This page controls the front door only. Kitchen managers and site roles are configured elsewhere.": "Esta página controla só a porta de acesso. Gestores de cozinha e papéis de site são configurados em outro lugar.",
+        "This snack cannot be logged right now.": "Este lanche não pode ser registrado agora.",
         "To deduct": "Dedução",
         "Toggle mobile menu": "Alternar menu móvel",
         "Token ready — copy it below": "Token pronto — copie abaixo",

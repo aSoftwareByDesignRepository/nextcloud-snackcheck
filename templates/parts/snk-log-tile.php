@@ -1,6 +1,6 @@
 <?php
 /**
- * Shared log tile — picture or category icon + name + price.
+ * Shared log tile — shop-style product card (image hero + name + price).
  *
  * @var array $item
  * @var int $siteId
@@ -40,6 +40,7 @@ $aria = implode(' · ', $ariaParts);
 $iconKey = (string)($item['icon'] ?? IconCatalog::forCategory($item['category'] ?? null));
 $cat = (string)($item['category'] ?? 'other');
 $nameLower = mb_strtolower((string)$item['name']);
+$priceClass = 'snk-tile__price' . (!empty($item['free']) ? ' snk-tile__price--free' : '');
 ?>
 <li data-snk-tile-item
 	data-snk-cat="<?php p($cat); ?>"
@@ -50,30 +51,32 @@ $nameLower = mb_strtolower((string)$item['name']);
 		data-item-id="<?php p($item['id']); ?>"
 		data-site-id="<?php p($siteId); ?>"
 		aria-label="<?php p($aria); ?>"
-		<?php if (!empty($periodClosed)) { ?>disabled aria-disabled="true"<?php } ?>
+		<?php if (!empty($periodClosed)) { ?>aria-disabled="true" data-snk-block-reason="period"<?php } ?>
 		<?php if (!empty($shelfFocus)) { ?>autofocus<?php } ?>>
-		<span class="snk-tile__media" aria-hidden="true">
-			<?php if (!empty($item['hasImage']) && !empty($item['imageUrl'])): ?>
-				<img class="snk-tile__img" src="<?php p($item['imageUrl']); ?>" alt="" loading="lazy" decoding="async" width="72" height="72" />
-			<?php else: ?>
-				<span class="snk-tile__icon">
-					<?php print_unescaped(IconCatalog::render($iconKey, 'snk-tile__icon-svg')); ?>
+		<span class="snk-tile__figure" aria-hidden="true">
+			<?php if ($tileTags !== []): ?>
+				<span class="snk-tile__tags">
+					<?php foreach ($tileTags as $tag):
+						$isHazard = in_array($tag, $hazardOrder, true);
+						?>
+						<span class="snk-tag<?php if ($isHazard) { p(' snk-tag--hazard'); } ?>"><?php p($tagLabels[$tag] ?? $tag); ?></span>
+					<?php endforeach; ?>
 				</span>
 			<?php endif; ?>
+			<span class="snk-tile__media">
+				<?php if (!empty($item['hasImage']) && !empty($item['imageUrl'])): ?>
+					<img class="snk-tile__img" src="<?php p($item['imageUrl']); ?>" alt="" loading="lazy" decoding="async" width="128" height="128" />
+				<?php else: ?>
+					<span class="snk-tile__icon">
+						<?php print_unescaped(IconCatalog::render($iconKey, 'snk-tile__icon-svg')); ?>
+					</span>
+				<?php endif; ?>
+			</span>
 		</span>
 		<span class="snk-tile__body">
 			<span class="snk-tile__name"><?php p($item['name']); ?></span>
-			<span class="snk-tile__tags"<?php if ($tileTags === []) { ?> aria-hidden="true"<?php } ?>>
-				<?php foreach ($tileTags as $tag): ?>
-					<span class="snk-tag"><?php p($tagLabels[$tag] ?? $tag); ?></span>
-				<?php endforeach; ?>
-			</span>
-			<span class="snk-tile__price">
-				<?php if (!empty($item['free'])): ?>
-					<?php p($l->t('Free')); ?>
-				<?php else: ?>
-					<?php p(number_format($item['priceCents'] / 100, 2, ',', '.') . ' €'); ?>
-				<?php endif; ?>
+			<span class="snk-tile__foot">
+				<span class="<?php p($priceClass); ?>"><?php p($priceLabel); ?></span>
 			</span>
 		</span>
 	</button>

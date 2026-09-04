@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Security
+
+- Web `catalogImage` requires app ACL; inactive SKU photos require kitchen site manage rights; CSRF-exempt image GETs reject `Sec-Fetch-Site: cross-site`.
+- Regenerate `l10n/*.js` without CSP-breaking `pluralForm` third args (shared regenerator).
+
+### Fixed
+
+- “Close anyway?” mistranslations (ES/DA/NL/SV/PT-BR/PL/FR) that rendered as “near/close” instead of dismiss.
+
 ## 1.0.9 - 2026-08-27
 
 ### Added

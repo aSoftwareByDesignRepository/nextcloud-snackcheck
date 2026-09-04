@@ -92,7 +92,7 @@ OC.L10N.register(
 	"Choose…" : "Elegir…",
 	"Choose… then search" : "Elige... luego busca.",
 	"Close anyway" : "Cerrar de todos modos",
-	"Close anyway?" : "¿Cerca de todos modos?",
+	"Close anyway?" : "¿Cerrar de todos modos?",
 	"Close navigation menu" : "Cerrar menú de navegación",
 	"Close period" : "Cerrar periodo",
 	"Close period anyway?" : "¿Un periodo cercano?",
@@ -573,6 +573,5 @@ OC.L10N.register(
 	"snk-chips-changed" : "snk-chips-changed",
 	"span" : "span",
 	"{used} of {total} tablet seats" : "{used} de {total} plazas de tableta"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

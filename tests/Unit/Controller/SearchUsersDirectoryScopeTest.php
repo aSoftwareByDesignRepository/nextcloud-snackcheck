@@ -59,6 +59,8 @@ final class SearchUsersDirectoryScopeTest extends TestCase
 			$this->createMock(\OCA\SnackCheck\Service\BrAggregateService::class),
 			$this->createMock(\OCA\SnackCheck\Service\ComplimentaryExportService::class),
 			$this->createMock(\OCA\SnackCheck\Service\ShelfQrService::class),
+			$this->createMock(\OCP\IL10N::class),
+			new \OCA\SnackCheck\Service\MyMonthStatementPresenter(),
 		);
 	}
 

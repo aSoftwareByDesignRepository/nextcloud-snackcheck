@@ -629,7 +629,15 @@ class ApiController extends Controller
 	public function catalogImage(int $id): DataDisplayResponse|JSONResponse
 	{
 		try {
-			$this->uid();
+			$user = $this->uid();
+			$this->access->assertAccess($user);
+			$this->assertNotCrossSiteDownload();
+			$item = $this->catalog->get($id);
+			// Active SKUs: any app user (same door as logging). Inactive: kitchen scope only —
+			// never let a random logged-in NC account scrape kitchen photos by id.
+			if (!(bool)$item->getActive()) {
+				$this->access->assertCanManageSite($user, (int)$item->getSiteId());
+			}
 			$blob = $this->catalogImages->read($id);
 			$res = new DataDisplayResponse($blob['content']);
 			$res->addHeader('Content-Type', $blob['mime']);

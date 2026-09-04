@@ -92,7 +92,7 @@ OC.L10N.register(
 	"Choose…" : "Vælg…",
 	"Choose… then search" : "Vælg... derefter søge",
 	"Close anyway" : "Luk alligevel",
-	"Close anyway?" : "Tæt på?",
+	"Close anyway?" : "Luk alligevel?",
 	"Close navigation menu" : "Luk navigationsmenu",
 	"Close period" : "Luk periode",
 	"Close period anyway?" : "- Er det en lukket periode?",
@@ -573,6 +573,5 @@ OC.L10N.register(
 	"snk-chips-changed" : "snk-chips-changed",
 	"span" : "span",
 	"{used} of {total} tablet seats" : "{used} af {total} tablet-pladser"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

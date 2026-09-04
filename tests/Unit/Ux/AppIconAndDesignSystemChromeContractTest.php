@@ -139,7 +139,12 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 		self::assertStringContainsString('.snk-mode-panel--embedded', $css);
 		self::assertStringContainsString('.snk-mode-panel[hidden]', $css);
 		self::assertStringContainsString('display: none !important', $css);
-		$ds = (string)file_get_contents(dirname($this->root(), 3) . '/planning/design-system/DESIGN-SYSTEM.md');
+		$dsPath = dirname($this->root(), 3) . '/planning/design-system/DESIGN-SYSTEM.md';
+		if (!is_file($dsPath)) {
+			// Docker mounts only nextcloud/; planning/ lives on the host workspace.
+			$this->markTestSkipped('DESIGN-SYSTEM.md not available in this environment');
+		}
+		$ds = (string)file_get_contents($dsPath);
 		self::assertStringContainsString('### 3.6c Three filter / context recipes', $ds);
 	}
 

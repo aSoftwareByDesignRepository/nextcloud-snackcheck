@@ -24,6 +24,7 @@ final class CrossSiteDownloadGuardContractTest extends TestCase
 			'function shelfQr',
 			'function shoppingList',
 			'function brReport',
+			'function catalogImage',
 		] as $fn) {
 			self::assertMatchesRegularExpression(
 				'/' . preg_quote($fn, '/') . '[\s\S]{0,350}assertNotCrossSiteDownload\(\)/',
@@ -38,7 +39,8 @@ final class CrossSiteDownloadGuardContractTest extends TestCase
 		);
 		// My-month PDF must be a statement with an explicit total (not a truncated line dump).
 		self::assertStringContainsString('SimplePdfBuilder::buildStatement', $api);
-		self::assertStringContainsString('TOTAL TO DEDUCT', $api);
-		self::assertStringContainsString('Total to deduct', $api);
+		$presenter = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Service/MyMonthStatementPresenter.php');
+		self::assertStringContainsString('TOTAL TO DEDUCT', $presenter);
+		self::assertStringContainsString("\$l->t('TOTAL TO DEDUCT')", $presenter);
 	}
 }

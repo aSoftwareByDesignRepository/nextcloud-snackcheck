@@ -91,8 +91,8 @@ OC.L10N.register(
 	"Choose whether every signed-in user can open SnackCheck, or only people you list below." : "Välj om alla inloggade användare kan öppna SnackCheck eller bara listade personer.",
 	"Choose…" : "Välj…",
 	"Choose… then search" : "Välj ... sedan Sök",
-	"Close anyway" : "Nära ändå",
-	"Close anyway?" : "Nära ändå?",
+	"Close anyway" : "Stäng ändå",
+	"Close anyway?" : "Stäng ändå?",
 	"Close navigation menu" : "Stäng navigeringsmeny",
 	"Close period" : "Stäng period",
 	"Close period anyway?" : "Nära perioden ändå?",
@@ -573,6 +573,5 @@ OC.L10N.register(
 	"snk-chips-changed" : "snk-chips-changed",
 	"span" : "span",
 	"{used} of {total} tablet seats" : "{used} av {total} tablettplatser"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

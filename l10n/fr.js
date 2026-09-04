@@ -91,8 +91,8 @@ OC.L10N.register(
 	"Choose whether every signed-in user can open SnackCheck, or only people you list below." : "Choisissez si tout utilisateur connecté peut ouvrir SnackCheck, ou seulement les personnes listées ci-dessous.",
 	"Choose…" : "Choisir…",
 	"Choose… then search" : "Choisissez... puis recherchez",
-	"Close anyway" : "Presque.",
-	"Close anyway?" : "Presque ?",
+	"Close anyway" : "Fermer quand même",
+	"Close anyway?" : "Fermer quand même ?",
 	"Close navigation menu" : "Fermer le menu de navigation",
 	"Close period" : "Période de fermeture",
 	"Close period anyway?" : "De toute façon ?",
@@ -573,6 +573,5 @@ OC.L10N.register(
 	"snk-chips-changed" : "snk-chips-changed",
 	"span" : "span",
 	"{used} of {total} tablet seats" : "{used} sur {total} places tablette"
-	},
-	"nplurals=2; plural=(n > 1);"
+	}
 );

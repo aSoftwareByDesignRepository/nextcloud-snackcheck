@@ -573,6 +573,5 @@ OC.L10N.register(
 	"snk-chips-changed" : "snk-chips-changed",
 	"span" : "span",
 	"{used} of {total} tablet seats" : "{used} von {total} Tablet-Plätzen"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

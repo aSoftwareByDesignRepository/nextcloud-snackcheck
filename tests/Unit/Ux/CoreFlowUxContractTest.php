@@ -194,6 +194,26 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringContainsString('sitePickRequired', $page);
 	}
 
+	/** Atlas MF: pulse/catalog must not 500 when multi-site needs an explicit site pick. */
+	public function testPulseAndCatalogCatchSiteRequired(): void
+	{
+		$page = (string)file_get_contents($this->root() . '/lib/Controller/PageController.php');
+		self::assertMatchesRegularExpression(
+			'/function pulse\(\)[\s\S]{0,900}site_required[\s\S]{0,200}sitePickRequired/',
+			$page
+		);
+		self::assertMatchesRegularExpression(
+			'/function catalog\(\)[\s\S]{0,900}site_required[\s\S]{0,200}sitePickRequired/',
+			$page
+		);
+		$pulse = (string)file_get_contents($this->root() . '/templates/pages/pulse.php');
+		$catalog = (string)file_get_contents($this->root() . '/templates/pages/catalog.php');
+		self::assertStringContainsString('sitePickRequired', $pulse);
+		self::assertStringContainsString('sitePickRequired', $catalog);
+		self::assertStringContainsString('Pick a site above', $pulse);
+		self::assertStringContainsString('Pick a site above', $catalog);
+	}
+
 	public function testHospitalityOverviewShowsSiteWhenMultiSite(): void
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/pages/hospitality.php');

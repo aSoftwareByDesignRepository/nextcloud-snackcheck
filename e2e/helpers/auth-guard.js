@@ -1,6 +1,8 @@
 /**
  * E2E auth helpers for SnackCheck (mirrors ProjectCheck / TicketCheck).
  */
+const { expect } = require('@playwright/test');
+
 async function tryProgrammaticLogin(page) {
 	const user = process.env.E2E_USER;
 	const pass = process.env.E2E_PASS || process.env.E2E_PASSWORD;
@@ -58,7 +60,13 @@ async function dismissOpenAppNavigation(page) {
 	const toggle = page.locator('#app-navigation-toggle, .app-navigation-toggle').first();
 	if (await toggle.count()) {
 		await toggle.click({ force: true }).catch(() => {});
-		await page.waitForTimeout(250);
+		await expect(appContent).toBeVisible();
+		await expect
+			.poll(async () => {
+				const box = await appContent.boundingBox();
+				return box?.width ?? 0;
+			})
+			.toBeGreaterThan(200);
 	}
 	await appContent
 		.evaluate((el) => {

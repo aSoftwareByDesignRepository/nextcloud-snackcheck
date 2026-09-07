@@ -270,7 +270,8 @@ class DigestMailService
 	/** Claim-before-send under exclusive lock — prevents duplicate digests under overlapping cron. */
 	private function claimDigestSlot(string $claimKey): bool
 	{
-		$lockKey = 'snackcheck/digest/' . hash('sha256', $claimKey);
+		// oc_file_locks.key is varchar(64); longer keys truncate and never release.
+		$lockKey = 'snkdg/' . substr(hash('sha256', $claimKey), 0, 58);
 		try {
 			$this->locking->acquireLock($lockKey, ILockingProvider::LOCK_EXCLUSIVE);
 		} catch (LockedException) {

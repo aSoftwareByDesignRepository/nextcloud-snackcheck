@@ -29,7 +29,11 @@ final class ShelfQrSiteAclContractTest extends TestCase
 			'/function unlockVerify[\s\S]{0,900}\(string\)\$device->getId\(\)/',
 			$src
 		);
-		self::assertSame(4, substr_count($src, 'peekUnlockToken($token, (string)$device->getId())'));
+		self::assertSame(5, substr_count($src, 'peekUnlockToken($token, (string)$device->getId())'));
+		self::assertMatchesRegularExpression(
+			'/function unpair[\s\S]{0,700}isLiveKitchenAdmin/',
+			$src
+		);
 	}
 
 	public function testUnlockServiceHashesQrWithPepperPrefix(): void

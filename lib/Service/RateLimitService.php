@@ -63,7 +63,9 @@ class RateLimitService
 	private function hit(string $key, int $limit): void
 	{
 		$bucket = $key . ':' . intdiv($this->timeFactory->getTime(), self::WINDOW);
-		$lockKey = 'snackcheck/rl/' . hash('sha256', $bucket);
+		// oc_file_locks.key is varchar(64). Keys longer than 64 truncate on insert, so
+		// releaseLock misses the row and exclusive locks stick → permanent 429s.
+		$lockKey = 'snkrl/' . substr(hash('sha256', $bucket), 0, 58);
 		$acquired = false;
 		try {
 			$this->locking->acquireLock($lockKey, ILockingProvider::LOCK_EXCLUSIVE);

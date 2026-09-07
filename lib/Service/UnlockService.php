@@ -340,7 +340,8 @@ class UnlockService
 	 */
 	private function withDeviceFailLock(string $deviceKey, callable $fn): mixed
 	{
-		$lockName = 'snackcheck/unlock_fail/' . hash('sha256', $deviceKey);
+		// oc_file_locks.key is varchar(64); longer keys truncate and never release.
+		$lockName = 'snkuf/' . substr(hash('sha256', $deviceKey), 0, 58);
 		$acquired = false;
 		try {
 			$this->locking->acquireLock($lockName, ILockingProvider::LOCK_EXCLUSIVE);

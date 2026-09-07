@@ -133,8 +133,10 @@ test.describe('SnackCheck UX journeys', () => {
 	});
 
 	test('Pulse: Top-up card owns Restock CTA; empty popular section opens', async ({ page }) => {
-		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse`);
-		await expect(page.locator('.snk-card__title').filter({ hasText: /restock|auffüll|nachfüll|top-up/i }).first()).toBeVisible();
+		// Multi-site: pulse requires an explicit kitchen — Default site is always id≥1.
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse?siteId=1`);
+		await expect(page.getByRole('status').filter({ hasText: /pick a site|site wählen|wählen sie eine standort/i })).toHaveCount(0);
+		await expect(page.locator('.snk-card__title').filter({ hasText: /restock|auffüll|nachfüll|top-up|réassort|reposición|genopfyld/i }).first()).toBeVisible();
 		const ranks = page.locator('details.snk-details--flush').first();
 		if (await ranks.count()) {
 			const hasRows = await page.locator('.snk-rank-list .snk-rank').count();

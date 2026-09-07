@@ -24,7 +24,7 @@ const outDir = path.resolve(
 async function shot(page, name) {
 	fs.mkdirSync(outDir, { recursive: true });
 	await dismissOpenAppNavigation(page);
-	await page.waitForTimeout(350);
+	await expect(page.locator('#app-content.snk-app, #snk-main-content').first()).toBeVisible();
 	await page.screenshot({
 		path: path.join(outDir, name),
 		fullPage: true,
@@ -74,8 +74,8 @@ test.describe('UX audit screenshots', () => {
 		const pages = [
 			['/index.php/apps/snackcheck/log', '01-log.png'],
 			['/index.php/apps/snackcheck/my-month', '02-my-month.png'],
-			['/index.php/apps/snackcheck/catalog', '03-catalog.png'],
-			['/index.php/apps/snackcheck/pulse', '04-pulse.png'],
+			['/index.php/apps/snackcheck/catalog?siteId=1', '03-catalog.png'],
+			['/index.php/apps/snackcheck/pulse?siteId=1', '04-pulse.png'],
 			['/index.php/apps/snackcheck/periods', '05-periods.png'],
 			['/index.php/apps/snackcheck/users', '06-users.png'],
 			['/index.php/apps/snackcheck/hospitality', '07-hospitality.png'],
@@ -101,13 +101,13 @@ test.describe('UX audit screenshots', () => {
 		const colleague = page.locator('.snk-mode-chip, .snk-mode-bar label').filter({ hasText: /colleague|kolleg/i }).first();
 		if (await colleague.count()) {
 			await colleague.click();
-			await page.waitForTimeout(300);
+			await expect(page.locator('#snk-mode-proxy, [data-snk-mode="proxy"], .snk-proxy-panel').first()).toBeVisible({ timeout: 5000 }).catch(() => {});
 			await shot(page, prefix + '19-log-colleague.png');
 		}
 		const company = page.locator('.snk-mode-chip, .snk-mode-bar label').filter({ hasText: /company|firma|betrieb|hospital/i }).first();
 		if (await company.count()) {
 			await company.click();
-			await page.waitForTimeout(300);
+			await expect(page.locator('#snk-mode-hosp, [data-snk-mode="hospitality"], .snk-hosp-panel').first()).toBeVisible({ timeout: 5000 }).catch(() => {});
 			await shot(page, prefix + '20-log-company.png');
 		}
 
@@ -122,7 +122,7 @@ test.describe('UX audit screenshots', () => {
 		}
 
 		// Catalog dialogs
-		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog`);
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog?siteId=1`);
 		await waitChrome(page);
 		const editBtn = page.locator('[data-snk-action="edit-item"], button:has-text("Edit"), button:has-text("Bearbeiten")').first();
 		if (await editBtn.count()) {
@@ -181,8 +181,8 @@ test.describe('UX audit screenshots', () => {
 		const prefix = 'm-';
 		const pages = [
 			['/index.php/apps/snackcheck/log', '01-log.png'],
-			['/index.php/apps/snackcheck/catalog', '02-catalog.png'],
-			['/index.php/apps/snackcheck/pulse', '03-pulse.png'],
+			['/index.php/apps/snackcheck/catalog?siteId=1', '02-catalog.png'],
+			['/index.php/apps/snackcheck/pulse?siteId=1', '03-pulse.png'],
 			['/index.php/apps/snackcheck/settings/license', '04-settings-license.png'],
 			['/index.php/apps/snackcheck/settings/unlock', '05-settings-unlock.png'],
 			['/index.php/apps/snackcheck/periods', '06-periods.png'],

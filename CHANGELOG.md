@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 - 2026-09-04
+
+### Changed
+- Nextcloud **35** support (`max-version` 35). Symfony Console 7–ready command signatures verified.
+
 ## [Unreleased]
 
 ### Security

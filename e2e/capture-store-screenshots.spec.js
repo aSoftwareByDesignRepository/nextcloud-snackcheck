@@ -20,7 +20,7 @@ const outDir = path.resolve(__dirname, '../screenshots');
  */
 async function shot(page, name) {
 	fs.mkdirSync(outDir, { recursive: true });
-	await page.waitForTimeout(500);
+	await expect(page.locator('#app-content.snk-app, #snk-main-content').first()).toBeVisible();
 	await page.screenshot({
 		path: path.join(outDir, name),
 		fullPage: false,
@@ -57,12 +57,12 @@ test.describe('App Store screenshots', () => {
 		await shot(page, 'snackcheck-screenshot-02-my-month.png');
 
 		// 03 — Catalog
-		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog`);
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/catalog?siteId=1`);
 		await waitChrome(page);
 		await shot(page, 'snackcheck-screenshot-03-catalog.png');
 
 		// 04 — Kitchen pulse
-		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse`);
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse?siteId=1`);
 		await waitChrome(page);
 		await shot(page, 'snackcheck-screenshot-04-pulse.png');
 
@@ -78,7 +78,6 @@ test.describe('App Store screenshots', () => {
 		if (await proxyChip.count()) {
 			await proxyChip.click();
 			await expect(page.locator('#snk-mode-proxy')).toBeVisible();
-			await page.waitForTimeout(300);
 		}
 		await shot(page, 'snackcheck-screenshot-06-users.png');
 

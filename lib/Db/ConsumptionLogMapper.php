@@ -107,4 +107,35 @@ class ConsumptionLogMapper extends QBMapper
 		return (int)($row['c'] ?? 0);
 	}
 
+	/**
+	 * Distinct charged users (personal + proxy targets) who have non-voided logs at a site.
+	 * Used to site-scope the kitchen tablet colleague picker under multi-site.
+	 *
+	 * @return list<string>
+	 */
+	public function distinctUserIdsForSite(int $siteId, int $limit = 500): array
+	{
+		if ($siteId <= 0) {
+			return [];
+		}
+		$limit = max(1, min(2000, $limit));
+		$qb = $this->db->getQueryBuilder();
+		$qb->selectDistinct('user_id')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('site_id', $qb->createNamedParameter($siteId)))
+			->andWhere($qb->expr()->isNull('voided_at'))
+			->andWhere($qb->expr()->isNotNull('user_id'))
+			->setMaxResults($limit);
+		$result = $qb->executeQuery();
+		$out = [];
+		while ($row = $result->fetch()) {
+			$uid = trim((string)($row['user_id'] ?? ''));
+			if ($uid !== '') {
+				$out[] = $uid;
+			}
+		}
+		$result->closeCursor();
+		return $out;
+	}
+
 }

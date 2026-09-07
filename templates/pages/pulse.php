@@ -2,6 +2,11 @@
 $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'] ?? []);
 ?>
 <section class="snk-section" aria-label="<?php p($l->t('Kitchen overview')); ?>">
+	<?php if (!empty($_['sitePickRequired'])): ?>
+		<div class="snk-callout snk-callout--warn" role="status">
+			<p><?php p($l->t('Pick a site above before logging. Each kitchen has its own catalog.')); ?></p>
+		</div>
+	<?php else: ?>
 	<section class="snk-quick-filters" aria-labelledby="snk-pulse-cat-label">
 		<p class="snk-quick-filters__label" id="snk-pulse-cat-label"><?php p($l->t('Category')); ?></p>
 		<nav class="snk-filter-bar" aria-labelledby="snk-pulse-cat-label">
@@ -135,4 +140,5 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 			<?php endif; ?>
 		</details>
 	</article>
+	<?php endif; ?>
 </section>

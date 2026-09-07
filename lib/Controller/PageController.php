@@ -190,11 +190,21 @@ class PageController extends Controller
 	{
 		$user = $this->requireUser();
 		$this->assertManager($user);
-		$siteId = $this->access->resolveManagedSiteId($user, $this->requestSiteId());
-		$items = $this->catalog->listAll($siteId);
+		$sitePickRequired = false;
+		$siteId = 0;
+		try {
+			$siteId = $this->access->resolveManagedSiteId($user, $this->requestSiteId());
+		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
+			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
+				$sitePickRequired = true;
+			} else {
+				throw $e;
+			}
+		}
+		$items = $sitePickRequired ? [] : $this->catalog->listAll($siteId);
 		$multiSite = $this->settings->isMultiSiteEnabled();
 		$otherSites = [];
-		if ($multiSite) {
+		if ($multiSite && !$sitePickRequired) {
 			foreach ($this->access->sitesVisibleTo($user) as $site) {
 				if ((int)$site->getId() !== $siteId) {
 					$otherSites[] = $site;
@@ -204,7 +214,8 @@ class PageController extends Controller
 		return $this->page('catalog', [
 			'siteId' => $siteId,
 			'items' => $items,
-			'empty' => count($items) === 0,
+			'empty' => !$sitePickRequired && count($items) === 0,
+			'sitePickRequired' => $sitePickRequired,
 			'multiSite' => $multiSite,
 			'otherSites' => $otherSites,
 		]);
@@ -216,11 +227,24 @@ class PageController extends Controller
 	{
 		$user = $this->requireUser();
 		$this->assertManager($user);
-		$siteId = $this->access->resolveManagedSiteId($user, $this->requestSiteId());
+		$sitePickRequired = false;
+		$siteId = 0;
+		try {
+			$siteId = $this->access->resolveManagedSiteId($user, $this->requestSiteId());
+		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
+			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
+				$sitePickRequired = true;
+			} else {
+				throw $e;
+			}
+		}
 		$category = (string)($this->request->getParam('category') ?? '');
-		$data = $this->pulse->buildForSite($siteId, $category !== '' ? $category : null);
+		$data = $sitePickRequired
+			? ['ranks' => [], 'topUp' => [], 'shoppingList' => []]
+			: $this->pulse->buildForSite($siteId, $category !== '' ? $category : null);
 		return $this->page('pulse', [
 			'siteId' => $siteId,
+			'sitePickRequired' => $sitePickRequired,
 			'pulse' => $data,
 			'category' => $category !== '' ? $category : 'all',
 			'categories' => ['all', 'drink', 'snack', 'alcohol', 'other'],
@@ -261,13 +285,27 @@ class PageController extends Controller
 			return $this->page('hospitality', $this->hospitalityView($user, null, [], null));
 		}
 		$siteFilter = null;
-		if (!$this->access->isAppAdmin($user)) {
-			$siteFilter = $this->access->resolveManagedSiteId($user, $this->requestSiteId());
-		} elseif ($this->requestSiteId()) {
-			$siteFilter = $this->requestSiteId();
+		$sitePickRequired = false;
+		try {
+			if (!$this->access->isAppAdmin($user)) {
+				$siteFilter = $this->access->resolveManagedSiteId($user, $this->requestSiteId());
+			} elseif ($this->requestSiteId()) {
+				$siteFilter = $this->requestSiteId();
+			}
+		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
+			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
+				$sitePickRequired = true;
+			} else {
+				throw $e;
+			}
 		}
-		$rows = $this->payroll->buildHospitalityRows((int)$period->getId(), $siteFilter);
-		return $this->page('hospitality', $this->hospitalityView($user, $period, $rows, $siteFilter));
+		$rows = $sitePickRequired
+			? []
+			: $this->payroll->buildHospitalityRows((int)$period->getId(), $siteFilter);
+		return $this->page('hospitality', array_merge(
+			$this->hospitalityView($user, $period, $rows, $siteFilter),
+			['sitePickRequired' => $sitePickRequired],
+		));
 	}
 
 	/**

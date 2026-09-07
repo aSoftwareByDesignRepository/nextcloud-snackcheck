@@ -9,7 +9,11 @@ $tagLabels = [
 ];
 ?>
 <section class="snk-section" aria-label="<?php p($l->t('Catalog')); ?>">
-	<?php if (!empty($_['empty'])): ?>
+	<?php if (!empty($_['sitePickRequired'])): ?>
+		<div class="snk-callout snk-callout--warn" role="status">
+			<p><?php p($l->t('Pick a site above before logging. Each kitchen has its own catalog.')); ?></p>
+		</div>
+	<?php elseif (!empty($_['empty'])): ?>
 		<?php
 		$icon = 'package';
 		$title = $l->t('Catalog is empty.');

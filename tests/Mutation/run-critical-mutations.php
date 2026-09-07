@@ -30,6 +30,57 @@ function assertTrue(bool $cond, string $msg): void
 	}
 }
 
+/**
+ * Resolve snackcheck-kiosk tree when present (host monorepo). Inside the Nextcloud
+ * container the mobile/ tree is usually not mounted — skip those asserts (Jest mutate:core is SoT).
+ */
+function kioskRoot(): ?string
+{
+	global $root;
+	static $resolved = false;
+	static $base = null;
+	if ($resolved) {
+		return $base;
+	}
+	$resolved = true;
+	$candidates = [];
+	$env = getenv('SNACKCHECK_KIOSK_ROOT');
+	if (is_string($env) && $env !== '') {
+		$candidates[] = rtrim($env, '/');
+	}
+	// Host: .../nextcloud-dev/nextcloud/apps/snackcheck → dirname(,3)=nextcloud-dev
+	$candidates[] = dirname($root, 3) . '/mobile/snackcheck-kiosk';
+	// Host alt: snackcheck checked out next to mobile under Development/
+	$candidates[] = dirname($root, 4) . '/mobile/snackcheck-kiosk';
+	foreach ($candidates as $c) {
+		if (is_dir($c) && is_file($c . '/src/state/kitchenStore.ts')) {
+			$base = $c;
+			break;
+		}
+	}
+	return $base;
+}
+
+function kioskRead(string $relative): ?string
+{
+	$base = kioskRoot();
+	if ($base === null) {
+		return null;
+	}
+	$path = $base . '/' . ltrim($relative, '/');
+	$src = @file_get_contents($path);
+	return is_string($src) ? $src : null;
+}
+
+function assertKiosk(bool $cond, string $msg, ?string $src): void
+{
+	if ($src === null) {
+		fwrite(STDOUT, "SKIP: $msg (kiosk tree not mounted; host npm run mutate:core is SoT)\n");
+		return;
+	}
+	assertTrue($cond, $msg);
+}
+
 // Subsidy mutants: wrong formula would fail
 $svc = new SubsidyService();
 $r = $svc->computeForUser(100, [
@@ -161,7 +212,7 @@ assertTrue(
 	'catalog copyToSite rejects same site'
 );
 assertTrue(
-	is_string($catalogSrc) && preg_match('/applyStarterDe[\s\S]{0,400}12,[\s\S]{0,80}20,/m', $catalogSrc) === 1,
+	is_string($catalogSrc) && preg_match('/applyStarterDe[\s\S]{0,1200}12,[\s\S]{0,120}20,/m', $catalogSrc) === 1,
 	'starter catalog sets par/onHand so Top-up works'
 );
 assertTrue(
@@ -462,13 +513,14 @@ assertTrue(
 	is_string($unlockSrc) && str_contains($unlockSrc, 'recordUnlockFailure') && str_contains($unlockSrc, 'acquireLock'),
 	'unlock fail counter is lock-serialized'
 );
-$kioskStore = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/state/kitchenStore.ts');
-assertTrue(
+$kioskStore = kioskRead('src/state/kitchenStore.ts');
+assertKiosk(
 	is_string($kioskStore)
 		&& str_contains($kioskStore, "SUCCESS_DISMISS")
 		&& str_contains($kioskStore, 'lockUnlockSession')
 		&& str_contains($kioskStore, 'scrubUnlockToken'),
-	'kiosk invalidates unlock on success/pending dismiss'
+	'kiosk invalidates unlock on success/pending dismiss',
+	$kioskStore
 );
 $voidSrc = file_get_contents($root . '/lib/Service/ConsumptionLogService.php');
 assertTrue(
@@ -565,15 +617,17 @@ assertTrue(
 		&& !is_file($root . '/public/docs/PARTNER-DEVICE-RECOMMENDATION-EN.md'),
 	'WP-HW2 partner device one-pager is not in the app repo'
 );
-$kioskHb = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/hooks/useDeviceHeartbeat.ts');
-assertTrue(
+$kioskHb = kioskRead('src/hooks/useDeviceHeartbeat.ts');
+assertKiosk(
 	is_string($kioskHb) && str_contains($kioskHb, 'postHeartbeat') && str_contains($kioskHb, 'HEARTBEAT_INTERVAL_MS'),
-	'kiosk heartbeat hook polls device last-seen / license (MF7)'
+	'kiosk heartbeat hook polls device last-seen / license (MF7)',
+	$kioskHb
 );
-$kioskApp = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/App.tsx');
-assertTrue(
+$kioskApp = kioskRead('App.tsx');
+assertKiosk(
 	is_string($kioskApp) && str_contains($kioskApp, 'useDeviceHeartbeat'),
-	'kiosk App wires device heartbeat'
+	'kiosk App wires device heartbeat',
+	$kioskApp
 );
 $unlockSrc2 = file_get_contents($root . '/lib/Service/UnlockService.php');
 assertTrue(
@@ -585,8 +639,9 @@ assertTrue(
 $deviceApiSrc = file_get_contents($root . '/lib/Controller/DeviceApiController.php');
 assertTrue(
 	is_string($deviceApiSrc)
-		&& substr_count($deviceApiSrc, 'peekUnlockToken($token, (string)$device->getId())') >= 4,
-	'device API peeks unlock tokens bound to device id (incl. catalog favorites)'
+		&& substr_count($deviceApiSrc, 'peekUnlockToken($token, (string)$device->getId())') >= 5
+		&& preg_match('/function unpair[\s\S]{0,700}isLiveKitchenAdmin/', $deviceApiSrc) === 1,
+	'device API peeks unlock tokens bound to device id; unpair requires live kitchen-admin'
 );
 $apiShelf = file_get_contents($root . '/lib/Controller/ApiController.php');
 assertTrue(
@@ -611,17 +666,19 @@ assertTrue(
 		&& preg_match('/function users\(\)[\s\S]{0,2500}\'proxyItems\'/', $pageUsers) === 1,
 	'Users controller supplies proxy catalog'
 );
-$kioskHb2 = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/hooks/useDeviceHeartbeat.ts');
-assertTrue(
+$kioskHb2 = kioskRead('src/hooks/useDeviceHeartbeat.ts');
+assertKiosk(
 	is_string($kioskHb2) && str_contains($kioskHb2, 'fetchBootstrap') && str_contains($kioskHb2, 'BOOTSTRAP_REFRESH'),
-	'heartbeat refreshes bootstrap period (AC-M3 live)'
+	'heartbeat refreshes bootstrap period (AC-M3 live)',
+	$kioskHb2
 );
-$flowSrc = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/state/kitchenFlowMachine.ts');
-assertTrue(
+$flowSrc = kioskRead('src/state/kitchenFlowMachine.ts');
+assertKiosk(
 	is_string($flowSrc)
 		&& str_contains($flowSrc, "state.screen === 'success'")
 		&& str_contains($flowSrc, 'BOOTSTRAP_REFRESH'),
-	'success ERROR stays visible; bootstrap refresh event exists'
+	'success ERROR stays visible; bootstrap refresh event exists',
+	$flowSrc
 );
 $deJson = json_decode((string)file_get_contents($root . '/l10n/de.json'), true);
 $deTr = is_array($deJson) ? ($deJson['translations'] ?? []) : [];
@@ -655,13 +712,14 @@ assertTrue(
 		&& !str_contains($hospTpl, "implode(', ', \$_['allowlist'])"),
 	'hospitality page shows display names not raw uid lists'
 );
-$successSrc = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/screens/SuccessScreen.tsx');
-assertTrue(
+$successSrc = kioskRead('src/screens/SuccessScreen.tsx');
+assertKiosk(
 	is_string($successSrc)
 		&& str_contains($successSrc, 'canDismiss')
 		&& str_contains($successSrc, 'SUCCESS_MIN_STAY_MS')
 		&& str_contains($successSrc, 'undoing.current'),
-	'success Done respects min stay; undo blocks auto-dismiss race'
+	'success Done respects min stay; undo blocks auto-dismiss race',
+	$successSrc
 );
 $usersNoUid = file_get_contents($root . '/templates/pages/users.php');
 assertTrue(
@@ -682,13 +740,14 @@ assertTrue(
 	is_string($licMig) && str_contains($licMig, 'snk_lic_single_uq') && str_contains($licMig, 'singleton_guard'),
 	'license singleton UNIQUE migration shipped'
 );
-$kioskLog = file_get_contents(dirname($root, 3) . '/mobile/snackcheck-kiosk/src/state/kitchenStore.ts');
-assertTrue(
+$kioskLog = kioskRead('src/state/kitchenStore.ts');
+assertKiosk(
 	is_string($kioskLog)
 		&& str_contains($kioskLog, 'if (get().logging)')
 		&& str_contains($kioskLog, 'set({ logging: true })')
 		&& str_contains($kioskLog, 'set({ logging: false })'),
-	'kiosk logItem submit mutex blocks double-tap double charge (Zeus MF)'
+	'kiosk logItem submit mutex blocks double-tap double charge (Zeus MF)',
+	$kioskLog
 );
 $unlockSrc = file_get_contents($root . '/lib/Service/UnlockService.php');
 assertTrue(
@@ -792,10 +851,15 @@ assertTrue(
 	is_string($lockBind)
 		&& preg_match('/function lockSession[\s\S]{0,400}invalidateUnlockToken\(\$token,\s*\(string\)\$device->getId\(\)\)/', $lockBind) === 1
 		&& preg_match('/function createLog[\s\S]{0,1400}assertLiveAppAccess/', $lockBind) === 1
-		&& preg_match('/function createLog[\s\S]{0,1400}isLiveKitchenAdmin/', $lockBind) === 1
+		&& preg_match('/function createLog[\s\S]{0,1600}isLiveKitchenAdmin/', $lockBind) === 1
+		&& preg_match('/function createLog[\s\S]{0,1800}assertProxyTargetOnSiteRoster/', $lockBind) === 1
+		&& preg_match('/function createLog[\s\S]{0,900}getParam\(\'unlockToken\'\)/', $lockBind) !== 1
 		&& preg_match('/function colleagues[\s\S]{0,500}assertLiveAppAccess/', $lockBind) === 1
-		&& preg_match('/function colleagues[\s\S]{0,700}isLiveKitchenAdmin/', $lockBind) === 1,
-	'device lockSession binds token; proxy/colleagues re-check live ACL'
+		&& preg_match('/function colleagues[\s\S]{0,700}isLiveKitchenAdmin/', $lockBind) === 1
+		&& preg_match('/function colleagues[\s\S]{0,1600}isMultiSiteEnabled/', $lockBind) === 1
+		&& preg_match('/function colleagues[\s\S]{0,1800}distinctUserIdsForSite/', $lockBind) === 1
+		&& preg_match('/function colleagues[\s\S]{0,900}getParam\(\'unlockToken\'\)/', $lockBind) !== 1,
+	'device lockSession binds token; proxy/colleagues re-check live ACL + multi-site roster; no unlockToken query'
 );
 $pageCsrf = file_get_contents($root . '/lib/Controller/PageController.php');
 assertTrue(

@@ -202,11 +202,12 @@ class DeviceApiController extends Controller
 			$device = $this->authenticateDevice();
 			$this->rateLimit->assertDeviceUnlock((string)$device->getId());
 			$body = $this->jsonBody();
+			// Unlock secrets only from JSON body — never query/form (access-log / proxy PII).
 			$result = $this->unlock->verify(
-				isset($body['pin']) ? (string)$body['pin'] : $this->request->getParam('pin'),
-				isset($body['qrPayload']) ? (string)$body['qrPayload'] : $this->request->getParam('qrPayload'),
+				isset($body['pin']) ? (string)$body['pin'] : null,
+				isset($body['qrPayload']) ? (string)$body['qrPayload'] : null,
 				'dev:' . $device->getId(),
-				isset($body['nfcPayload']) ? (string)$body['nfcPayload'] : $this->request->getParam('nfcPayload'),
+				isset($body['nfcPayload']) ? (string)$body['nfcPayload'] : null,
 				(int)$device->getSiteId(),
 				(string)$device->getId(),
 			);
@@ -232,28 +233,34 @@ class DeviceApiController extends Controller
 		try {
 			$device = $this->authenticateDevice();
 			$body = $this->jsonBody();
-			$token = (string)($body['unlockToken'] ?? $this->request->getParam('unlockToken') ?? '');
+			// Unlock secrets: JSON body only — never query/form (access-log / proxy leak).
+			$token = trim((string)($body['unlockToken'] ?? ''));
 			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
 			$this->assertLiveAppAccess($session['userId']);
 			// Device 120/min already applied in authenticateDevice (COMPANION §7.5).
 			// CORE §9.7 also requires per-user 60 logs/min on the tablet path.
 			$this->rateLimit->assertUserLog($session['userId']);
-			$mode = (string)($body['mode'] ?? $this->request->getParam('mode') ?? 'self');
+			$mode = (string)($body['mode'] ?? 'self');
 			// Never trust cached isKitchenAdmin for the full unlock TTL — re-check live ACL.
 			$liveKitchenAdmin = $this->isLiveKitchenAdmin($session['userId'], (int)$device->getSiteId());
+			$siteId = (int)$device->getSiteId();
+			$targetUserId = isset($body['targetUserId']) ? (string)$body['targetUserId'] : null;
+			if ($mode === 'proxy') {
+				$this->assertProxyTargetOnSiteRoster(trim((string)$targetUserId), $siteId);
+			}
 			$idem = (string)($this->request->getHeader('Idempotency-Key')
-				?: ($body['idempotencyKey'] ?? $this->request->getParam('idempotencyKey') ?? ''));
+				?: ($body['idempotencyKey'] ?? ''));
 			$result = $this->logs->create([
-				'itemId' => (int)($body['itemId'] ?? $this->request->getParam('itemId')),
-				'qty' => (int)($body['qty'] ?? $this->request->getParam('qty') ?? 1),
+				'itemId' => (int)($body['itemId'] ?? 0),
+				'qty' => (int)($body['qty'] ?? 1),
 				'idempotencyKey' => $idem,
-				'siteId' => (int)$device->getSiteId(),
+				'siteId' => $siteId,
 				'actorUserId' => $session['userId'],
 				'source' => $mode === 'hospitality' ? 'hospitality_terminal' : 'terminal',
 				'mode' => $mode,
-				'targetUserId' => $body['targetUserId'] ?? $this->request->getParam('targetUserId'),
-				'proxyReason' => $body['proxyReason'] ?? $this->request->getParam('proxyReason'),
-				'hospitalityReason' => $body['hospitalityReason'] ?? $this->request->getParam('hospitalityReason'),
+				'targetUserId' => $targetUserId,
+				'proxyReason' => $body['proxyReason'] ?? null,
+				'hospitalityReason' => $body['hospitalityReason'] ?? null,
 				'deviceId' => (string)$device->getId(),
 				'isKitchenAdmin' => $liveKitchenAdmin,
 			]);
@@ -282,7 +289,7 @@ class DeviceApiController extends Controller
 		try {
 			$device = $this->authenticateDevice();
 			$body = $this->jsonBody();
-			$token = (string)($body['unlockToken'] ?? $this->request->getParam('unlockToken') ?? '');
+			$token = trim((string)($body['unlockToken'] ?? ''));
 			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
 			$this->assertLiveAppAccess($session['userId']);
 			// Argus MF: tablet undo is site-scoped — never void another kitchen's ledger row.
@@ -299,17 +306,37 @@ class DeviceApiController extends Controller
 	{
 		try {
 			$device = $this->authenticateDevice();
-			$token = (string)($this->request->getHeader('X-Unlock-Token') ?: $this->request->getParam('unlockToken') ?? '');
+			// GET: header only — never unlockToken query (access logs).
+			$token = trim((string)$this->request->getHeader('X-Unlock-Token'));
 			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
 			$this->assertLiveAppAccess($session['userId']);
 			// Live ACL — do not trust session.isKitchenAdmin for the full unlock TTL.
-			if (!$this->isLiveKitchenAdmin($session['userId'], (int)$device->getSiteId())) {
+			$siteId = (int)$device->getSiteId();
+			if (!$this->isLiveKitchenAdmin($session['userId'], $siteId)) {
 				throw new DomainException('permission_denied', 'Kitchen admin required', 403);
 			}
 			$q = trim((string)($this->request->getParam('q') ?? ''));
 			$limit = min(50, max(1, (int)($this->request->getParam('limit') ?? 50)));
+			// Multi-site: never dump the whole NC directory. Roster = this site's managers
+			// ∪ users who already have non-voided charges at this site (Momos privacy).
+			$siteRoster = null;
+			if ($this->settings->isMultiSiteEnabled()) {
+				$siteRoster = [];
+				foreach ($this->logs->distinctUserIdsForSite($siteId) as $uid) {
+					$siteRoster[$uid] = true;
+				}
+				try {
+					foreach ($this->sites->managerUids($this->sites->get($siteId)) as $uid) {
+						$siteRoster[$uid] = true;
+					}
+				} catch (DomainException) {
+					// missing site — authenticateDevice already requires it; keep empty roster
+				}
+			}
 			$colleagues = [];
-			foreach ($this->userManager->search($q, $limit) as $user) {
+			// Over-fetch then filter so a Munich-heavy directory cannot crowd out Berlin peers.
+			$searchLimit = $siteRoster === null ? $limit : min(200, max($limit * 4, 50));
+			foreach ($this->userManager->search($q, $searchLimit) as $user) {
 				$uid = $user->getUID();
 				if ($uid === $session['userId']) {
 					continue;
@@ -317,10 +344,16 @@ class DeviceApiController extends Controller
 				if (!$this->access->canAccessApp($uid)) {
 					continue;
 				}
+				if ($siteRoster !== null && !isset($siteRoster[$uid])) {
+					continue;
+				}
 				$colleagues[] = [
 					'userId' => $uid,
 					'displayName' => $user->getDisplayName() ?: $uid,
 				];
+				if (count($colleagues) >= $limit) {
+					break;
+				}
 			}
 			usort($colleagues, static fn (array $a, array $b): int => strcasecmp($a['displayName'], $b['displayName']));
 			return new JSONResponse(['colleagues' => $colleagues]);
@@ -336,7 +369,10 @@ class DeviceApiController extends Controller
 		try {
 			$device = $this->authenticateDevice();
 			$body = $this->jsonBody();
-			$token = (string)($body['unlockToken'] ?? $this->request->getParam('unlockToken') ?? '');
+			$token = trim((string)($body['unlockToken'] ?? ''));
+			if ($token === '') {
+				throw new DomainException('validation_failed', 'unlockToken required', 422);
+			}
 			$this->unlock->invalidateUnlockToken($token, (string)$device->getId());
 			return new JSONResponse(['ok' => true]);
 		} catch (\Throwable $e) {
@@ -358,6 +394,8 @@ class DeviceApiController extends Controller
 
 	/**
 	 * Optional P1.1 self-revoke (COMPANION §7.4) — tablet clears credentials after 2xx.
+	 * Momos: must require a *live* kitchen-admin unlock. Bearer-only unpair let any
+	 * stolen snkterm_ brick the kitchen slot while the UI pretended admin-only.
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -365,6 +403,13 @@ class DeviceApiController extends Controller
 	{
 		try {
 			$device = $this->authenticateDevice();
+			$body = $this->jsonBody();
+			$token = trim((string)($body['unlockToken'] ?? ''));
+			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
+			$this->assertLiveAppAccess($session['userId']);
+			if (!$this->isLiveKitchenAdmin($session['userId'], (int)$device->getSiteId())) {
+				throw new DomainException('permission_denied', 'Kitchen admin required', 403);
+			}
 			$result = $this->terminals->revoke((int)$device->getId(), 'device:' . $device->getId());
 			if (!$result['ok']) {
 				throw new DomainException('terminal_not_found', 'Device not found', 404);
@@ -427,6 +472,35 @@ class DeviceApiController extends Controller
 	}
 
 	/**
+	 * Multi-site proxy targets must be on the same privacy roster as GET /colleagues
+	 * (site managers ∪ users with non-voided charges at this site).
+	 */
+	private function assertProxyTargetOnSiteRoster(string $targetUserId, int $siteId): void
+	{
+		if ($targetUserId === '') {
+			throw new DomainException('validation_failed', 'targetUserId required', 422);
+		}
+		if (!$this->settings->isMultiSiteEnabled()) {
+			return;
+		}
+		foreach ($this->logs->distinctUserIdsForSite($siteId) as $uid) {
+			if (hash_equals((string)$uid, $targetUserId)) {
+				return;
+			}
+		}
+		try {
+			foreach ($this->sites->managerUids($this->sites->get($siteId)) as $uid) {
+				if (hash_equals((string)$uid, $targetUserId)) {
+					return;
+				}
+			}
+		} catch (DomainException) {
+			// fall through to deny
+		}
+		throw new DomainException('permission_denied', 'Target not on site roster', 403);
+	}
+
+	/**
 	 * Content-sensitive catalog revision token (not a row count — delete+add same N must change).
 	 *
 	 * @param list<\OCA\SnackCheck\Db\CatalogItem> $items
@@ -450,7 +524,7 @@ class DeviceApiController extends Controller
 	}
 
 	/** @return array<string, mixed> */
-	private function jsonBody(): array
+	protected function jsonBody(): array
 	{
 		$raw = file_get_contents('php://input');
 		if (!is_string($raw) || trim($raw) === '') {

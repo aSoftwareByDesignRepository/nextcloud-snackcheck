@@ -31,6 +31,7 @@ use OCA\SnackCheck\Service\UnlockService;
 use OCA\SnackCheck\Support\PeriodDisplay;
 use OCA\SnackCheck\Db\ConsumptionLogMapper;
 use OCA\SnackCheck\Db\HospAllowMapper;
+use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -95,6 +96,31 @@ class ApiController extends Controller
 				|| $this->access->canManageSite($user, $siteId);
 			if ($mode === 'proxy') {
 				$this->access->assertCanManageSite($user, $siteId);
+				if ($this->settings->isMultiSiteEnabled()) {
+					$target = trim((string)$this->request->getParam('targetUserId'));
+					$onRoster = false;
+					foreach ($this->logs->distinctUserIdsForSite($siteId) as $uid) {
+						if (hash_equals((string)$uid, $target)) {
+							$onRoster = true;
+							break;
+						}
+					}
+					if (!$onRoster) {
+						try {
+							foreach ($this->sites->managerUids($this->sites->get($siteId)) as $uid) {
+								if (hash_equals((string)$uid, $target)) {
+									$onRoster = true;
+									break;
+								}
+							}
+						} catch (\Throwable) {
+							$onRoster = false;
+						}
+					}
+					if (!$onRoster) {
+						throw new DomainException('permission_denied', 'Target not on site roster', 403);
+					}
+				}
 			}
 			$result = $this->logs->create([
 				'itemId' => (int)$this->request->getParam('itemId'),

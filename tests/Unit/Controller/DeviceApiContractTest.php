@@ -206,6 +206,212 @@ final class DeviceApiContractTest extends TestCase
 		self::assertSame('unlock_invalid', $res->getData()['code']);
 	}
 
+	/**
+	 * Momos privacy: multi-site colleagues must not dump the org-wide NC directory.
+	 * Roster = site managers ∪ users with non-voided charges at this device site.
+	 */
+	public function testColleaguesMultiSiteHidesUsersOutsideSiteRoster(): void
+	{
+		$device = $this->device(1, 10);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => true,
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+		$access->method('isAppAdmin')->with('alice')->willReturn(true);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isMultiSiteEnabled')->willReturn(true);
+
+		$site = new Site();
+		$site->setId(10);
+		$site->setCode('BER');
+		$site->setName('Berlin');
+		$sites = $this->createMock(SiteService::class);
+		$sites->method('get')->with(10)->willReturn($site);
+		$sites->method('managerUids')->with($site)->willReturn(['berlin_mgr']);
+
+		$logs = $this->createMock(ConsumptionLogService::class);
+		$logs->method('distinctUserIdsForSite')->with(10)->willReturn(['berlin_eater']);
+
+		$munich = $this->createMock(IUser::class);
+		$munich->method('getUID')->willReturn('munich_only');
+		$munich->method('getDisplayName')->willReturn('Munich Only');
+		$eater = $this->createMock(IUser::class);
+		$eater->method('getUID')->willReturn('berlin_eater');
+		$eater->method('getDisplayName')->willReturn('Berlin Eater');
+		$mgr = $this->createMock(IUser::class);
+		$mgr->method('getUID')->willReturn('berlin_mgr');
+		$mgr->method('getDisplayName')->willReturn('Berlin Manager');
+		$self = $this->createMock(IUser::class);
+		$self->method('getUID')->willReturn('alice');
+		$self->method('getDisplayName')->willReturn('Alice');
+
+		$users = $this->createMock(IUserManager::class);
+		$users->method('search')->willReturn([$munich, $eater, $mgr, $self]);
+
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			license: $license,
+			unlock: $unlock,
+			access: $access,
+			settings: $settings,
+			sites: $sites,
+			logs: $logs,
+			users: $users,
+		);
+		$res = $ctrl->colleagues();
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		$ids = array_column($res->getData()['colleagues'], 'userId');
+		self::assertContains('berlin_eater', $ids);
+		self::assertContains('berlin_mgr', $ids);
+		self::assertNotContains('munich_only', $ids);
+		self::assertNotContains('alice', $ids);
+	}
+
+	public function testColleaguesSingleSiteKeepsAppAccessDirectorySearch(): void
+	{
+		$device = $this->device(1, 1);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => true,
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+		$access->method('isAppAdmin')->with('alice')->willReturn(true);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isMultiSiteEnabled')->willReturn(false);
+
+		$logs = $this->createMock(ConsumptionLogService::class);
+		$logs->expects($this->never())->method('distinctUserIdsForSite');
+
+		$bob = $this->createMock(IUser::class);
+		$bob->method('getUID')->willReturn('bob');
+		$bob->method('getDisplayName')->willReturn('Bob');
+		$users = $this->createMock(IUserManager::class);
+		$users->method('search')->willReturn([$bob]);
+
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			license: $license,
+			unlock: $unlock,
+			access: $access,
+			settings: $settings,
+			logs: $logs,
+			users: $users,
+		);
+		$res = $ctrl->colleagues();
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		$ids = array_column($res->getData()['colleagues'], 'userId');
+		self::assertSame(['bob'], $ids);
+	}
+
+	/**
+	 * Momos: UI hides Unpair behind kitchen-admin, but bearer-only /unpair let any stolen
+	 * snkterm_ brick the kitchen slot. Server must require a live kitchen-admin unlock.
+	 */
+	public function testUnpairRejectsBearerOnlyWithoutKitchenAdminUnlock(): void
+	{
+		$device = $this->device(7, 3);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$terminals->expects($this->never())->method('revoke');
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willThrowException(
+			new DomainException('unlock_invalid', 'Unlock invalid', 401)
+		);
+		$ctrl = $this->controller(terminals: $terminals, license: $license, unlock: $unlock);
+		$res = $ctrl->unpair();
+		self::assertSame(401, $res->getStatus());
+	}
+
+	public function testUnpairRejectsNonAdminUnlockEvenWithValidSession(): void
+	{
+		$device = $this->device(7, 3);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$terminals->expects($this->never())->method('revoke');
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'bob',
+			'isKitchenAdmin' => true, // stale — live ACL must deny
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->with('bob')->willReturn(true);
+		$access->method('isAppAdmin')->with('bob')->willReturn(false);
+		$access->method('canManageSite')->with('bob', 3)->willReturn(false);
+		$ctrl = $this->controller(terminals: $terminals, license: $license, unlock: $unlock, access: $access);
+		$res = $ctrl->unpair();
+		self::assertSame(403, $res->getStatus());
+		self::assertSame('permission_denied', $res->getData()['code']);
+	}
+
+	public function testUnpairSucceedsWithLiveKitchenAdminUnlock(): void
+	{
+		$device = $this->device(7, 3);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$terminals->expects($this->once())->method('revoke')->with(7, 'device:7')->willReturn(['ok' => true]);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'admin',
+			'isKitchenAdmin' => false,
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->with('admin')->willReturn(true);
+		$access->method('isAppAdmin')->with('admin')->willReturn(false);
+		$access->method('canManageSite')->with('admin', 3)->willReturn(true);
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->willReturnCallback(static function (string $h): string {
+			return $h === 'Authorization' ? 'Bearer snkterm_x' : '';
+		});
+		$request->method('getParam')->willReturn('snkunlock_admin');
+		$request->method('getRemoteAddress')->willReturn('127.0.0.1');
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			license: $license,
+			unlock: $unlock,
+			access: $access,
+			request: $request,
+			jsonBody: ['unlockToken' => 'snkunlock_admin'],
+		);
+		$res = $ctrl->unpair();
+		self::assertSame(200, $res->getStatus());
+		self::assertTrue($res->getData()['ok']);
+	}
+
 	public function testLockSessionBindsInvalidateToDevice(): void
 	{
 		$device = $this->device(42, 1);
@@ -222,9 +428,15 @@ final class DeviceApiContractTest extends TestCase
 		$request->method('getHeader')->willReturnCallback(static function (string $h): string {
 			return $h === 'Authorization' ? 'Bearer snkterm_x' : '';
 		});
-		$request->method('getParam')->willReturn('snkunlock_abc');
+		$request->method('getParam')->willReturn('snkunlock_from_query_must_be_ignored');
 		$request->method('getRemoteAddress')->willReturn('127.0.0.1');
-		$ctrl = $this->controller(terminals: $terminals, license: $license, unlock: $unlock, request: $request);
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			license: $license,
+			unlock: $unlock,
+			request: $request,
+			jsonBody: ['unlockToken' => 'snkunlock_abc'],
+		);
 		$res = $ctrl->lockSession();
 		self::assertSame(200, $res->getStatus());
 		self::assertTrue($res->getData()['ok']);
@@ -287,6 +499,12 @@ final class DeviceApiContractTest extends TestCase
 			access: $access,
 			rateLimit: $rate,
 			request: $request,
+			jsonBody: [
+				'unlockToken' => 'tok',
+				'itemId' => 11,
+				'qty' => 1,
+				'mode' => 'self',
+			],
 		);
 		$res = $ctrl->createLog();
 		self::assertSame(201, $res->getStatus());
@@ -356,77 +574,56 @@ final class DeviceApiContractTest extends TestCase
 			access: $access,
 			rateLimit: $rate,
 			request: $request,
+			jsonBody: [
+				'unlockToken' => 'tok',
+				'itemId' => 11,
+				'qty' => 1,
+				'mode' => 'self',
+			],
 		);
 		$res = $ctrl->createLog();
 		self::assertSame(401, $res->getStatus());
 		self::assertSame('unlock_invalid', $res->getData()['code']);
 	}
 
+	public function testUnlockVerifyDoesNotReadSecretsFromQueryParams(): void
+	{
+		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/DeviceApiController.php');
+		$pos = strpos($src, 'function unlockVerify');
+		self::assertNotFalse($pos);
+		$chunk = substr($src, $pos, 900);
+		self::assertStringContainsString("isset(\$body['pin'])", $chunk);
+		self::assertStringNotContainsString("getParam('pin')", $chunk);
+		self::assertStringNotContainsString("getParam('qrPayload')", $chunk);
+		self::assertStringNotContainsString("getParam('nfcPayload')", $chunk);
+	}
+
+	public function testMoneyPathUnlockTokensRejectQueryFallback(): void
+	{
+		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/DeviceApiController.php');
+		foreach (['function createLog', 'function undoLog', 'function unpair', 'function lockSession', 'function colleagues'] as $fn) {
+			$pos = strpos($src, $fn);
+			self::assertNotFalse($pos, $fn);
+			$chunk = substr($src, $pos, 1400);
+			self::assertStringNotContainsString("getParam('unlockToken')", $chunk, $fn);
+		}
+		self::assertStringContainsString('assertProxyTargetOnSiteRoster', $src);
+	}
+
 	/** NN-13: device createLog attributes from unlock session only — never client userId. */
 	public function testCreateLogIgnoresSpoofedClientUserId(): void
 	{
-		$device = $this->device(5, 2);
-		$terminals = $this->createMock(TerminalDeviceService::class);
-		$terminals->method('resolveToken')->willReturn($device);
-		$terminals->method('getDeviceLimit')->willReturn(10);
-		$terminals->method('getActiveCount')->willReturn(1);
-		$license = $this->createMock(LicenseService::class);
-		$license->method('isTerminalPlanActive')->willReturn(true);
-		$unlock = $this->createMock(UnlockService::class);
-		$unlock->method('peekUnlockToken')->willReturn([
-			'userId' => 'alice',
-			'isKitchenAdmin' => false,
-			'hospitalityAllowed' => false,
-		]);
-		$log = new \OCA\SnackCheck\Db\ConsumptionLog();
-		$log->setId(9);
-		$log->setItemId(11);
-		$log->setItemNameSnap('Cola');
-		$log->setQty(1);
-		$log->setLineTotalCents(100);
-		$log->setCreatedAt(new \DateTime('2026-08-10T12:00:00+00:00'));
-
-		$logs = $this->createMock(ConsumptionLogService::class);
-		$logs->expects($this->once())->method('create')->with($this->callback(static function (array $in): bool {
-			return ($in['actorUserId'] ?? null) === 'alice'
-				&& !array_key_exists('userId', $in)
-				&& ($in['itemId'] ?? null) === 11
-				&& ($in['qty'] ?? null) === 1;
-		}))->willReturn(['log' => $log, 'replay' => false, 'httpStatus' => 201]);
-
-		$rate = $this->createMock(RateLimitService::class);
-		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->willReturnCallback(static function (string $h): string {
-			return match ($h) {
-				'Authorization' => 'Bearer snkterm_x',
-				'Idempotency-Key' => 'idem-1',
-				default => '',
-			};
-		});
-		$request->method('getParam')->willReturnCallback(static function (string $key) {
-			return match ($key) {
-				'unlockToken' => 'tok',
-				'itemId' => 11,
-				'qty' => 1,
-				'mode' => 'self',
-				// Spoofed identity — must be ignored by controller.
-				'userId' => 'attacker',
-				default => null,
-			};
-		});
-		$request->method('getRemoteAddress')->willReturn('127.0.0.1');
-
-		$ctrl = $this->controller(
-			terminals: $terminals,
-			license: $license,
-			unlock: $unlock,
-			logs: $logs,
-			rateLimit: $rate,
-			request: $request,
-		);
-		$res = $ctrl->createLog();
-		self::assertSame(201, $res->getStatus());
-		self::assertSame(9, $res->getData()['id']);
+		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/DeviceApiController.php');
+		$createPos = strpos($src, 'function createLog');
+		self::assertNotFalse($createPos);
+		$chunk = substr($src, $createPos, 2200);
+		self::assertStringContainsString("'actorUserId' => \$session['userId']", $chunk);
+		self::assertStringContainsString('isLiveKitchenAdmin', $chunk);
+		self::assertStringContainsString('assertProxyTargetOnSiteRoster', $chunk);
+		self::assertStringNotContainsString("\$body['userId']", $chunk);
+		self::assertStringNotContainsString("getParam('userId')", $chunk);
+		self::assertStringNotContainsString("getParam('unlockToken')", $chunk);
+		self::assertStringNotContainsString("getParam('itemId')", $chunk);
 	}
 
 	public function testCreateLogSourceNeverReadsBodyUserId(): void
@@ -475,7 +672,8 @@ final class DeviceApiContractTest extends TestCase
 		?RateLimitService $rateLimit = null,
 		?IUserManager $users = null,
 		?IRequest $request = null,
-	): DeviceApiController {
+		array $jsonBody = [],
+	): TestableDeviceApiController {
 		if ($request === null) {
 			$request = $this->createMock(IRequest::class);
 			$request->method('getHeader')->willReturn('Bearer snkterm_x');
@@ -514,7 +712,7 @@ final class DeviceApiContractTest extends TestCase
 			$access->method('canAccessApp')->willReturn(true);
 		}
 
-		return new DeviceApiController(
+		$ctrl = new TestableDeviceApiController(
 			'snackcheck',
 			$request,
 			$terminals ?? $this->createMock(TerminalDeviceService::class),
@@ -531,5 +729,19 @@ final class DeviceApiContractTest extends TestCase
 			$users ?? $this->createMock(IUserManager::class),
 			$time,
 		);
+		$ctrl->forcedJsonBody = $jsonBody;
+		return $ctrl;
+	}
+}
+
+/** @internal test double — injects JSON body without php://input */
+final class TestableDeviceApiController extends DeviceApiController
+{
+	/** @var array<string, mixed> */
+	public array $forcedJsonBody = [];
+
+	protected function jsonBody(): array
+	{
+		return $this->forcedJsonBody !== [] ? $this->forcedJsonBody : parent::jsonBody();
 	}
 }

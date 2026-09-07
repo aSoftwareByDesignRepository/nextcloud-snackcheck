@@ -360,18 +360,38 @@ class ConsumptionLogService
 		return array_map('intval', array_keys($ids));
 	}
 
+	/**
+	 * Site-local proxy roster seeds: users who already have non-voided charges at this site.
+	 *
+	 * @return list<string>
+	 */
+	public function distinctUserIdsForSite(int $siteId): array
+	{
+		return $this->mapper->distinctUserIdsForSite($siteId);
+	}
+
 	/** @param array<string,mixed> $input */
 	private function requestFingerprint(array $input): string
 	{
+		$mode = (string)($input['mode'] ?? 'self');
+		$target = '';
+		$proxyReason = '';
+		$hospReason = '';
+		if ($mode === 'proxy') {
+			$target = (string)($input['targetUserId'] ?? '');
+			$proxyReason = (string)($input['proxyReason'] ?? '');
+		} elseif ($mode === 'hospitality') {
+			$hospReason = (string)($input['hospitalityReason'] ?? '');
+		}
 		$canon = [
 			'itemId' => (int)$input['itemId'],
 			'qty' => (int)$input['qty'],
 			'siteId' => (int)$input['siteId'],
 			'actorUserId' => (string)($input['actorUserId'] ?? ''),
-			'mode' => (string)($input['mode'] ?? 'self'),
-			'targetUserId' => (string)($input['targetUserId'] ?? ''),
-			'proxyReason' => (string)($input['proxyReason'] ?? ''),
-			'hospitalityReason' => (string)($input['hospitalityReason'] ?? ''),
+			'mode' => $mode,
+			'targetUserId' => $target,
+			'proxyReason' => $proxyReason,
+			'hospitalityReason' => $hospReason,
 		];
 		return hash('sha256', json_encode($canon, JSON_THROW_ON_ERROR));
 	}

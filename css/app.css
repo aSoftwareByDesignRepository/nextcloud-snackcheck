@@ -2145,14 +2145,19 @@ body[data-theme-dark-highcontrast] {
 	box-sizing: border-box;
 }
 #app-content.snk-app .snk-chip__remove,
-.snk-app .snk-chip__remove {
-	min-width: var(--snk-touch);
-	min-height: var(--snk-touch);
-	height: auto;
+.snk-app .snk-chip__remove,
+#app-content.snk-app button.snk-chip__remove {
+	min-width: var(--snk-touch) !important;
+	min-height: var(--snk-touch) !important;
+	width: var(--snk-touch);
+	height: var(--snk-touch);
+	flex: 0 0 var(--snk-touch);
 	font: inherit;
 	font-size: 1.25rem;
 	line-height: 1;
 	cursor: pointer;
+	/* Beat NC core `button` height/width shrink — WCAG 2.5.5 */
+	padding: 0 !important;
 }
 .snk-chip__remove:hover {
 	background: color-mix(in srgb, var(--snk-danger-ink) 12%, var(--snk-bg-card));

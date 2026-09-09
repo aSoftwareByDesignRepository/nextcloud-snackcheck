@@ -267,6 +267,14 @@ test.describe('SnackCheck UX journeys', () => {
 		const empty = page.locator(`#${listId} [role="status"]`);
 		await expect(opts.or(empty).first()).toBeVisible({ timeout: 5000 });
 		if (await opts.count()) {
+			// Clear existing chips so add is observable (roster may already list matches).
+			while (await field.locator('.snk-chip__remove').count()) {
+				await field.locator('.snk-chip__remove').first().click();
+			}
+			await expect(field.locator('.snk-chip')).toHaveCount(0);
+			await search.fill('ad');
+			await expect(search).toHaveAttribute('aria-expanded', 'true', { timeout: 5000 });
+			await expect(opts.first()).toBeVisible({ timeout: 5000 });
 			const before = await field.locator('.snk-chip').count();
 			await opts.first().click();
 			await expect(field.locator('.snk-chip').first()).toBeVisible({ timeout: 3000 });

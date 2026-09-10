@@ -1,6 +1,7 @@
 <?php
 /**
- * Shared log tile — shop-style product card (image hero + name + price).
+ * Shared log tile — family tile language (category icon + name + price).
+ * Photos stay on Catalog admin edit only — Log never uses photo-shelf chrome.
  *
  * @var array $item
  * @var int $siteId
@@ -63,14 +64,10 @@ $priceClass = 'snk-tile__price' . (!empty($item['free']) ? ' snk-tile__price--fr
 					<?php endforeach; ?>
 				</span>
 			<?php endif; ?>
-			<span class="snk-tile__media">
-				<?php if (!empty($item['hasImage']) && !empty($item['imageUrl'])): ?>
-					<img class="snk-tile__img" src="<?php p($item['imageUrl']); ?>" alt="" loading="lazy" decoding="async" width="128" height="128" />
-				<?php else: ?>
-					<span class="snk-tile__icon">
-						<?php print_unescaped(IconCatalog::render($iconKey, 'snk-tile__icon-svg')); ?>
-					</span>
-				<?php endif; ?>
+			<span class="snk-tile__media snk-tile__media--glyph">
+				<span class="snk-tile__icon" data-snk-tile-glyph="<?php p($iconKey); ?>">
+					<?php print_unescaped(IconCatalog::render($iconKey, 'snk-tile__icon-svg')); ?>
+				</span>
 			</span>
 		</span>
 		<span class="snk-tile__body">

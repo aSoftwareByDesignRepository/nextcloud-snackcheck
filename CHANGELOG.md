@@ -1,11 +1,6 @@
 # Changelog
 
-## 1.1.0 - 2026-09-04
-
-### Changed
-- Nextcloud **35** support (`max-version` 35). Symfony Console 7–ready command signatures verified.
-
-## [Unreleased]
+## 1.1.1 - 2026-09-09
 
 ### Security
 
@@ -15,6 +10,12 @@
 ### Fixed
 
 - “Close anyway?” mistranslations (ES/DA/NL/SV/PT-BR/PL/FR) that rendered as “near/close” instead of dismiss.
+- Device API `vendorPublicKeyB64` now follows `VendorPublicKey::publicKeyB64()` (lab TEST key when configured).
+
+## 1.1.0 - 2026-09-04
+
+### Changed
+- Nextcloud **35** support (`max-version` 35). Symfony Console 7–ready command signatures verified.
 
 ## 1.0.9 - 2026-08-27
 

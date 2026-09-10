@@ -784,6 +784,19 @@ body[data-theme-dark-highcontrast] {
 	border-bottom: 1px solid var(--snk-border);
 	overflow: hidden;
 }
+/* Log browse: category glyph well — calm family surface, not photo-shelf stage.
+   Shorter than 1:1 product-stage so name+price stay in the first viewport (no shelf clip). */
+.snk-tile__media--glyph {
+	aspect-ratio: 4 / 3;
+	min-height: 4.5rem;
+	max-height: 7.5rem;
+	background: color-mix(in srgb, var(--snk-primary) 8%, var(--snk-bg));
+}
+.snk-tile__media--glyph .snk-tile__icon-svg,
+.snk-tile__media--glyph .snk-tile__icon .snk-icon {
+	width: 2.75rem;
+	height: 2.75rem;
+}
 .snk-tile__img {
 	display: block;
 	width: 100%;
@@ -805,8 +818,9 @@ body[data-theme-dark-highcontrast] {
 }
 .snk-tile__icon-svg,
 .snk-tile__icon .snk-icon {
-	width: 3.25rem;
-	height: 3.25rem;
+	width: 3.75rem;
+	height: 3.75rem;
+	stroke-width: 2;
 }
 .snk-tile__body {
 	display: flex;

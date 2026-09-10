@@ -93,7 +93,8 @@ class DeviceApiController extends Controller
 				],
 				// Client expects envelope at licensing (not licensing.envelope)
 				'licensing' => $envelope,
-				'vendorPublicKeyB64' => \OCA\SnackCheck\Config\VendorPublicKey::DEFAULT_PUBLIC_KEY_B64,
+				// Must match Snk2Codec / SNK_VENDOR_PUBLIC_KEY_B64 (lab uses TEST key).
+				'vendorPublicKeyB64' => \OCA\SnackCheck\Config\VendorPublicKey::publicKeyB64(),
 				'terminalPlanActive' => $planActive,
 				'licenseAccess' => $planActive ? 'ok' : 'required',
 				'hospitalityEnabled' => $this->settings->isHospitalityEnabled(),

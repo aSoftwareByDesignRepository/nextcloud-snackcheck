@@ -32,7 +32,10 @@ final class LogBrowseUxContractTest extends TestCase
 		self::assertStringContainsString('data-snk-log-find', $log);
 		self::assertStringContainsString('data-snk-log-cat', $log);
 		self::assertStringContainsString('snk-tile__media', $tile);
-		self::assertStringContainsString('snk-tile__img', $tile);
+		self::assertStringContainsString('snk-tile__icon', $tile);
+		self::assertStringContainsString('data-snk-tile-glyph', $tile);
+		self::assertStringNotContainsString('snk-tile__img', $tile);
+		self::assertStringNotContainsString('imageUrl', $tile);
 		self::assertStringContainsString('IconCatalog::forCategory', $tile);
 		self::assertMatchesRegularExpression('/\.snk-tile__media\s*\{[^}]*background:\s*var\(--snk-product-stage\)/', $css);
 		self::assertStringContainsString('.snk-log-group__title', $css);

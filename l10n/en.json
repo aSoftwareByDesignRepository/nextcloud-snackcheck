@@ -577,7 +577,8 @@
 		"You cannot book on company.": "You cannot book on company.",
 		"You cannot log for a colleague.": "You cannot log for a colleague.",
 		"Your consumption this period": "Your consumption this period",
-		"{used} of {total} tablet seats": "{used} of {total} tablet seats"
+		"{used} of {total} tablet seats": "{used} of {total} tablet seats",
+		"Open navigation menu": "Open navigation menu"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

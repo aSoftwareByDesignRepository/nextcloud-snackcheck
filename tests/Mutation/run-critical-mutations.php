@@ -807,11 +807,18 @@ assertTrue(
 		&& preg_match('/remove\(\'tier:\'\s*\.\s*\$deviceKey\)/', $unlockSrcProg) === 1,
 	'progressive unlock lockout schedule + tier clear on success (Argus SF-02)'
 );
+$mobileNavJs = file_get_contents($root . '/js/mobile-nav.js');
+$cssChrome = file_get_contents($root . '/css/app.css');
 assertTrue(
 	is_string($mainChrome)
-		&& !str_contains($mainChrome, 'snk-nav-toggle')
-		&& !str_contains($mainChrome, 'data-snk-nav-toggle'),
-	'design-system: no custom burger — NC #app-navigation-toggle owns mobile nav'
+		&& str_contains($mainChrome, 'id="snk-nav-toggle"')
+		&& str_contains($mainChrome, 'data-snk-nav-toggle')
+		&& str_contains($mainChrome, "script('snackcheck', 'mobile-nav')")
+		&& is_string($mobileNavJs)
+		&& str_contains($mobileNavJs, 'snk-nav--open')
+		&& is_string($cssChrome)
+		&& str_contains($cssChrome, '.snk-nav-toggle'),
+	'design-system: NC34 in-page #snk-nav-toggle + mobile-nav.js drawer (core toggle absent)'
 );
 $catalogStarter = file_get_contents($root . '/lib/Service/CatalogService.php');
 $appJsStarter = file_get_contents($root . '/js/app.js');

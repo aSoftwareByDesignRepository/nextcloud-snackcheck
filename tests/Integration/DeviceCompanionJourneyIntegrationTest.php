@@ -67,7 +67,12 @@ final class DeviceCompanionJourneyIntegrationTest extends TestCase
 
 		$site = $sites->ensureDefaultSite();
 		$siteId = (int)$site->getId();
-		$periods->ensureOpenPeriod();
+		// Shared Docker DB may have only closed periods after prior close journeys.
+		try {
+			$periods->ensureOpenPeriod();
+		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
+			$periods->openNextPeriod('admin');
+		}
 
 		$reg = $terminals->register('admin', 'Journey Tablet ' . uniqid('', true), $siteId);
 		self::assertTrue($reg['ok'], (string)($reg['error'] ?? 'register failed'));

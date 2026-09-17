@@ -259,6 +259,7 @@ OC.L10N.register(
 	"Me" : "Me",
 	"Member" : "Member",
 	"Menu" : "Menu",
+	"Open navigation menu" : "Open navigation menu",
 	"Mobile & terminal" : "Mobile & terminal",
 	"Money" : "Money",
 	"Monthly subsidy" : "Monthly subsidy",

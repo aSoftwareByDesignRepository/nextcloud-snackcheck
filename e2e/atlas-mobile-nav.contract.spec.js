@@ -11,9 +11,11 @@ test('ATLAS_MOBILE_NAV_CONTRACT core toggle opens drawer', async ({ page }) => {
 	await page.goto(`${BASE}/apps/snackcheck/`, { waitUntil: 'domcontentloaded' });
 	await ensureAuthenticated(page);
 	await page.waitForSelector('#app-navigation', { timeout: 30000 });
-	const toggle = page.locator('#app-navigation-toggle, .app-navigation-toggle').first();
+	await page.waitForSelector('#snk-nav-toggle, [data-snk-nav-toggle]', { timeout: 30000 });
+	const toggle = page.locator('#snk-nav-toggle, [data-snk-nav-toggle]').first();
 	await assertAtlasMobileNav(page, {
 		toggle,
 		nav: page.locator('#app-navigation'),
+		openClass: /snk-nav--open/,
 	});
 });

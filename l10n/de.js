@@ -259,6 +259,7 @@ OC.L10N.register(
 	"Me" : "Ich",
 	"Member" : "Mitglied",
 	"Menu" : "Menü",
+	"Open navigation menu" : "Navigationsmenü öffnen",
 	"Mobile & terminal" : "Mobil & Terminal",
 	"Money" : "Geld",
 	"Monthly subsidy" : "Monatlicher Zuschuss",

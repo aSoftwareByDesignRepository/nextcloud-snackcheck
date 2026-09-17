@@ -1748,5 +1748,5 @@
 	wireChipFields();
 	wireUserSearch();
 	wireEditPhotoInputs();
-	/* Mobile nav: Nextcloud #app-navigation-toggle only (design-system checklist — no custom burger). */
+	/* Mobile nav: NC34 in-page #snk-nav-toggle + js/mobile-nav.js (core header toggle absent). */
 })();

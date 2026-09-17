@@ -120,7 +120,10 @@ test.describe('SnackCheck dialogs confirm/cancel (Atlas 3.5.10)', () => {
 				const dlg = document.getElementById('snk-close-dialog');
 				const warn = document.getElementById('snk-close-warnings');
 				if (warn) {
-					warn.textContent = 'No snacks logged this period';
+					const locale = document.getElementById('app-content')?.getAttribute('data-snk-locale') || '';
+					warn.textContent = locale.startsWith('de')
+						? 'Keine Snacks in dieser Periode'
+						: 'No snacks logged this period';
 				}
 				if (dlg instanceof HTMLDialogElement && !dlg.open) {
 					dlg.showModal();

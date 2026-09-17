@@ -156,20 +156,26 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 		self::assertStringContainsString('toast(userFacingError(e), null, true)', $js);
 	}
 
-	public function testUsesNextcloudNavToggleNotCustomBurger(): void
+	/**
+	 * NC 34 dropped a usable core #app-navigation-toggle — SnackCheck ships an
+	 * in-page Menu (#snk-nav-toggle) + js/mobile-nav.js drawer (same pattern as
+	 * CustomerCheck / ArbeitszeitCheck). Atlas ATLAS_MOBILE_NAV_CONTRACT depends on it.
+	 */
+	public function testUsesInPageNavToggleForNc34(): void
 	{
 		$main = (string)file_get_contents($this->root() . '/templates/main.php');
-		$js = (string)file_get_contents($this->root() . '/js/app.js');
 		$css = (string)file_get_contents($this->root() . '/css/app.css');
-		self::assertStringNotContainsString('snk-nav-toggle', $main);
-		self::assertStringNotContainsString('data-snk-nav-toggle', $main);
-		self::assertStringNotContainsString('initNavToggle', $js);
-		self::assertStringNotContainsString('snk-nav--open', $js);
-		self::assertDoesNotMatchRegularExpression(
+		$mobileNav = (string)file_get_contents($this->root() . '/js/mobile-nav.js');
+		self::assertStringContainsString('id="snk-nav-toggle"', $main);
+		self::assertStringContainsString('data-snk-nav-toggle', $main);
+		self::assertStringContainsString('script(\'snackcheck\', \'mobile-nav\')', $main);
+		self::assertStringContainsString('.snk-nav-toggle', $css);
+		self::assertMatchesRegularExpression(
 			'/#app-navigation-toggle[^{]*\{[^}]*display:\s*none\s*!important/',
 			$css
 		);
-		self::assertStringNotContainsString('snk-nav-toggle', $css);
+		self::assertStringContainsString('snk-nav--open', $mobileNav);
+		self::assertStringContainsString('getElementById(\'snk-nav-toggle\')', $mobileNav);
 	}
 
 	public function testSiteScopeLabelNotBoundToNonLabelableSpan(): void

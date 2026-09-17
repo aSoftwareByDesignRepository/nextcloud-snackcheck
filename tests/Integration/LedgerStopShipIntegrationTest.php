@@ -41,7 +41,12 @@ final class LedgerStopShipIntegrationTest extends TestCase
 
 		$site = $sites->ensureDefaultSite();
 		$siteId = (int)$site->getId();
-		$period = $periods->ensureOpenPeriod();
+		// Shared Docker DB may have only closed periods after prior close journeys.
+		try {
+			$period = $periods->ensureOpenPeriod();
+		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
+			$period = $periods->openNextPeriod('admin');
+		}
 
 		$item = $catalog->create($siteId, 'StopShip Coffee ' . uniqid('', true), 150, 'admin', 'drink');
 		$key = 'stopship-' . bin2hex(random_bytes(8));

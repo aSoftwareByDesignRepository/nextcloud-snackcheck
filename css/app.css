@@ -101,15 +101,13 @@ body {
 	--snk-shadow-md: 0 8px 24px color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
 }
 
-/* Bright accent fills on dark themes fail AA with white/black ink — darken fill */
+/* Bright accent fills on dark themes fail AA with white/black ink — darken fill.
+ * Danger CTAs stay solid error red so deactivate/close confirms stay visually distinct
+ * from secondary Cancel (Atlas visual: snk-vis-web-destructive-confirm-no-danger-clarity). */
 body[data-theme-dark],
 body[data-theme-dark-highcontrast] {
-	--snk-danger-fill: color-mix(
-		in srgb,
-		var(--color-element-error, var(--color-error, #c0341d)) 40%,
-		var(--color-main-background, #1d1d1d)
-	);
-	--snk-danger-on-fill: var(--color-main-text, #ffffff);
+	--snk-danger-fill: #b42318;
+	--snk-danger-on-fill: #ffffff;
 	--snk-danger: var(--snk-danger-fill);
 }
 
@@ -548,7 +546,7 @@ body[data-theme-dark-highcontrast] {
 	max-width: 100%;
 }
 
-/* Desktop sticky nav width — mobile uses Nextcloud #app-navigation-toggle (DS: no custom burger). */
+/* Desktop sticky nav width — phone drawer uses in-page #snk-nav-toggle (NC 34 dropped core toggle). */
 @media (min-width: 1024px) {
 	#content.app-snackcheck > #app-navigation.snk-nav {
 		position: sticky;
@@ -570,6 +568,140 @@ body[data-theme-dark-highcontrast] {
 		width: var(--snk-nav-width, 280px);
 		min-width: var(--snk-nav-width, 280px);
 		max-width: var(--snk-nav-width, 280px);
+	}
+}
+
+/* —— Mobile nav toggle + drawer (NC 34: no core #app-navigation-toggle) —— */
+@media (width < 1024px) {
+	#content.app-snackcheck #app-navigation-toggle {
+		display: none !important;
+		visibility: hidden !important;
+		pointer-events: none !important;
+	}
+}
+
+.snk-nav-toggle {
+	display: none;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	gap: var(--snk-space-2, 0.5rem);
+	min-height: 44px !important;
+	height: 44px !important;
+	min-width: 44px !important;
+	padding: 0.5rem var(--snk-space-3, 0.75rem) !important;
+	margin: 0 0 var(--snk-space-3, 0.75rem);
+	border: 1px solid var(--snk-border, var(--color-border));
+	border-radius: var(--snk-radius-sm, 8px);
+	background: var(--snk-bg-card, var(--color-main-background));
+	color: var(--snk-text, var(--color-main-text));
+	font-family: inherit;
+	font-size: var(--snk-fs-sm, 0.875rem);
+	font-weight: 600;
+	line-height: 1.2;
+	cursor: pointer;
+	touch-action: manipulation;
+	flex-shrink: 0;
+}
+
+.snk-nav-toggle__icon {
+	display: inline-flex;
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.snk-nav-toggle__icon .snk-icon,
+.snk-nav-toggle__icon svg,
+.snk-nav-toggle__icon-svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.snk-nav-toggle:hover {
+	background: color-mix(in srgb, var(--snk-primary, var(--color-primary-element)) 10%, var(--snk-bg-card, var(--color-main-background)));
+}
+
+.snk-nav-toggle:focus-visible {
+	outline: 3px solid var(--color-primary-element, #006aa3);
+	outline-offset: 2px;
+}
+
+.snk-nav-toggle[aria-expanded='true'] {
+	border-color: var(--snk-primary, var(--color-primary-element));
+	background: color-mix(
+		in srgb,
+		var(--snk-primary, var(--color-primary-element)) 14%,
+		var(--snk-bg-card, var(--color-main-background))
+	);
+}
+
+.snk-nav-backdrop {
+	display: none;
+	position: fixed;
+	inset: 0;
+	z-index: 1998;
+	background: color-mix(in srgb, var(--color-main-text) 35%, transparent);
+	border: 0;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+
+body.snk-nav-open .snk-nav-backdrop {
+	display: block;
+}
+
+@media (width < 1024px) {
+	.snk-nav-toggle {
+		display: inline-flex;
+		min-height: 44px !important;
+		height: 44px !important;
+	}
+
+	#content.app-snackcheck #app-navigation.snk-nav,
+	body > #app-navigation.snk-nav {
+		position: fixed !important;
+		top: var(--header-height, 50px) !important;
+		inset-inline-start: 0;
+		width: min(18rem, 88vw) !important;
+		max-width: 88vw;
+		height: var(--body-height, calc(100dvh - var(--header-height, 50px))) !important;
+		z-index: 1999;
+		transform: translateX(-105%) !important;
+		transition: transform 180ms ease;
+		box-shadow:
+			0 4px 16px color-mix(in srgb, var(--color-main-text) 18%, transparent),
+			0 0 0 1px var(--snk-border, var(--color-border));
+		overflow-x: hidden;
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
+		background: var(--snk-bg-card, var(--color-main-background));
+	}
+
+	#content.app-snackcheck #app-navigation.snk-nav.snk-nav--open,
+	body > #app-navigation.snk-nav.snk-nav--open {
+		transform: translateX(0) !important;
+	}
+
+	body.snk-nav-open {
+		overflow: hidden;
+	}
+}
+
+@media (min-width: 1024px) {
+	.snk-nav-toggle {
+		display: none !important;
+	}
+
+	.snk-nav-backdrop {
+		display: none !important;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#content.app-snackcheck #app-navigation.snk-nav,
+	body > #app-navigation.snk-nav {
+		transition: none;
 	}
 }
 
@@ -1809,10 +1941,19 @@ body[data-theme-dark-highcontrast] {
 }
 .snk-btn--primary:hover { background: var(--snk-primary-hover); }
 .snk-btn--danger {
-	background: var(--snk-danger-fill);
-	color: var(--snk-danger-on-fill);
+	background: var(--snk-danger-fill, #b42318);
+	color: var(--snk-danger-on-fill, #ffffff);
 	border-color: transparent;
 	min-height: var(--snk-touch-lg);
+	/* Beat NC / theme secondary paints on <dialog> outside .snk-app */
+	box-shadow: none;
+}
+.snk-dialog .snk-btn--danger,
+#snk-confirm-dialog .snk-btn--danger,
+#snk-close-dialog .snk-btn--danger {
+	background: #b42318 !important;
+	color: #ffffff !important;
+	border-color: transparent !important;
 }
 .snk-btn--secondary {
 	background: color-mix(in srgb, var(--snk-bg) 82%, var(--snk-text) 18%);

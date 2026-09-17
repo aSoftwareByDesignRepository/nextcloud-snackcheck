@@ -16,6 +16,14 @@ const USER_THEMES = ['light', 'dark', 'light-highcontrast', 'dark-highcontrast']
  * @param {string} themeId
  */
 async function setUserTheme(page, themeId) {
+	// NC 34 UserConfig TypeConflictException: legacy `enabled-themes` typed as INT
+	// cannot be overwritten as MIXED. Wipe before OCS enable/disable.
+	try {
+		const user = process.env.E2E_USER || 'admin';
+		occ(['user:setting', user, 'theming', 'enabled-themes', '--delete']);
+	} catch {
+		/* unset is fine */
+	}
 	const failures = await page.evaluate(async ({ target, all }) => {
 		const token = (typeof window.OC !== 'undefined' && window.OC.requestToken)
 			|| document.querySelector('head[data-requesttoken]')?.getAttribute('data-requesttoken')
@@ -39,7 +47,36 @@ async function setUserTheme(page, themeId) {
 		return problems;
 	}, { target: themeId, all: USER_THEMES });
 	if (failures.length > 0) {
-		throw new Error(`Theme switch to "${themeId}" failed: ${failures.join('; ')}`);
+		// Second chance after hard DB wipe (type conflict leaves stale INT rows)
+		try {
+			const user = process.env.E2E_USER || 'admin';
+			occ(['user:setting', user, 'theming', 'enabled-themes', '--delete']);
+		} catch { /* ignore */ }
+		const retry = await page.evaluate(async ({ target, all }) => {
+			const token = (typeof window.OC !== 'undefined' && window.OC.requestToken)
+				|| document.querySelector('head[data-requesttoken]')?.getAttribute('data-requesttoken')
+				|| '';
+			const headers = { requesttoken: token, 'OCS-APIRequest': 'true', Accept: 'application/json' };
+			const problems = [];
+			for (const id of all.filter((t) => t !== target)) {
+				const res = await fetch(`/ocs/v2.php/apps/theming/api/v1/theme/${id}`, {
+					method: 'DELETE', credentials: 'same-origin', headers,
+				});
+				if (!res.ok && res.status !== 400) {
+					problems.push(`disable ${id}: HTTP ${res.status}`);
+				}
+			}
+			const res = await fetch(`/ocs/v2.php/apps/theming/api/v1/theme/${target}/enable`, {
+				method: 'PUT', credentials: 'same-origin', headers,
+			});
+			if (!res.ok && res.status !== 400) {
+				problems.push(`enable ${target}: HTTP ${res.status}`);
+			}
+			return problems;
+		}, { target: themeId, all: USER_THEMES });
+		if (retry.length > 0) {
+			throw new Error(`Theme switch to "${themeId}" failed: ${retry.join('; ')}`);
+		}
 	}
 	await page.reload({ waitUntil: 'domcontentloaded' });
 	await page.waitForSelector(`body[data-theme-${themeId}]`, { timeout: 15_000 });

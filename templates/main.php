@@ -11,6 +11,7 @@ use OCA\SnackCheck\Service\IconCatalog;
 /** @var \OCP\IURLGenerator $urlGenerator */
 $urlGenerator = $_['urlGenerator'];
 script('snackcheck', 'app');
+script('snackcheck', 'mobile-nav');
 style('snackcheck', 'app');
 $pageId = (string)($_['pageId'] ?? 'log');
 $htmlLang = str_replace('_', '-', $l->getLanguageCode());
@@ -51,6 +52,22 @@ include __DIR__ . '/common/navigation.php';
 	<div id="snk-alert-region" class="snk-sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
 	<div id="app-content-wrapper" class="snk-shell">
 		<header class="snk-page-header" aria-labelledby="snk-page-title">
+			<button
+				type="button"
+				class="snk-nav-toggle"
+				id="snk-nav-toggle"
+				data-snk-nav-toggle
+				aria-controls="app-navigation"
+				aria-expanded="false"
+				aria-label="<?php p($l->t('Open navigation menu')); ?>"
+				data-aria-label-open="<?php p($l->t('Open navigation menu')); ?>"
+				data-aria-label-close="<?php p($l->t('Close navigation menu')); ?>"
+			>
+				<span class="snk-nav-toggle__icon" aria-hidden="true">
+					<?php print_unescaped(IconCatalog::render('menu', 'snk-nav-toggle__icon-svg')); ?>
+				</span>
+				<span class="snk-nav-toggle__label"><?php p($l->t('Menu')); ?></span>
+			</button>
 			<nav class="snk-breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
 				<ol>
 					<li>

@@ -578,7 +578,16 @@
 		"You cannot log for a colleague.": "Loggning för en kollega är inte möjlig.",
 		"Your consumption this period": "Förbrukning denna period",
 		"{used} of {total} tablet seats": "{used} av {total} tablettplatser",
-		"Open navigation menu": "Öppna navigeringsmenyn"
+		"Open navigation menu": "Öppna navigeringsmenyn",
+		"No access": "Ingen åtkomst",
+		"You do not have access to this page.": "Du har inte åtkomst till den här sidan.",
+		"Back to Log": "Tillbaka till Logg",
+		"Back to Dashboard": "Tillbaka till instrumentpanelen",
+		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "Du har inte åtkomst till SnackCheck. Be din SnackCheck-administratör att lägga till dig.",
+		"This area is for kitchen managers. Your Log and My month are still available.": "Det här området är för köksansvariga. Din Logg och Min månad är fortfarande tillgängliga.",
+		"This area is for SnackCheck administrators.": "Det här området är för SnackCheck-administratörer.",
+		"This kitchen is not managed by you.": "Det här köket hanteras inte av dig.",
+		"This page or item was not found.": "Sidan eller objektet hittades inte."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

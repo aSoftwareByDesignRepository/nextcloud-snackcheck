@@ -579,6 +579,15 @@ OC.L10N.register(
 	"You cannot log for a colleague." : "Logging for en kollega er ikke mulig.",
 	"Your consumption this period" : "Ditt forbruk denne perioden",
 	"{used} of {total} tablet seats" : "{used} av {total} tablettplasser",
-	"Open navigation menu" : "Åpne navigasjonsmenyen"
+	"Open navigation menu" : "Åpne navigasjonsmenyen",
+	"No access" : "Ingen tilgang",
+	"You do not have access to this page." : "Du har ikke tilgang til denne siden.",
+	"Back to Log" : "Tilbake til Logg",
+	"Back to Dashboard" : "Tilbake til dashbord",
+	"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you." : "Du har ikke tilgang til SnackCheck. Be SnackCheck-administratoren din om å legge deg til.",
+	"This area is for kitchen managers. Your Log and My month are still available." : "Dette området er for kjøkkenansvarlige. Din Logg og Min måned er fortsatt tilgjengelige.",
+	"This area is for SnackCheck administrators." : "Dette området er for SnackCheck-administratorer.",
+	"This kitchen is not managed by you." : "Dette kjøkkenet administreres ikke av deg.",
+	"This page or item was not found." : "Denne siden eller oppføringen ble ikke funnet."
 	}
 );

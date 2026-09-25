@@ -25,6 +25,7 @@ use OCA\SnackCheck\Service\TerminalDeviceService;
 use OCA\SnackCheck\Support\PeriodDisplay;
 use OCA\SnackCheck\Support\SupportUsLinks;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\NotFoundResponse;
@@ -95,7 +96,7 @@ class PageController extends Controller
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
 			} else {
-				throw $e;
+				return $this->denied('site');
 			}
 		}
 		$items = $sitePickRequired ? [] : $this->catalog->listActive($siteId);
@@ -189,7 +190,9 @@ class PageController extends Controller
 	public function catalog(): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->assertManager($user);
+		if (!$this->access->isKitchenManager($user)) {
+			return $this->denied('kitchen_manager');
+		}
 		$sitePickRequired = false;
 		$siteId = 0;
 		try {
@@ -198,7 +201,7 @@ class PageController extends Controller
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
 			} else {
-				throw $e;
+				return $this->denied('site');
 			}
 		}
 		$items = $sitePickRequired ? [] : $this->catalog->listAll($siteId);
@@ -226,7 +229,9 @@ class PageController extends Controller
 	public function pulse(): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->assertManager($user);
+		if (!$this->access->isKitchenManager($user)) {
+			return $this->denied('kitchen_manager');
+		}
 		$sitePickRequired = false;
 		$siteId = 0;
 		try {
@@ -235,7 +240,7 @@ class PageController extends Controller
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
 			} else {
-				throw $e;
+				return $this->denied('site');
 			}
 		}
 		$category = (string)($this->request->getParam('category') ?? '');
@@ -257,7 +262,9 @@ class PageController extends Controller
 	public function periods(): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAppAdmin($user);
+		if (!$this->access->isAppAdmin($user)) {
+			return $this->denied('app_admin');
+		}
 		return $this->page('periods', [
 			'periods' => $this->periods->listAll(),
 			'open' => $this->periods->findOpen(),
@@ -271,13 +278,19 @@ class PageController extends Controller
 	public function hospitality(): TemplateResponse|RedirectResponse
 	{
 		$user = $this->requireUser();
-		$this->assertManager($user);
+		if (!$this->access->isKitchenManager($user)) {
+			return $this->denied('kitchen_manager');
+		}
 		if (!$this->settings->isHospitalityEnabled()) {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('snackcheck.page.log'));
 		}
 		$requested = (int)($this->request->getParam('periodId') ?: 0);
 		if ($requested > 0) {
-			$period = $this->periods->get($requested);
+			try {
+				$period = $this->periods->get($requested);
+			} catch (\OCA\SnackCheck\Exception\DomainException) {
+				return $this->denied('not_found', Http::STATUS_NOT_FOUND);
+			}
 		} else {
 			$period = $this->periods->findOpen() ?? $this->periods->findLatestClosed();
 		}
@@ -296,7 +309,7 @@ class PageController extends Controller
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
 			} else {
-				throw $e;
+				return $this->denied('site');
 			}
 		}
 		$rows = $sitePickRequired
@@ -385,7 +398,9 @@ class PageController extends Controller
 	public function sites(): TemplateResponse|RedirectResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAppAdmin($user);
+		if (!$this->access->isAppAdmin($user)) {
+			return $this->denied('app_admin');
+		}
 		if (!$this->settings->isMultiSiteEnabled()) {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('snackcheck.page.settings', ['section' => 'benefits']));
 		}
@@ -409,7 +424,9 @@ class PageController extends Controller
 	public function users(): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->assertManager($user);
+		if (!$this->access->isKitchenManager($user)) {
+			return $this->denied('kitchen_manager');
+		}
 		$siteIds = null;
 		if (!$this->access->isAppAdmin($user)) {
 			$siteIds = array_map(static fn ($s) => (int)$s->getId(), $this->access->sitesVisibleTo($user));
@@ -427,7 +444,7 @@ class PageController extends Controller
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
 			} else {
-				throw $e;
+				return $this->denied('site');
 			}
 		}
 		$open = $this->periods->findOpen();
@@ -454,7 +471,9 @@ class PageController extends Controller
 	public function brReport(): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAppAdmin($user);
+		if (!$this->access->isAppAdmin($user)) {
+			return $this->denied('app_admin');
+		}
 		$periodId = (int)($this->request->getParam('periodId') ?: 0);
 		$open = $this->periods->findOpen();
 		if ($periodId <= 0) {
@@ -479,7 +498,9 @@ class PageController extends Controller
 	public function audit(): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAppAdmin($user);
+		if (!$this->access->isAppAdmin($user)) {
+			return $this->denied('app_admin');
+		}
 		$events = [];
 		foreach ($this->audit->recent(100) as $e) {
 			$events[] = [
@@ -495,10 +516,12 @@ class PageController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function settingsIndex(): RedirectResponse
+	public function settingsIndex(): TemplateResponse|RedirectResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAppAdmin($user);
+		if (!$this->access->isAppAdmin($user)) {
+			return $this->denied('app_admin');
+		}
 		return new RedirectResponse($this->urlGenerator->linkToRoute(
 			'snackcheck.page.settings',
 			['section' => SettingsSectionCatalog::DEFAULT_SECTION],
@@ -510,7 +533,9 @@ class PageController extends Controller
 	public function settings(string $section): TemplateResponse|RedirectResponse|NotFoundResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAppAdmin($user);
+		if (!$this->access->isAppAdmin($user)) {
+			return $this->denied('app_admin');
+		}
 		if ($section === 'periods') {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('snackcheck.page.periods'));
 		}
@@ -581,11 +606,17 @@ class PageController extends Controller
 		$user = $this->requireUser();
 		// Argus MF-A04: assert app access BEFORE catalog probe — otherwise NC users
 		// denied SnackCheck can distinguish missing/inactive (404) vs active SKU (403).
-		$this->access->assertAccess($user);
-		$item = $this->catalog->get($itemId);
+		if (!$this->access->canAccessApp($user)) {
+			return $this->denied('access');
+		}
+		try {
+			$item = $this->catalog->get($itemId);
+		} catch (\OCA\SnackCheck\Exception\DomainException) {
+			return $this->denied('not_found', Http::STATUS_NOT_FOUND);
+		}
 		// Inactive / archived: same 404 as missing — no shelf deep-link probe of retired SKUs.
 		if ((int)$item->getActive() !== 1) {
-			throw new \OCA\SnackCheck\Exception\DomainException('not_found', 'Item not found', 404);
+			return $this->denied('not_found', Http::STATUS_NOT_FOUND);
 		}
 		$canHosp = $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($user);
 		$open = $this->periods->findOpen();
@@ -612,7 +643,9 @@ class PageController extends Controller
 	private function page(string $pageId, array $params): TemplateResponse
 	{
 		$user = $this->requireUser();
-		$this->access->assertAccess($user);
+		if (!$this->access->canAccessApp($user)) {
+			return $this->denied('access');
+		}
 		Util::addStyle('snackcheck', 'app');
 		Util::addScript('snackcheck', 'app');
 		Util::addScript('snackcheck', 'common/app-feedback');
@@ -755,11 +788,31 @@ class PageController extends Controller
 		return $user->getUID();
 	}
 
-	private function assertManager(string $userId): void
+	/**
+	 * Clean 403 (or 404) HTML page for gated page routes — an uncaught
+	 * DomainException would surface as a raw HTTP 500 (Atlas web_api probe).
+	 */
+	private function denied(string $reason, int $status = Http::STATUS_FORBIDDEN): TemplateResponse
 	{
-		if (!$this->access->isKitchenManager($userId)) {
-			throw new \OCA\SnackCheck\Exception\DomainException('permission_denied', 'Manager required', 403);
-		}
+		$messages = [
+			'access' => $this->l10n->t('You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.'),
+			'kitchen_manager' => $this->l10n->t('This area is for kitchen managers. Your Log and My month are still available.'),
+			'app_admin' => $this->l10n->t('This area is for SnackCheck administrators.'),
+			'site' => $this->l10n->t('This kitchen is not managed by you.'),
+			'not_found' => $this->l10n->t('This page or item was not found.'),
+		];
+		$backToLog = $reason !== 'access';
+		$response = new TemplateResponse('snackcheck', 'denied', [
+			'deniedMessage' => $messages[$reason] ?? $this->l10n->t('You do not have access to this page.'),
+			'backUrl' => $backToLog
+				? $this->urlGenerator->linkToRoute('snackcheck.page.log')
+				: $this->urlGenerator->linkToRoute('dashboard.dashboard.index'),
+			'backLabel' => $backToLog
+				? $this->l10n->t('Back to Log')
+				: $this->l10n->t('Back to Dashboard'),
+		]);
+		$response->setStatus($status);
+		return $response;
 	}
 
 	private function requestSiteId(): ?int

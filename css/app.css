@@ -4118,3 +4118,42 @@ dialog.snk-dialog[open] {
 	min-height: 44px;
 }
 
+
+.snk-denied {
+	max-width: 32rem;
+	margin: 4rem auto;
+	padding: 2rem;
+	text-align: center;
+	background: var(--snk-bg-card);
+	color: var(--snk-text);
+	border: 1px solid var(--snk-border);
+	border-radius: var(--border-radius-large, 10px);
+}
+.snk-denied h1 {
+	margin: 0 0 0.75rem;
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: var(--snk-text);
+}
+.snk-denied p {
+	margin: 0 0 1.25rem;
+	color: var(--snk-text);
+}
+.snk-denied .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	min-width: 44px;
+	padding: 0.6rem 1.2rem;
+	border-radius: var(--border-radius-pill, 22px);
+	font-weight: 600;
+	text-decoration: none;
+}
+.snk-denied .button.primary {
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+.snk-denied .button.primary:hover {
+	background: var(--color-primary-element-light);
+}

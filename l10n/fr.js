@@ -579,6 +579,15 @@ OC.L10N.register(
 	"You cannot log for a colleague." : "Vous ne pouvez pas enregistrer pour un collègue.",
 	"Your consumption this period" : "Votre consommation cette période",
 	"{used} of {total} tablet seats" : "{used} sur {total} places tablette",
-	"Open navigation menu" : "Ouvrir le menu de navigation"
+	"Open navigation menu" : "Ouvrir le menu de navigation",
+	"No access" : "Accès refusé",
+	"You do not have access to this page." : "Vous n'avez pas accès à cette page.",
+	"Back to Log" : "Retour au journal",
+	"Back to Dashboard" : "Retour au tableau de bord",
+	"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you." : "Vous n'avez pas accès à SnackCheck. Demandez à votre administrateur SnackCheck de vous ajouter.",
+	"This area is for kitchen managers. Your Log and My month are still available." : "Cette zone est réservée aux responsables de cuisine. Votre Journal et Mon mois restent disponibles.",
+	"This area is for SnackCheck administrators." : "Cette zone est réservée aux administrateurs SnackCheck.",
+	"This kitchen is not managed by you." : "Cette cuisine n'est pas gérée par vous.",
+	"This page or item was not found." : "Cette page ou cet élément est introuvable."
 	}
 );

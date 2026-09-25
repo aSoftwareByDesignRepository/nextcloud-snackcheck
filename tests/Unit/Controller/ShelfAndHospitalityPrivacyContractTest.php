@@ -13,7 +13,7 @@ final class ShelfAndHospitalityPrivacyContractTest extends TestCase
 	{
 		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/PageController.php');
 		self::assertMatchesRegularExpression(
-			'/function shelf\(int \$itemId\)[\s\S]{0,500}getActive\(\)[\s\S]{0,120}not_found/',
+			'/function shelf\(int \$itemId\)[\s\S]{0,700}getActive\(\)[\s\S]{0,160}not_found/',
 			$src
 		);
 	}
@@ -21,9 +21,9 @@ final class ShelfAndHospitalityPrivacyContractTest extends TestCase
 	public function testShelfAssertsAccessBeforeCatalogProbe(): void
 	{
 		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/PageController.php');
-		// Argus MF-A04: assertAccess must precede catalog->get (SKU existence oracle).
+		// Argus MF-A04: access check must precede catalog->get (SKU existence oracle).
 		self::assertMatchesRegularExpression(
-			'/function shelf\(int \$itemId\)[\s\S]{0,280}assertAccess\(\$user\)[\s\S]{0,120}catalog->get\(\$itemId\)/',
+			'/function shelf\(int \$itemId\)[\s\S]{0,400}canAccessApp\(\$user\)[\s\S]{0,200}catalog->get\(\$itemId\)/',
 			$src
 		);
 	}
@@ -32,7 +32,7 @@ final class ShelfAndHospitalityPrivacyContractTest extends TestCase
 	{
 		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/PageController.php');
 		self::assertMatchesRegularExpression(
-			'/function shelf\(int \$itemId\)[\s\S]{0,1100}periodClosed\'\s*=>\s*\$open === null/',
+			'/function shelf\(int \$itemId\)[\s\S]{0,1400}periodClosed\'\s*=>\s*\$open === null/',
 			$src
 		);
 	}

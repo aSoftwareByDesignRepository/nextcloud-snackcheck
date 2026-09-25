@@ -561,7 +561,7 @@
 		"What is running low and what to restock.": "Was knapp wird und was nachgefüllt werden muss.",
 		"What payroll will deduct this period.": "Was die Lohnabrechnung in dieser Periode abzieht.",
 		"What this license does": "Wozu diese Lizenz dient",
-		"What you logged": "Was du gebucht hast",
+		"What you logged": "Was Sie gebucht haben",
 		"What's popular": "Was wird oft genommen",
 		"When": "Wann",
 		"When colleagues book on company, lines appear here.": "Wenn Kolleginnen und Kollegen auf Firma buchen, erscheinen die Zeilen hier.",
@@ -578,7 +578,16 @@
 		"You cannot log for a colleague.": "Sie dürfen nicht für Kolleg:innen erfassen.",
 		"Your consumption this period": "Ihr Verbrauch in dieser Periode",
 		"{used} of {total} tablet seats": "{used} von {total} Tablet-Plätzen",
-		"Open navigation menu": "Navigationsmenü öffnen"
+		"Open navigation menu": "Navigationsmenü öffnen",
+		"No access": "Kein Zugriff",
+		"You do not have access to this page.": "Sie haben keinen Zugriff auf diese Seite.",
+		"Back to Log": "Zurück zum Buchen",
+		"Back to Dashboard": "Zurück zum Dashboard",
+		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "Sie haben keinen Zugriff auf SnackCheck. Bitten Sie Ihre SnackCheck-Administration, Sie hinzuzufügen.",
+		"This area is for kitchen managers. Your Log and My month are still available.": "Dieser Bereich ist für Küchenverantwortliche. Ihr Buchen und Mein Monat bleiben verfügbar.",
+		"This area is for SnackCheck administrators.": "Dieser Bereich ist für SnackCheck-Administratoren.",
+		"This kitchen is not managed by you.": "Diese Küche wird nicht von Ihnen verwaltet.",
+		"This page or item was not found.": "Diese Seite oder dieser Eintrag wurde nicht gefunden."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

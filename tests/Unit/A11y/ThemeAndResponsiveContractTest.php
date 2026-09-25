@@ -78,7 +78,17 @@ final class ThemeAndResponsiveContractTest extends TestCase
 	{
 		$css = $this->css();
 		self::assertStringContainsString('data-theme-dark', $css);
-		self::assertStringContainsString('--snk-danger-on-fill: var(--color-main-text', $css);
+		// Dark themes: destructive CTAs stay a solid error red with white ink so
+		// confirm stays visually distinct from secondary Cancel
+		// (Atlas visual: snk-vis-web-destructive-confirm-no-danger-clarity).
+		self::assertMatchesRegularExpression(
+			'/body\[data-theme-dark\][\s\S]*?--snk-danger-fill:\s*#b42318/',
+			$css
+		);
+		self::assertMatchesRegularExpression(
+			'/body\[data-theme-dark\][\s\S]*?--snk-danger-on-fill:\s*#ffffff/',
+			$css
+		);
 	}
 
 	public function testResponsiveBreakpointsAndSafeArea(): void

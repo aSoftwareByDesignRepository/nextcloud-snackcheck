@@ -578,7 +578,16 @@
 		"You cannot log for a colleague.": "No puedes registrarte para un colega.",
 		"Your consumption this period": "Su consumo este período",
 		"{used} of {total} tablet seats": "{used} de {total} plazas de tableta",
-		"Open navigation menu": "Abrir el menú de navegación"
+		"Open navigation menu": "Abrir el menú de navegación",
+		"No access": "Sin acceso",
+		"You do not have access to this page.": "No tiene acceso a esta página.",
+		"Back to Log": "Volver al Log",
+		"Back to Dashboard": "Volver al panel",
+		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "No tiene acceso a SnackCheck. Pida a su administrador de SnackCheck que le añada.",
+		"This area is for kitchen managers. Your Log and My month are still available.": "Esta zona es para responsables de cocina. Su Log y Mi mes siguen disponibles.",
+		"This area is for SnackCheck administrators.": "Esta zona es para administradores de SnackCheck.",
+		"This kitchen is not managed by you.": "Esta cocina no la gestiona usted.",
+		"This page or item was not found.": "No se encontró esta página o elemento."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

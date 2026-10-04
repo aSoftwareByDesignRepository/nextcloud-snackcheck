@@ -1,10 +1,22 @@
 # Changelog
 
-## 1.1.1 - 2026-09-09
+All notable changes to this project will be documented in this file.
 
-### Security
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- Web `catalogImage` requires app ACL; inactive SKU photos require kitchen site manage rights; CSRF-exempt image GETs reject `Sec-Fetch-Site: cross-site`.
+## 1.1.2 - 2026-10-04
+
+### Fixed
+
+- Dialogs now close on Escape even when another Nextcloud app suppresses the native dialog cancel event (central fix covering all app dialogs).
+- Modal focus restoration hardened; form errors marked aria-invalid on reject paths.
+- Localization fixes.
+
+### Changed
+
+- Atlas v3.5.14 verification pass: expanded contract coverage; store screenshot URLs corrected.
+
 - Regenerate `l10n/*.js` without CSP-breaking `pluralForm` third args (shared regenerator).
 
 ### Fixed

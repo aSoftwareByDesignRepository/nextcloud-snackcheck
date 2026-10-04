@@ -325,8 +325,10 @@ class ConsumptionLogIdempotencyTest extends TestCase
 				'isKitchenAdmin' => true,
 			]);
 		} catch (DomainException $e) {
-			self::assertSame('permission_denied', $e->errorCode);
-			self::assertSame(403, $e->httpStatus);
+			// Uniform target reject — access denial is indistinguishable from an
+			// unknown user (no uid/access-membership oracle).
+			self::assertSame('validation_failed', $e->errorCode);
+			self::assertSame(422, $e->httpStatus);
 			throw $e;
 		}
 	}

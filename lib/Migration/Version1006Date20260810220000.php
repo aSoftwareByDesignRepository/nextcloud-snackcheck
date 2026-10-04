@@ -45,6 +45,9 @@ class Version1006Date20260810220000 extends SimpleMigrationStep
 			])->executeStatement();
 			$output->info('Seeded snk_locks.' . $key);
 		} catch (\Throwable $e) {
+			// best-effort: existence already checked above; a remaining failure is a
+			// concurrent-seed unique violation or unusable DB — LockGate falls back
+			// to table-level locking, so a missing seed row degrades, not corrupts.
 			$output->warning('Could not seed terminal_capacity lock: ' . $e->getMessage());
 		}
 	}

@@ -107,7 +107,9 @@ class ConsumptionLogService
 				throw new DomainException('item_inactive', 'Item inactive', 422);
 			}
 			if ((int)$item->getSiteId() !== $siteId) {
-				throw new DomainException('permission_denied', 'Site mismatch', 403);
+				// Uniform 404 — an itemId from another kitchen must be indistinguishable
+				// from a missing item (no existence oracle across sites).
+				throw new DomainException('not_found', 'Item not found', 404);
 			}
 			[$userId, $loggedBy, $billingBucket, $proxyReason, $hospReason, $finalSource, $action] =
 				$this->resolveAttribution($mode, $actor, $input, $source);
@@ -198,12 +200,14 @@ class ConsumptionLogService
 			}
 			if ($enforceSelfUndoWindow) {
 				// Permission + undo TTL under the same row lock (closes TOCTOU on window expiry).
+				// Uniform 404 for every "not yours / foreign-site" deny — a caller must
+				// not diff 403-vs-404 to learn that another user's/kitchen's log exists.
 				if ($log->getBillingBucket() === 'company_hospitality') {
 					if ((string)$log->getLoggedBy() !== $actorUid) {
-						throw new DomainException('permission_denied', 'Not your hospitality log', 403);
+						throw new DomainException('not_found', 'Log not found', 404);
 					}
 				} elseif ($log->getUserId() !== $actorUid && (string)$log->getLoggedBy() !== $actorUid) {
-					throw new DomainException('permission_denied', 'Not your log', 403);
+					throw new DomainException('not_found', 'Log not found', 404);
 				}
 				$created = $log->getCreatedAt()?->getTimestamp() ?? 0;
 				if ($this->timeFactory->getTime() - $created > self::UNDO_SECONDS) {
@@ -211,18 +215,18 @@ class ConsumptionLogService
 				}
 				// Argus MF: tablet undo must not cross kitchens — bind under the same lock.
 				if ($requiredSiteId !== null && (int)$log->getSiteId() !== $requiredSiteId) {
-					throw new DomainException('foreign_site', 'Log is not for this site', 403);
+					throw new DomainException('not_found', 'Log not found', 404);
 				}
 			} elseif ($isAdmin) {
 				// Zeus MF: site ACL under the same FOR UPDATE as void — never trust a pre-lock find().
 				if (!$this->access->canManageSite($actorUid, (int)$log->getSiteId())) {
-					throw new DomainException('foreign_site', 'Site not allowed for this manager', 403);
+					throw new DomainException('not_found', 'Log not found', 404);
 				}
 			} else {
 				$ok = $log->getUserId() === $actorUid
 					|| ($allowLoggedByActor && (string)$log->getLoggedBy() === $actorUid);
 				if (!$ok) {
-					throw new DomainException('permission_denied', 'Not your log', 403);
+					throw new DomainException('not_found', 'Log not found', 404);
 				}
 			}
 			$log->setVoidedAt($this->timeFactory->getDateTime());
@@ -286,8 +290,10 @@ class ConsumptionLogService
 			if ($target === '') {
 				throw new DomainException('validation_failed', 'targetUserId required', 422);
 			}
+			// Uniform target reject (no uid/roster oracle): nonexistent user, user
+			// without SnackCheck access, and off-roster user all look identical.
 			if ($this->userManager->get($target) === null) {
-				throw new DomainException('validation_failed', 'Unknown user', 422);
+				throw new DomainException('validation_failed', 'Cannot log for this user', 422);
 			}
 			if (mb_strlen($reason) < 3) {
 				throw new DomainException('proxy_reason_required', 'Proxy reason required', 422);
@@ -297,7 +303,7 @@ class ConsumptionLogService
 			}
 			// US-008: proxy target must pass the SnackCheck access door.
 			if (!$this->access->canAccessApp($target)) {
-				throw new DomainException('permission_denied', 'Target cannot access SnackCheck', 403);
+				throw new DomainException('validation_failed', 'Cannot log for this user', 422);
 			}
 			return [$target, $actor, 'personal', $reason, null, 'admin_proxy', 'log.proxy_create'];
 		}

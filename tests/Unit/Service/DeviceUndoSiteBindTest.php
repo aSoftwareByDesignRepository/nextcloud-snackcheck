@@ -104,7 +104,8 @@ final class DeviceUndoSiteBindTest extends TestCase
 
 		$svc = $this->service($mapper, $periodMapper, $time);
 		$this->expectException(DomainException::class);
-		$this->expectExceptionMessage('Log is not for this site');
+		// Uniform 404 — foreign-kitchen log must be indistinguishable from missing.
+		$this->expectExceptionMessage('Log not found');
 		$svc->selfUndo(42, 'alice', 3);
 	}
 

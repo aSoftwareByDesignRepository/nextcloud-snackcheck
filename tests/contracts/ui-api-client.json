@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "appId": "snackcheck",
+  "companionDir": "mobile/snackcheck-kiosk",
+  "contracts": [
+    {
+      "id": "log.proxy_reason",
+      "param": "proxyReason",
+      "server": [
+        {
+          "file": "lib/Service/ConsumptionLogService.php",
+          "needles": ["proxy_reason_required", "Proxy reason required"]
+        },
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["getParam('proxyReason')"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/parts/snk-proxy-panel.php",
+          "needles": ["name=\"proxyReason\"", "id=\"snk-proxy-reason\"", "minlength=\"3\""]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["payload.proxyReason", "snk-proxy-reason"]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/ProxyOverlay.tsx",
+          "needles": ["proxyReason", "proxy-reason", "validateProxyReason"]
+        }
+      ]
+    },
+    {
+      "id": "log.hospitality_reason",
+      "param": "hospitalityReason",
+      "server": [
+        {
+          "file": "lib/Service/ConsumptionLogService.php",
+          "needles": ["Hospitality reason required"]
+        },
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["getParam('hospitalityReason')"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/pages/log.php",
+          "needles": ["name=\"hospitalityReason\"", "id=\"snk-hosp-reason\"", "minlength=\"3\""]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["hospitalityReason", "snk-hosp-reason"]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/HospitalityOverlay.tsx",
+          "needles": ["hospitalityReason", "hospitality-reason", "validateHospitalityReason"]
+        }
+      ]
+    },
+    {
+      "id": "log.void_reason",
+      "param": "reason",
+      "server": [
+        {
+          "file": "lib/Service/ConsumptionLogService.php",
+          "needles": ["Void reason required"]
+        },
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["getParam('reason')"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/pages/users.php",
+          "needles": ["id=\"snk-void-dialog\"", "name=\"reason\"", "minlength=\"3\""]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["/void'", "body.reason"]
+        }
+      ],
+      "mobile": null,
+      "mobile_reason": "kiosk exposes undo (POST /api/device/logs/{id}/undo, no reason param — src/api/deviceClient.ts undoLog); void is a kitchen-admin web surface only"
+    },
+    {
+      "id": "period.reopen_reason",
+      "param": "reason",
+      "server": [
+        {
+          "file": "lib/Service/PeriodService.php",
+          "needles": ["Reopen reason required", "mb_strlen($reason) < 3"]
+        },
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["reopen", "getParam('reason')"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/pages/periods.php",
+          "needles": ["id=\"snk-reopen-reason\"", "name=\"reason\"", "minlength=\"3\""]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["reopen-period", "body.reason"]
+        }
+      ],
+      "mobile": null,
+      "mobile_reason": "kiosk never reopens accounting periods — admin web surface only"
+    }
+  ]
+}

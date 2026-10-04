@@ -44,6 +44,7 @@
 			period_closed: t('Period closed. Ask a kitchen admin to open the next period before logging.', 'Period closed. Ask a kitchen admin to open the next period before logging.'),
 			item_inactive: t('That snack is no longer available.', 'That snack is no longer available.'),
 			item_not_found: t('That snack is no longer available.', 'That snack is no longer available.'),
+			not_found: t('That entry no longer exists. Reload the page and try again.', 'That entry no longer exists. Reload the page and try again.'),
 			proxy_reason_required: t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'),
 			proxy_forbidden: t('You cannot log for a colleague.', 'You cannot log for a colleague.'),
 			hospitality_forbidden: t('You cannot book on company.', 'You cannot book on company.'),
@@ -171,6 +172,21 @@
 			el.appendChild(btn);
 			window.setTimeout(function () { if (btn.parentNode) btn.remove(); }, 60000);
 		}
+		if (assertive) {
+			// Family contract (_shared/app-feedback README): error toasts offer a
+			// "Report this problem" mailto. SnackCheck renders its own #snk-toast,
+			// so the shared showToast/showError wrapper never sees it — attach here.
+			try {
+				const feedback = window.SbdAppFeedback;
+				if (feedback && typeof feedback.buildMailto === 'function') {
+					const link = document.createElement('a');
+					link.className = 'snk-nav-footer__toast-link';
+					link.href = feedback.buildMailto('problem', {});
+					link.textContent = t('Report this problem', 'Report this problem');
+					el.appendChild(link);
+				}
+			} catch (e) { /* never break the toast */ }
+		}
 		announce(msg, !!assertive);
 		window.clearTimeout(el._snkHide);
 		el._snkHide = window.setTimeout(function () {
@@ -180,6 +196,23 @@
 				el.classList.remove('snk-toast--ok', 'snk-toast--error');
 			}
 		}, undoId ? 62000 : 6000);
+	}
+	/**
+	 * WCAG 3.3.1: mark the invalid control (aria-invalid) in addition to the
+	 * assertive toast + focus move; the linked aria-describedby hint describes
+	 * the rule. Clears on the next input event.
+	 */
+	function markFieldInvalid(field) {
+		if (!field) return;
+		field.setAttribute('aria-invalid', 'true');
+		const clear = function () {
+			field.removeAttribute('aria-invalid');
+			field.removeEventListener('input', clear);
+			field.removeEventListener('change', clear);
+		};
+		// file inputs fire 'change'; text inputs fire 'input' — cover both.
+		field.addEventListener('input', clear);
+		field.addEventListener('change', clear);
 	}
 	function logTileItemName(btn) {
 		if (!btn) return '';
@@ -205,13 +238,44 @@
 		flashTile(btn, false);
 	}
 	const snkDialogTriggers = typeof WeakMap === 'function' ? new WeakMap() : null;
+	/**
+	 * Focus must land on a live element after a dialog closes — never on body
+	 * (WCAG 2.4.3 / Atlas a11y contract). If the trigger was re-rendered or the
+	 * dialog was opened without a focused control, fall back to the first
+	 * actionable page-header control, then the page title, then the main landmark.
+	 */
+	function resolveSnkDialogRestoreTarget(prev) {
+		if (prev && prev !== document.body && typeof prev.focus === 'function' && prev.isConnected !== false) {
+			return prev;
+		}
+		const actions = document.getElementById('snk-page-actions');
+		if (actions) {
+			const actionable = actions.querySelector(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			);
+			if (actionable) {
+				return actionable;
+			}
+		}
+		const title = document.getElementById('snk-page-title');
+		if (title) {
+			if (!title.hasAttribute('tabindex')) {
+				title.setAttribute('tabindex', '-1');
+			}
+			return title;
+		}
+		return document.getElementById('snk-main-content');
+	}
 	function openSnkDialog(dlg, trigger) {
 		const restore = trigger || document.activeElement;
 		if (snkDialogTriggers) {
 			snkDialogTriggers.set(dlg, restore);
 		}
 		if (typeof dlg.showModal === 'function') {
-			dlg.showModal();
+			// Idempotent: showModal() on an already-open dialog throws InvalidStateError.
+			if (!dlg.open) {
+				dlg.showModal();
+			}
 		} else {
 			dlg.setAttribute('open', 'open');
 		}
@@ -227,8 +291,9 @@
 			if (snkDialogTriggers) {
 				snkDialogTriggers.delete(dlg);
 			}
-			if (prev && typeof prev.focus === 'function') {
-				prev.focus();
+			const target = resolveSnkDialogRestoreTarget(prev);
+			if (target && typeof target.focus === 'function') {
+				target.focus();
 			}
 		};
 		dlg.addEventListener('close', onClose);
@@ -483,6 +548,7 @@
 				const invalid = validateCatalogImageFile(file);
 				if (invalid) {
 					input.value = '';
+					markFieldInvalid(input);
 					toast(userFacingError(new Error(invalid)), null, true);
 					const serverUrl = root.getAttribute('data-server-image-url') || '';
 					const hasServer = root.getAttribute('data-server-has-image') === '1';
@@ -1219,6 +1285,7 @@
 					if (!uid) {
 						toast(t('Pick a colleague first', 'Pick a colleague first'));
 						const search = document.querySelector('#snk-mode-proxy [data-snk-user-search]');
+						markFieldInvalid(search);
 						if (search) search.focus();
 						btn.classList.remove('is-logging');
 						btn.removeAttribute('aria-busy');
@@ -1227,6 +1294,7 @@
 					}
 					if (why.length < 3) {
 						toast(t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'));
+						markFieldInvalid(reason);
 						if (reason) reason.focus();
 						btn.classList.remove('is-logging');
 						btn.removeAttribute('aria-busy');
@@ -1240,6 +1308,7 @@
 					const why = reason ? String(reason.value || '').trim() : '';
 					if (why.length < 3) {
 						toast(t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'));
+						markFieldInvalid(reason);
 						if (reason) reason.focus();
 						btn.classList.remove('is-logging');
 						btn.removeAttribute('aria-busy');
@@ -1576,6 +1645,7 @@
 				if (fd.has('priceEuro')) {
 					const cents = parseEuroToCentsClient(body.priceEuro);
 					if (cents === null) {
+						markFieldInvalid(form.querySelector('[name="priceEuro"]'));
 						toast(t('Please check your entries and try again.', 'Please check your entries and try again.'), null, true);
 						return;
 					}
@@ -1592,6 +1662,7 @@
 				if (pendingFile) {
 					const invalid = validateCatalogImageFile(pendingFile);
 					if (invalid) {
+						markFieldInvalid(fileInput);
 						toast(userFacingError(new Error(invalid)), null, true);
 						return;
 					}
@@ -1612,6 +1683,7 @@
 				if (fd.has('priceEuro')) {
 					const cents = parseEuroToCentsClient(body.priceEuro);
 					if (cents === null) {
+						markFieldInvalid(form.querySelector('[name="priceEuro"]'));
 						toast(t('Please check your entries and try again.', 'Please check your entries and try again.'), null, true);
 						return;
 					}
@@ -1628,6 +1700,7 @@
 				if (pendingFile) {
 					const invalid = validateCatalogImageFile(pendingFile);
 					if (invalid) {
+						markFieldInvalid(fileInput);
 						toast(userFacingError(new Error(invalid)), null, true);
 						return;
 					}

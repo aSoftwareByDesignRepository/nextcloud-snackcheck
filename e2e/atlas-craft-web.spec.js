@@ -44,7 +44,7 @@ test.describe('Atlas web craft screenshots', () => {
 			});
 			if (p.id === 'log') {
 				// Drinks-only: full glyph tiles (icon+name+price) with no second-row clip.
-				const drinksFilter = page.getByRole('button', { name: /^Drinks$/i }).first();
+				const drinksFilter = page.locator('button.snk-filter[data-snk-log-cat="drink"]').first();
 				if (await drinksFilter.count()) {
 					await drinksFilter.click();
 					await page.waitForTimeout(200);

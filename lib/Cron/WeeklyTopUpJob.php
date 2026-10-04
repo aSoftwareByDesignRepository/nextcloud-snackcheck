@@ -27,6 +27,8 @@ class WeeklyTopUpJob extends TimedJob
 			$result = $this->digests->sendWeeklyTopUp();
 			$this->logger->info('SnackCheck weekly top-up run', $result);
 		} catch (\Throwable $e) {
+			// best-effort: cron run must not throw; failure is logged and the job
+			// reschedules on the next tick.
 			$this->logger->warning('SnackCheck weekly top-up failed', ['exception' => $e]);
 		}
 	}

@@ -118,7 +118,9 @@ class ApiController extends Controller
 						}
 					}
 					if (!$onRoster) {
-						throw new DomainException('permission_denied', 'Target not on site roster', 403);
+						// Uniform target reject — same payload as unknown/no-access
+						// user so roster membership is not an oracle.
+						throw new DomainException('validation_failed', 'Cannot log for this user', 422);
 					}
 				}
 			}

@@ -44,6 +44,24 @@ test.describe('SnackCheck shell chrome a11y smoke', () => {
 			await expect(app.getByRole('heading', { level: 1 }).first()).toBeAttached();
 			await expect(page.locator('#app-navigation.snk-nav')).toBeAttached();
 
+			// COMPANION-DESIGN-SYSTEM §8 landmark_uniqueness: NC #header owns the
+			// page banner; the in-app .snk-page-header is role="group" — never a
+			// second implicit banner. // i18n: structural only, no locale text.
+			const banners = await page.evaluate(() => {
+				let n = 0;
+				document.querySelectorAll('header, [role="banner"]').forEach((h) => {
+					if (h.closest('article, aside, main, nav, section')) {
+						return;
+					}
+					const role = h.getAttribute('role');
+					if (h.tagName === 'HEADER' ? role === null || role === 'banner' : role === 'banner') {
+						n += 1;
+					}
+				});
+				return n;
+			});
+			expect(banners, 'single banner landmark (NC #header only)').toBe(1);
+
 			const tokens = await page.evaluate(() => {
 				const el = document.querySelector('#app-content.snk-app');
 				const cs = el ? getComputedStyle(el) : getComputedStyle(document.body);

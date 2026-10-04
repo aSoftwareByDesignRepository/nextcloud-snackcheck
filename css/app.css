@@ -3607,7 +3607,10 @@ dialog.snk-dialog[open] {
 	gap: var(--snk-space-2, 0.5rem);
 }
 
-.snk-nav-footer__trigger {
+/* Scoped under #content: bare .{p}-nav-footer__trigger loses to NC core
+ * `#app-content button` / `#app-navigation button` min-height rules
+ * (var(--default-clickable-area) → 34px) — Atlas touch-target defect. */
+#content .snk-nav-footer__trigger {
 	display: inline-flex;
 	gap: var(--snk-space-3, 0.75rem);
 	min-height: 44px;
@@ -3669,7 +3672,7 @@ dialog.snk-dialog[open] {
 	display: none;
 }
 
-.snk-nav-footer__menu-item {
+#content .snk-nav-footer__menu-item {
 	display: flex;
 	align-items: center;
 	gap: var(--snk-space-3, 0.75rem);
@@ -3734,7 +3737,7 @@ dialog.snk-dialog[open] {
 	border: 0;
 }
 
-.snk-nav-footer__toast-link {
+#content .snk-nav-footer__toast-link {
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;

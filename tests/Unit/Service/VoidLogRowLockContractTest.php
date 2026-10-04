@@ -210,7 +210,8 @@ final class VoidLogRowLockContractTest extends TestCase
 		);
 
 		$this->expectException(\OCA\SnackCheck\Exception\DomainException::class);
-		$this->expectExceptionMessage('Site not allowed for this manager');
+		// Uniform 404 — foreign-site log is indistinguishable from a missing row.
+		$this->expectExceptionMessage('Log not found');
 		$svc->void(45, 'mgr', 'wrong site', true);
 	}
 }

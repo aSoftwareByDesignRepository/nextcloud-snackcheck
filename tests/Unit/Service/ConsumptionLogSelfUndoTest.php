@@ -112,8 +112,9 @@ final class ConsumptionLogSelfUndoTest extends TestCase
 		try {
 			$svc->selfUndo(71, 'company');
 		} catch (DomainException $e) {
-			self::assertSame('permission_denied', $e->errorCode);
-			self::assertSame(403, $e->httpStatus);
+			// Uniform 404 — "not yours" must be indistinguishable from "does not exist".
+			self::assertSame('not_found', $e->errorCode);
+			self::assertSame(404, $e->httpStatus);
 			throw $e;
 		}
 	}
@@ -175,8 +176,9 @@ final class ConsumptionLogSelfUndoTest extends TestCase
 		try {
 			$svc->selfUndo(9, 'eve');
 		} catch (DomainException $e) {
-			self::assertSame('permission_denied', $e->errorCode);
-			self::assertSame(403, $e->httpStatus);
+			// Uniform 404 — "not yours" must be indistinguishable from "does not exist".
+			self::assertSame('not_found', $e->errorCode);
+			self::assertSame(404, $e->httpStatus);
 			throw $e;
 		}
 	}

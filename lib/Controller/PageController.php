@@ -95,6 +95,9 @@ class PageController extends Controller
 		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
+			} elseif ($e->errorCode === 'not_found') {
+				// Uniform 404 at page level too — never confirm a foreign kitchen exists.
+				return $this->denied('not_found', Http::STATUS_NOT_FOUND);
 			} else {
 				return $this->denied('site');
 			}
@@ -200,6 +203,9 @@ class PageController extends Controller
 		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
+			} elseif ($e->errorCode === 'not_found') {
+				// Uniform 404 at page level too — never confirm a foreign kitchen exists.
+				return $this->denied('not_found', Http::STATUS_NOT_FOUND);
 			} else {
 				return $this->denied('site');
 			}
@@ -239,6 +245,9 @@ class PageController extends Controller
 		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
+			} elseif ($e->errorCode === 'not_found') {
+				// Uniform 404 at page level too — never confirm a foreign kitchen exists.
+				return $this->denied('not_found', Http::STATUS_NOT_FOUND);
 			} else {
 				return $this->denied('site');
 			}
@@ -308,6 +317,9 @@ class PageController extends Controller
 		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
+			} elseif ($e->errorCode === 'not_found') {
+				// Uniform 404 at page level too — never confirm a foreign kitchen exists.
+				return $this->denied('not_found', Http::STATUS_NOT_FOUND);
 			} else {
 				return $this->denied('site');
 			}
@@ -443,6 +455,9 @@ class PageController extends Controller
 		} catch (\OCA\SnackCheck\Exception\DomainException $e) {
 			if (in_array($e->errorCode, ['site_required', 'validation_failed'], true)) {
 				$sitePickRequired = true;
+			} elseif ($e->errorCode === 'not_found') {
+				// Uniform 404 at page level too — never confirm a foreign kitchen exists.
+				return $this->denied('not_found', Http::STATUS_NOT_FOUND);
 			} else {
 				return $this->denied('site');
 			}

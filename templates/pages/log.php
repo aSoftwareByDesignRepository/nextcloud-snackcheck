@@ -28,7 +28,7 @@ foreach ($itemGroups as $g) {
 ?>
 <section class="snk-section" aria-label="<?php p($l->t('Log')); ?>">
 	<?php if (!empty($_['sitePickRequired'])): ?>
-		<div class="snk-callout snk-callout--warn" role="status">
+		<div class="snk-callout snk-callout--warn snk-callout--site-pick" role="status">
 			<p><?php p($l->t('Pick a site above before logging. Each kitchen has its own catalog.')); ?></p>
 		</div>
 	<?php endif; ?>

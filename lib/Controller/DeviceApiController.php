@@ -498,7 +498,9 @@ class DeviceApiController extends Controller
 		} catch (DomainException) {
 			// fall through to deny
 		}
-		throw new DomainException('permission_denied', 'Target not on site roster', 403);
+		// Uniform target reject — same payload as unknown/no-access user so a
+		// kitchen admin cannot enumerate site roster membership by error diffing.
+		throw new DomainException('validation_failed', 'Cannot log for this user', 422);
 	}
 
 	/**

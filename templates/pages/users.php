@@ -2,7 +2,7 @@
 <section class="snk-section" aria-label="<?php p($l->t('Users / totals')); ?>">
 	<p class="snk-lead"><?php p($l->t('Period')); ?>: <strong><?php p($_['periodLabel'] ?? ''); ?></strong>
 		<?php if (!empty($_['privacyTotalsOnly'])): ?>
-			· <span class="snk-badge"><?php p($l->t('Totals only (privacy)')); ?></span>
+			· <span class="snk-badge snk-badge--privacy"><?php p($l->t('Totals only (privacy)')); ?></span>
 		<?php endif; ?>
 	</p>
 
@@ -37,7 +37,7 @@
 					</p>
 				</div>
 			<?php elseif (!empty($_['sitePickRequired']) || (int)($_['siteId'] ?? 0) <= 0): ?>
-				<div class="snk-callout snk-callout--warn" role="status">
+				<div class="snk-callout snk-callout--warn snk-callout--site-pick" role="status">
 					<p><?php p($l->t('Pick a site above before logging. Each kitchen has its own catalog.')); ?></p>
 					<p class="snk-actions">
 						<button type="button" class="snk-btn snk-btn--primary" data-snk-action="focus-site"><?php p($l->t('Choose site')); ?></button>

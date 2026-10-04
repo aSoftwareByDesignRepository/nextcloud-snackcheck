@@ -108,8 +108,10 @@ class AccessControlService
 
 	public function assertCanManageSite(string $userId, int $siteId): void
 	{
+		// Uniform 404 (no existence oracle): a manager must not be able to diff
+		// "site exists but not mine" (403) from "site does not exist" (404).
 		if (!$this->canManageSite($userId, $siteId)) {
-			throw new \OCA\SnackCheck\Exception\DomainException('foreign_site', 'Site not allowed for this manager', 403);
+			throw new \OCA\SnackCheck\Exception\DomainException('not_found', 'Not found.', 404);
 		}
 	}
 
@@ -160,6 +162,7 @@ class AccessControlService
 				return $requestedSiteId;
 			}
 		}
-		throw new \OCA\SnackCheck\Exception\DomainException('foreign_site', 'Site not allowed for this manager', 403);
+		// Uniform 404 — do not reveal that the site exists to a manager who cannot see it.
+		throw new \OCA\SnackCheck\Exception\DomainException('not_found', 'Not found.', 404);
 	}
 }

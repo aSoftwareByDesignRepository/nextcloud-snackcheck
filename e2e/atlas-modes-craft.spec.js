@@ -77,10 +77,8 @@ test.describe('Atlas shipping modes crafts', () => {
 			await expect(page.locator('#app-content.snk-app, #snk-main-content, #content').first()).toBeVisible({
 				timeout: 30_000,
 			});
-			const privacyBadge = page.locator('.snk-badge').filter({
-				hasText: /Totals only \(privacy\)|Nur Summen \(Datenschutz\)/i,
-			});
-			await expect(privacyBadge.first()).toBeVisible({ timeout: 20_000 });
+			// Structural hook — badge text is localized; never match EN|DE.
+			await expect(page.locator('.snk-badge--privacy').first()).toBeVisible({ timeout: 20_000 });
 			const voidBtns = page.locator('[data-snk-action="void-log"]');
 			const voidCount = await voidBtns.count();
 			await page.screenshot({
@@ -104,9 +102,7 @@ test.describe('Atlas shipping modes crafts', () => {
 			await expect(page.locator('#app-content.snk-app, #snk-main-content, #content').first()).toBeVisible({
 				timeout: 30_000,
 			});
-			await expect(
-				page.locator('.snk-badge').filter({ hasText: /Totals only \(privacy\)|Nur Summen/i }),
-			).toHaveCount(0);
+			await expect(page.locator('.snk-badge--privacy')).toHaveCount(0);
 			await page.screenshot({
 				path: path.join(outDir, 'snackcheck-web-privacy-totals-off.png'),
 				fullPage: false,
@@ -143,7 +139,8 @@ test.describe('Atlas shipping modes crafts', () => {
 			log(`HAPPY switched siteId=${site2} craft snackcheck-web-multisite-site2.png`);
 
 			await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log`);
-			const choose = page.getByText(/Choose a site|Site wählen|Pick a site/i);
+			// Structural: site-pick callout / focus-site CTA / empty option (locale-safe).
+			const choose = page.locator('.snk-callout--site-pick, [data-snk-action="focus-site"]');
 			const emptyShell =
 				(await choose.count()) > 0 || (await page.locator('#snk-site-select option[value=""]').count()) > 0;
 			await page.screenshot({

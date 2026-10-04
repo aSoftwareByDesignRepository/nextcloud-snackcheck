@@ -29,6 +29,8 @@ class PersonalDigestJob extends TimedJob
 			$result = $this->digests->sendPersonalDigests();
 			$this->logger->info('SnackCheck personal digest run', $result);
 		} catch (\Throwable $e) {
+			// best-effort: cron run must not throw; failure is logged and the job
+			// reschedules on the next tick.
 			$this->logger->warning('SnackCheck personal digest failed', ['exception' => $e]);
 		}
 	}

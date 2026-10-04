@@ -51,7 +51,9 @@ include __DIR__ . '/common/navigation.php';
 	<div id="snk-live-region" class="snk-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 	<div id="snk-alert-region" class="snk-sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
 	<div id="app-content-wrapper" class="snk-shell">
-		<header class="snk-page-header" aria-labelledby="snk-page-title">
+		<!-- Not a landmark: Nextcloud #header already owns banner; a second <header>
+		     banner breaks landmark uniqueness (COMPANION-DESIGN-SYSTEM §8). -->
+		<header class="snk-page-header" role="group" aria-labelledby="snk-page-title">
 			<button
 				type="button"
 				class="snk-nav-toggle"

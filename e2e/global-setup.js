@@ -61,16 +61,39 @@ module.exports = async function globalSetup() {
 		console.warn('[snackcheck:e2e] Login form not ready — tests may skip.');
 		return;
 	}
-	await accountField.fill(user);
-	await passwordField.fill(pass);
-	await page.locator('button[type="submit"], input[type="submit"]').first().click();
-	try {
-		await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30_000 });
-	} catch {
+	const loginHeading = page.getByRole('heading', { name: /log in to nextcloud|bei nextcloud anmelden/i });
+	let loggedIn = false;
+	for (let attempt = 0; attempt < 2 && !loggedIn; attempt++) {
+		if (attempt > 0) {
+			// NC bruteforce throttling can delay a correct login by seconds;
+			// wait briefly, then re-submit if the form is still up.
+			await page.waitForTimeout(5000);
+			if (!(await loginHeading.isVisible({ timeout: 2000 }).catch(() => false))) {
+				loggedIn = true;
+				break;
+			}
+			await accountField.fill(user);
+			await passwordField.fill(pass);
+		} else {
+			await accountField.fill(user);
+			await passwordField.fill(pass);
+		}
+		await page.locator('button[type="submit"], input[type="submit"]').first().click();
+		try {
+			await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30_000 });
+			loggedIn = true;
+		} catch {
+			// Redirect raced the timeout — verify actual state via the login form.
+			loggedIn = !(await loginHeading.isVisible({ timeout: 3000 }).catch(() => false));
+		}
+	}
+	if (!loggedIn) {
 		await browser.close();
 		console.warn('[snackcheck:e2e] Login failed — check credentials.');
 		return;
 	}
+	// Post-login page may still be settling; give it a moment for cookies/session.
+	await page.waitForLoadState('domcontentloaded').catch(() => {});
 
 	await context.storageState({ path: outputPath });
 	await browser.close();

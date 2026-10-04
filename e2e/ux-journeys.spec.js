@@ -135,8 +135,9 @@ test.describe('SnackCheck UX journeys', () => {
 	test('Pulse: Top-up card owns Restock CTA; empty popular section opens', async ({ page }) => {
 		// Multi-site: pulse requires an explicit kitchen — Default site is always id≥1.
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse?siteId=1`);
-		await expect(page.getByRole('status').filter({ hasText: /pick a site|site wählen|wählen sie eine standort/i })).toHaveCount(0);
-		await expect(page.locator('.snk-card__title').filter({ hasText: /restock|auffüll|nachfüll|top-up|réassort|reposición|genopfyld/i }).first()).toBeVisible();
+		// Structural: site-pick callout must be absent (locale-safe — fixture runs any lang).
+		await expect(page.locator('.snk-callout--site-pick')).toHaveCount(0);
+		await expect(page.locator('#snk-restock-card .snk-card__title').first()).toBeVisible();
 		const ranks = page.locator('details.snk-details--flush').first();
 		if (await ranks.count()) {
 			const hasRows = await page.locator('.snk-rank-list .snk-rank').count();
@@ -221,7 +222,7 @@ test.describe('SnackCheck UX journeys', () => {
 		if (await sub.count()) {
 			await expect(page.locator('.snk-nav__sublink[aria-current="page"]')).toBeVisible();
 		}
-		await page.locator('.snk-settings-nav__link').filter({ hasText: /Subsidy|Zuschuss|Benefits|Leistungen/i }).first().click();
+		await page.locator('.snk-settings-nav__link[href*="/settings/benefits"]').first().click();
 		await expect(page).toHaveURL(/settings\/benefits/);
 		await expect(page.locator('#snk-hosp-enabled, #snk-benefits-form').first()).toBeVisible();
 	});
@@ -384,7 +385,7 @@ test.describe('SnackCheck UX journeys', () => {
 
 	test('Pulse: no hollow shopping buttons when Top-up empty', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/pulse`);
-		const topUpRows = page.locator('.snk-card').filter({ hasText: /Top-up|Auffüll|Nachschub/i }).locator('ul.snk-list li');
+		const topUpRows = page.locator('#snk-restock-card ul.snk-list li');
 		const csvBtn = page.locator('button[data-snk-action="shopping-csv"]');
 		const printBtn = page.locator('button[data-snk-action="shopping-print"]');
 		if ((await topUpRows.count()) === 0) {

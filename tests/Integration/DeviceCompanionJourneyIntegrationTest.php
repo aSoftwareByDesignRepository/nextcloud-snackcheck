@@ -60,9 +60,16 @@ final class DeviceCompanionJourneyIntegrationTest extends TestCase
 		$summary = $license->getLicenseSummary();
 		$enforcement->trimTerminalsToLimit((int)($summary['terminalDevices'] ?? 0));
 		self::assertTrue($license->isTerminalPlanActive());
-		// Ensure a free device slot for this journey (shared Docker DB may already be at cap).
+		// Only free slots this test owns — the shared Docker DB may host a live
+		// terminal from another verification lane (avd_craft). A blanket revoke
+		// killed a foreign lane's device mid-run (2026-10-02).
 		foreach ($terminals->listActive() as $existing) {
-			$terminals->revoke((int)$existing['id'], 'journey-cleanup');
+			if (str_starts_with((string)($existing['label'] ?? ''), 'Journey Tablet ')) {
+				$terminals->revoke((int)$existing['id'], 'journey-cleanup');
+			}
+		}
+		if ($terminals->getActiveCount() >= $terminals->getDeviceLimit()) {
+			self::markTestSkipped('terminal license cap occupied by foreign device(s) — lane-safe skip');
 		}
 
 		$site = $sites->ensureDefaultSite();

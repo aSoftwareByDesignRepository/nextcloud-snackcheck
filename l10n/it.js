@@ -511,6 +511,7 @@ OC.L10N.register(
 	"Target stock" : "Scorta obiettivo",
 	"Text in the QR code" : "Testo nel codice QR",
 	"That snack is no longer available." : "Quello spuntino non è più disponibile.",
+	"That entry no longer exists. Reload the page and try again." : "Questa voce non esiste più. Ricarica la pagina e riprova.",
 	"The photo is too large. Maximum size is 2 MB." : "La foto è troppo grande. Dimensione massima: 2 MB.",
 	"The SnackCheck web app always stays free. An SNK2 license unlocks kitchen tablets for your organisation — shared devices staff use to log snacks." : "L’app web SnackCheck resta sempre gratuita. Una licenza SNK2 sblocca i tablet di cucina per la vostra organizzazione — dispositivi condivisi per registrare gli snack.",
 	"The web app stays free. An SNK2 key unlocks kitchen tablets for your organisation." : "L’app web resta gratuita. Una chiave SNK2 sblocca i tablet di cucina per la vostra organizzazione.",

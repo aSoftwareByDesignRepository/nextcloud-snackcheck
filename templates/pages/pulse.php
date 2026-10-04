@@ -3,7 +3,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 ?>
 <section class="snk-section" aria-label="<?php p($l->t('Kitchen overview')); ?>">
 	<?php if (!empty($_['sitePickRequired'])): ?>
-		<div class="snk-callout snk-callout--warn" role="status">
+		<div class="snk-callout snk-callout--warn snk-callout--site-pick" role="status">
 			<p><?php p($l->t('Pick a site above before logging. Each kitchen has its own catalog.')); ?></p>
 		</div>
 	<?php else: ?>
@@ -32,7 +32,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 		</nav>
 	</section>
 
-	<article class="snk-card">
+	<article class="snk-card" id="snk-restock-card">
 		<header class="snk-card__header">
 			<div class="snk-card__header-text">
 				<h2 class="snk-card__title"><?php p($l->t('Restock list')); ?></h2>

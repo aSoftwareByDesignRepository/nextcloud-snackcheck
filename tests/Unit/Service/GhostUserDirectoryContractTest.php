@@ -205,7 +205,7 @@ final class GhostUserDirectoryContractTest extends TestCase
 	{
 		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Service/ConsumptionLogService.php');
 		self::assertMatchesRegularExpression(
-			'/mode === \'proxy\'[\s\S]{0,500}userManager->get\(\$target\)/',
+			'/mode === \'proxy\'[\s\S]{0,700}userManager->get\(\$target\)/',
 			$src
 		);
 		self::assertMatchesRegularExpression(

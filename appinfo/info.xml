@@ -212,23 +212,26 @@ Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer h
 
 - Nextcloud 32–35 · PHP 8.2–8.5 · MySQL eller PostgreSQL
 	]]></description>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-01.png">
-		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-01.png
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-01-log.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-01-log.png
 	</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-02.png">
-		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-02.png
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-02-my-month.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-02-my-month.png
 	</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-03.png">
-		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-03.png
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-03-catalog.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-03-catalog.png
 	</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-04.png">
-		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-04.png
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-04-pulse.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-04-pulse.png
 	</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-05.png">
-		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-05.png
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-05-periods.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-05-periods.png
 	</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-06.png">
-		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/master/screenshots/snackcheck-screenshot-06.png
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-06-users.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-06-users.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-07-settings.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/snackcheck-screenshot-07-settings.png
 	</screenshot>
 	<version>1.1.1</version>
 	<licence>agpl</licence>

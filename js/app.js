@@ -271,6 +271,17 @@
 		if (snkDialogTriggers) {
 			snkDialogTriggers.set(dlg, restore);
 		}
+		if (!dlg._snkEscapeBound) {
+			dlg._snkEscapeBound = true;
+			// Host apps (e.g. core notifications) preventDefault() the Escape keydown
+			// globally, suppressing the native `cancel` event — close explicitly.
+			dlg.addEventListener('keydown', function (ev) {
+				if (ev.key === 'Escape' && dlg.open) {
+					ev.preventDefault();
+					dlg.close();
+				}
+			});
+		}
 		if (typeof dlg.showModal === 'function') {
 			// Idempotent: showModal() on an already-open dialog throws InvalidStateError.
 			if (!dlg.open) {

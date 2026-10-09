@@ -75,6 +75,9 @@ body {
 	);
 	--snk-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
 	--snk-border-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 24%, transparent);
+	/* Interactive controls need >=3:1 (WCAG 1.4.11): maxcontrast is NC's own
+	   input border; --color-border / --snk-border stay surface-only. */
+	--snk-form-border: var(--color-border-maxcontrast, var(--snk-border-strong));
 	--snk-primary: var(--color-primary-element, #006aa3);
 	--snk-primary-text: var(--color-primary-element-text, #ffffff);
 	--snk-primary-hover: var(--color-primary-element-hover, var(--color-primary-element, #006aa3));
@@ -591,7 +594,7 @@ body[data-theme-dark-highcontrast] {
 	min-width: 44px !important;
 	padding: 0.5rem var(--snk-space-3, 0.75rem) !important;
 	margin: 0 0 var(--snk-space-3, 0.75rem);
-	border: 1px solid var(--snk-border, var(--color-border));
+	border: 1px solid var(--snk-border, var(--snk-form-border));
 	border-radius: var(--snk-radius-sm, 8px);
 	background: var(--snk-bg-card, var(--color-main-background));
 	color: var(--snk-text, var(--color-main-text));
@@ -1914,7 +1917,7 @@ body.snk-nav-open .snk-nav-backdrop {
 	min-width: var(--snk-touch);
 	padding: 0 var(--snk-space-4);
 	border-radius: var(--snk-radius-md);
-	border: 1px solid var(--snk-border);
+	border: 1px solid var(--snk-form-border);
 	background: var(--snk-bg);
 	color: var(--snk-text);
 	font: inherit;
@@ -1966,7 +1969,7 @@ body.snk-nav-open .snk-nav-backdrop {
 }
 .snk-btn--ghost:hover {
 	background: var(--snk-surface);
-	border-color: var(--snk-border);
+	border-color: var(--snk-form-border);
 }
 .snk-btn:disabled,
 .snk-btn[aria-disabled="true"] {
@@ -1976,7 +1979,7 @@ body.snk-nav-open .snk-nav-backdrop {
 	pointer-events: none;
 	color: var(--snk-muted);
 	background: var(--snk-surface);
-	border-color: var(--snk-border);
+	border-color: var(--snk-form-border);
 	box-shadow: none;
 }
 .snk-btn--primary:disabled,
@@ -2108,7 +2111,7 @@ body.snk-nav-open .snk-nav-backdrop {
 	min-height: var(--snk-touch);
 	min-width: var(--snk-touch);
 	padding: 0 var(--snk-space-3);
-	border: 1px solid var(--snk-border);
+	border: 1px solid var(--snk-form-border);
 	border-radius: var(--snk-radius-md);
 	background: var(--snk-bg);
 	color: var(--snk-text);
@@ -2414,7 +2417,7 @@ body[data-theme-dark-highcontrast] .snk-field select option {
 	cursor: not-allowed;
 	background: var(--snk-surface);
 	color: var(--snk-muted);
-	border-color: var(--snk-border);
+	border-color: var(--snk-form-border);
 }
 
 /* Page-level empty (standalone): light dashed frame. Nested empties strip chrome. */
@@ -4159,4 +4162,50 @@ dialog.snk-dialog[open] {
 }
 .snk-denied .button.primary:hover {
 	background: var(--color-primary-element-light);
+}
+
+/*
+ * Control-border baseline (WCAG 1.4.11 >= 3:1 vs background) — DESIGN-SYSTEM §3.6.0.
+ * NC core styles every button/input with the faint `--color-border-dark`, and its
+ * `button:disabled` rule (0,2,1) outranks page-level `.button.secondary` (0,2,0),
+ * so disabled controls silently lose their frame. This rule only re-colours
+ * borders that are already drawn — borderless icon buttons are unaffected —
+ * and state classes keep their semantic borders.
+ */
+#app-content input:not([type='range'], [type='hidden'], [type='color'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], .form-input--error, .form-input--success, .form-input--warning, .has-error, [aria-invalid='true'], .has-error *),
+#app-content select:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+#app-content textarea:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+#app-content button:not(.primary, .error, .warning, .success, .danger, .button-vue),
+#app-content .button:not(.primary, .error, .warning, .success, .danger),
+.oc-dialog input:not([type='range'], [type='hidden'], [type='color'], [type='file']),
+.oc-dialog select,
+.oc-dialog textarea,
+.oc-dialog button:not(.primary, .error, .warning, .success, .danger, .button-vue),
+.oc-dialog .button:not(.primary, .error, .warning, .success, .danger) {
+	border-color: var(--snk-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}
+
+/*
+ * Invalid-field marking (WCAG 3.3.1/1.4.11): js/app.js markFieldInvalid() pins
+ * aria-invalid; the field must also LOOK invalid — same pattern as
+ * apps/_shared/field-errors/field-errors.css. Also applies inside native
+ * .snk-dialog (dialogs render under #app-content but keep the explicit scope
+ * for dialogs appended elsewhere).
+ */
+#app-content.snk-app input[aria-invalid='true'],
+#app-content.snk-app select[aria-invalid='true'],
+#app-content.snk-app textarea[aria-invalid='true'],
+#app-content.snk-app .snk-input[aria-invalid='true'],
+.snk-dialog input[aria-invalid='true'],
+.snk-dialog select[aria-invalid='true'],
+.snk-dialog textarea[aria-invalid='true'],
+.snk-dialog .snk-input[aria-invalid='true'] {
+	border-color: var(--color-error-text, var(--snk-danger-ink, var(--color-error)));
+	box-shadow: 0 0 0 1px var(--color-error-text, var(--snk-danger-ink, var(--color-error)));
+}
+
+/* Aliases for dead-name refs (literal fallbacks masked them). */
+body {
+	--snk-font-sm: var(--snk-fs-sm);
+	--snk-line-normal: var(--snk-line-base);
 }

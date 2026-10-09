@@ -599,8 +599,16 @@ class PageController extends Controller
 				true,
 				$this->urlGenerator->linkToRouteAbsolute('snackcheck.page.settings', ['section' => 'license']) . '#snk-license-key',
 			);
-			$payload['productsUrl'] = $supportLinks->productsUrl();
-			$payload['licenseRenewMailto'] = $supportLinks->licenseMailto($lang);
+			// Shared SupportUsLinks resync (5fcdc83) dropped productsUrl()/
+			// licenseMailto(): appsPageUrl() is the canonical apps-catalogue link
+			// and the license mailto keeps its de/en subject inline (family
+			// pattern, cf. arbeitszeitcheck LicenseAdminController).
+			$payload['productsUrl'] = $supportLinks->appsPageUrl($lang);
+			$licenseSubject = $supportLinks->isGermanLocale($lang)
+				? 'SnackCheck: Küchen-Tablet-Lizenz'
+				: 'SnackCheck: kitchen tablet license';
+			$payload['licenseRenewMailto'] = 'mailto:' . SupportUsLinks::CONTACT_EMAIL
+				. '?subject=' . rawurlencode($licenseSubject);
 			$payload['instanceId'] = $this->instanceId->get();
 		}
 		if ($section === 'support') {

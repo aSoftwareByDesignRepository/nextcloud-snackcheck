@@ -166,8 +166,6 @@ class UpgradeBackupService
 			try {
 				$snapshots[] = $this->readManifest($this->getSnapshotFolder($snapshotId), $snapshotId);
 			} catch (\Throwable $e) {
-				// best-effort: an unreadable/corrupt snapshot folder must not abort
-				// listing the remaining snapshots; it is simply skipped.
 				$this->logger->warning('SnackCheck: skipping unreadable upgrade backup folder', [
 					'app' => UpgradeBackupCatalog::APP_ID,
 					'folder' => $snapshotId,
@@ -239,8 +237,10 @@ class UpgradeBackupService
 				$this->db->executeStatement('ALTER SESSION SET CONSTRAINTS = DEFERRED');
 				$oracleConstraintsDeferred = true;
 			} catch (\Throwable $e) {
-				// best-effort: deferred constraints are an optimization; restore
-				// order already respects FKs, so proceeding is safe.
+				// best-effort: deferred constraints are an optimization; when the
+				// ALTER SESSION fails the FK-safe table order from
+				// UpgradeBackupCatalog::sortedRestoreTables still keeps the
+				// restore consistent, so warn and continue.
 				$this->logger->warning('SnackCheck: Oracle constraints could not be deferred for restore; relying on restore table order.', [
 					'exception' => $e,
 				]);
@@ -808,9 +808,10 @@ class UpgradeBackupService
 					$folder->delete();
 				}
 			} catch (\Throwable $e) {
-				// best-effort: secondary cleanup — the explicit delete below is the
-				// compensating action when manifest read/delete of a corrupt
-				// snapshot folder fails.
+				// best-effort per snapshot: a corrupt/unreadable manifest or a
+				// failed ->delete() must not abort the purge sweep; the folder is
+				// still removed through the fallback path below so the corrupt
+				// snapshot cannot poison later listSnapshots() runs.
 				$this->logger->warning('SnackCheck: removing corrupt upgrade backup folder', [
 					'app' => UpgradeBackupCatalog::APP_ID,
 					'folder' => $snapshotId,

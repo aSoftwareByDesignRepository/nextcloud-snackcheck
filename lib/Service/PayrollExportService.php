@@ -247,10 +247,10 @@ class PayrollExportService
 
 	public static function csvEscape(string $value): string
 	{
-		if ($value !== '' && in_array($value[0], ['=', '+', '-', '@'], true)) {
+		if ($value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r", "\x0B"], true)) {
 			$value = "'" . $value;
 		}
-		if (str_contains($value, ';') || str_contains($value, '"') || str_contains($value, "\n")) {
+		if (str_contains($value, ';') || str_contains($value, '"') || str_contains($value, "\n") || str_contains($value, "\r")) {
 			return '"' . str_replace('"', '""', $value) . '"';
 		}
 		return $value;

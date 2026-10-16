@@ -19,12 +19,16 @@ final class CsvExportBuilderTest extends TestCase
 
 	public function testNeutralizesFormulaInjection(): void
 	{
-		self::assertSame("'=1+1", CsvExportBuilder::neutralizeFormula('=1+1'));
-		self::assertSame("'+cmd", CsvExportBuilder::neutralizeFormula('+cmd'));
-		self::assertSame("'-2", CsvExportBuilder::neutralizeFormula('-2'));
-		self::assertSame("'@SUM", CsvExportBuilder::neutralizeFormula('@SUM'));
+		foreach (['=1+1', '+cmd', '-2', '@SUM', "\t=x", "\r=x", "\x0B=x"] as $hostile) {
+			self::assertSame(
+				"'" . $hostile,
+				CsvExportBuilder::neutralizeFormula($hostile),
+				'hostile first char must be apostrophe-prefixed: ' . bin2hex($hostile[0])
+			);
+		}
 		self::assertSame('plain', CsvExportBuilder::neutralizeFormula('plain'));
-		$csv = CsvExportBuilder::build(['n'], [['=HYPERLINK("x")']]);
+		$csv = CsvExportBuilder::build(['n'], [['=HYPERLINK("x")'], ["\x0B=x"]]);
 		self::assertStringContainsString("'=HYPERLINK", $csv);
+		self::assertStringContainsString("'\x0B=x", $csv);
 	}
 }

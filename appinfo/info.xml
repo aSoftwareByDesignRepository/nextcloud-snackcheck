@@ -255,15 +255,9 @@ Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer h
 			<step>OCA\SnackCheck\Repair\UninstallDropTables</step>
 		</uninstall>
 	</repair-steps>
-	<navigations>
-		<navigation>
-			<name>SnackCheck</name>
-			<route>snackcheck.page.index</route>
-			<icon>app.svg</icon>
-			<order>10</order>
-			<type>link</type>
-		</navigation>
-	</navigations>
+	<!-- No <navigation> here: the menu entry is registered conditionally via
+	     NavGate (canAccessApp) — a static entry would advertise the app to
+	     excluded users when access_mode=listed. -->
 	<release>
 		<databases>
 			<database>mysql</database>

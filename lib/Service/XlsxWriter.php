@@ -147,7 +147,7 @@ final class XlsxWriter
 	private static function inlineCell(string $ref, string $value): string
 	{
 		// AC-19: neutralize formula-leading cells the same way as CSV (Excel/LibreOffice).
-		if ($value !== '' && in_array($value[0], ['=', '+', '-', '@'], true)) {
+		if ($value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r", "\x0B"], true)) {
 			$value = "'" . $value;
 		}
 		$esc = htmlspecialchars($value, ENT_XML1);

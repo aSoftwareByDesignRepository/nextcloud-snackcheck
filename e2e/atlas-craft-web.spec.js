@@ -6,6 +6,12 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const { gotoApp } = require('./helpers/auth-guard');
+const {
+	hospitalityFlag,
+	ensureHospitalityOn,
+	assertOnHospitality,
+	restoreHospitality,
+} = require('./helpers/hospitality');
 
 const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 const outDir = path.resolve(
@@ -37,8 +43,17 @@ test.describe('Atlas web craft screenshots', () => {
 
 	test('capture web pages + log toast step', async ({ page }) => {
 		fs.mkdirSync(outDir, { recursive: true });
+		// Pin the shared hospitality flag ON — without it /hospitality silently
+		// redirects to /log and the "hospitality" craft captures the wrong page.
+		const prevFlag = hospitalityFlag() ? '1' : '0';
+		try {
+			await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log`);
+			await ensureHospitalityOn(page);
 		for (const p of PAGES) {
 			await gotoApp(page, `${BASE}${p.path}`);
+			if (p.id === 'hospitality') {
+				await assertOnHospitality(page, page);
+			}
 			await expect(page.locator('#app-content.snk-app, #snk-main-content, #content').first()).toBeVisible({
 				timeout: 30_000,
 			});
@@ -88,6 +103,9 @@ test.describe('Atlas web craft screenshots', () => {
 			const toast = page.locator('#snk-toast');
 			await expect(toast).toBeVisible({ timeout: 10_000 });
 			await page.screenshot({ path: path.join(outDir, 'snackcheck-web-log-toast.png'), fullPage: false });
+		}
+		} finally {
+			await restoreHospitality(page, prevFlag).catch(() => {});
 		}
 	});
 });

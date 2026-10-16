@@ -9,7 +9,9 @@ use OCA\SnackCheck\Db\CatalogItemMapper;
 use OCA\SnackCheck\Repair\BackupBeforeUpdate;
 use OCA\SnackCheck\Repair\EnsureSnackCheckSchema;
 use OCA\SnackCheck\Repair\UninstallDropTables;
+use OCA\SnackCheck\Service\AccessControlService;
 use OCA\SnackCheck\Service\AuditService;
+use OCA\SnackCheck\Support\NavGate;
 use OCA\SnackCheck\Service\CatalogImageService;
 use OCA\SnackCheck\Service\UpgradeBackupService;
 use OCP\AppFramework\App;
@@ -78,5 +80,16 @@ class Application extends App implements IBootstrap
 
 	public function boot(IBootContext $context): void
 	{
+		$app = $context->getAppContainer();
+		// Menu entry only for users with app access — in listed mode the
+		// door denies outsiders, so the entry must not advertise it.
+		NavGate::register(
+			$app,
+			'snackcheck.page.index',
+			'app.svg',
+			'SnackCheck',
+			10,
+			static fn(string $uid): bool => $app->get(AccessControlService::class)->canAccessApp($uid),
+		);
 	}
 }

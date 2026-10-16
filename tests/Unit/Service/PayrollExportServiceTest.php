@@ -26,7 +26,17 @@ class PayrollExportServiceTest extends TestCase
 		self::assertStringStartsWith("\xEF\xBB\xBF", $csv);
 		self::assertStringContainsString('user_id;item_name;qty', $csv);
 		self::assertSame('1.50', PayrollExportService::centsToEur(150));
-		self::assertStringStartsWith("'", PayrollExportService::csvEscape('=cmd'));
+		foreach (['=cmd', '+cmd', '-2', '@SUM', "\t=x", "\r=x", "\x0B=x"] as $hostile) {
+			$escaped = PayrollExportService::csvEscape($hostile);
+			self::assertStringContainsString(
+				"'" . $hostile,
+				$escaped,
+				'hostile first char must be apostrophe-prefixed: ' . bin2hex($hostile[0])
+			);
+		}
+		// CR/LF-bearing cells must be quoted so the control char cannot forge a row.
+		self::assertSame("\"a\rb\"", PayrollExportService::csvEscape("a\rb"));
+		self::assertSame("\"'\r=x\"", PayrollExportService::csvEscape("\r=x"));
 	}
 
 	public function testXlsxIsZip(): void

@@ -24,7 +24,7 @@ final class CsvExportBuilder
 	}
 
 	/**
-	 * Neutralize spreadsheet formula injection (= + - @ | tab) per OWASP CSV guidance.
+	 * Neutralize spreadsheet formula injection (= + - @ TAB CR VT) per OWASP CSV guidance.
 	 */
 	public static function neutralizeFormula(string $value): string
 	{
@@ -32,7 +32,7 @@ final class CsvExportBuilder
 			return $value;
 		}
 		$first = $value[0];
-		if ($first === '=' || $first === '+' || $first === '-' || $first === '@' || $first === "\t" || $first === "\r") {
+		if ($first === '=' || $first === '+' || $first === '-' || $first === '@' || $first === "\t" || $first === "\r" || $first === "\x0B") {
 			return "'" . $value;
 		}
 		return $value;

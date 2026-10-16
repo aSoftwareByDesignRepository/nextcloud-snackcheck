@@ -11,11 +11,17 @@ const fs = require('fs');
 const path = require('path');
 const { gotoApp } = require('./helpers/auth-guard');
 const { setUserTheme } = require('./helpers/theming');
-const { execFileSync } = require('child_process');
+const {
+	occ,
+	hospitalityFlag,
+	setHospitality,
+	ensureHospitalityOn,
+	assertOnHospitality,
+	restoreHospitality,
+} = require('./helpers/hospitality');
 
 const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 const craftDir = path.resolve(__dirname, '../../../../.cursor/atlas-farm-v3/artifacts/snackcheck/craft/web');
-const nextcloudRoot = path.resolve(__dirname, '../../../');
 
 const VIEWS = [
 	{ name: 'log', url: `${BASE}/index.php/apps/snackcheck/log?siteId=1` },
@@ -38,13 +44,6 @@ const MANAGER_VIEWS = [
 
 /** @type {Array<Record<string, string>>} */
 const manifest = [];
-
-/** @param {string[]} args */
-function occ(args) {
-	return execFileSync('docker', [
-		'compose', 'exec', '-T', '-u', 'www-data', 'nextcloud', 'php', 'occ', ...args,
-	], { cwd: nextcloudRoot, encoding: 'utf8', timeout: 60_000 });
-}
 
 /**
  * @param {import('@playwright/test').Page} page
@@ -139,22 +138,33 @@ test.describe('SnackCheck ds_chrome web craft (Atlas 3.5.14)', () => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log`);
 
-		for (const theme of THEMES) {
-			await setUserTheme(page, theme);
-			for (const width of WIDTHS) {
-				await page.setViewportSize({ width, height: width < 480 ? 740 : 1000 });
-				for (const view of VIEWS) {
-					await gotoApp(page, view.url);
-					await shot(page, `snk-web-${view.name}-${theme}-${width}.png`, {
-						view: view.name, theme, width: String(width), role: 'admin',
-					});
+		// hospitality_enabled is global shared state: pin ON so the
+		// /hospitality sweep shots can't silently collapse into /log.
+		const prevFlag = hospitalityFlag() ? '1' : '0';
+		try {
+			await ensureHospitalityOn(page);
+			for (const theme of THEMES) {
+				await setUserTheme(page, theme);
+				for (const width of WIDTHS) {
+					await page.setViewportSize({ width, height: width < 480 ? 740 : 1000 });
+					for (const view of VIEWS) {
+						await gotoApp(page, view.url);
+						if (view.name === 'hospitality') {
+							await assertOnHospitality(page, page);
+						}
+						await shot(page, `snk-web-${view.name}-${theme}-${width}.png`, {
+							view: view.name, theme, width: String(width), role: 'admin',
+						});
+					}
 				}
 			}
+		} finally {
+			await setUserTheme(page, 'light').catch(() => {});
+			await restoreHospitality(page, prevFlag);
 		}
-		await setUserTheme(page, 'light');
 	});
 
-	test('role crafts — member / manager / denied', async ({ browser }) => {
+	test('role crafts — member / manager / denied', async ({ page, browser }) => {
 		const memberUser = process.env.SNK_MEMBER_USER;
 		const managerUser = process.env.SNK_MANAGER_USER;
 		const deniedUser = process.env.SNK_DENIED_USER;
@@ -184,14 +194,21 @@ test.describe('SnackCheck ds_chrome web craft (Atlas 3.5.14)', () => {
 			await member.ctx.close();
 		}
 
-		// Kitchen manager: hospitality + pulse access (site-scoped).
+		// Kitchen manager: hospitality + pulse access (site-scoped). The manager
+		// session cannot write admin settings — pin the shared flag via `page`.
+		const prevManagerFlag = hospitalityFlag() ? '1' : '0';
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log`);
 		const manager = await loginAs(browser, /** @type {string} */ (managerUser), process.env.SNK_MANAGER_PASS || '');
 		try {
+			await ensureHospitalityOn(page);
 			for (const theme of THEMES) {
 				await gotoApp(manager.page, `${BASE}/index.php/apps/snackcheck/hospitality`);
 				await setThemeFor(manager.page, theme, /** @type {string} */ (managerUser));
 				for (const view of MANAGER_VIEWS) {
 					await gotoApp(manager.page, view.url);
+					if (view.name === 'hospitality') {
+						await assertOnHospitality(manager.page, page);
+					}
 					const nav = manager.page.locator('#app-navigation');
 					if (await nav.count()) {
 						for (const forbidden of ['periods', 'settings', 'audit']) {
@@ -206,6 +223,7 @@ test.describe('SnackCheck ds_chrome web craft (Atlas 3.5.14)', () => {
 			}
 		} finally {
 			await manager.ctx.close();
+			await restoreHospitality(page, prevManagerFlag).catch(() => {});
 		}
 
 		// Denied user: uniform 403 surface, light only (role chrome, not theme).
@@ -275,47 +293,30 @@ test.describe('SnackCheck ds_chrome web craft (Atlas 3.5.14)', () => {
 		}
 	});
 
-	/**
-	 * Toggle hospitality via the real admin settings API — NOT occ: CLI writes
-	 * invalidate only the CLI APCu space, web requests would read stale values
-	 * (memcache.local = APCu). This also exercises the app-side stale-state path.
-	 * @param {import('@playwright/test').Page} page
-	 * @param {boolean} on
-	 */
-	async function setHospitality(page, on) {
-		const res = await page.evaluate(async (enabled) => {
-			const token = (typeof window.OC !== 'undefined' && window.OC.requestToken)
-				|| document.querySelector('head[data-requesttoken]')?.getAttribute('data-requesttoken')
-				|| '';
-			const body = new URLSearchParams({ hospitalityEnabled: enabled ? '1' : '0' });
-			const r = await fetch('/index.php/apps/snackcheck/api/admin/settings', {
-				method: 'POST',
-				credentials: 'same-origin',
-				headers: { requesttoken: token, 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: body.toString(),
-			});
-			return { status: r.status, ok: r.ok };
-		}, on);
-		if (!res.ok) {
-			throw new Error(`hospitality toggle → HTTP ${res.status}`);
-		}
-	}
-
 	test('hospitality OFF — no stale mode chip / panel / nav; route redirects', async ({ page }) => {
 		test.skip(!process.env.E2E_USER, 'Set E2E_USER + E2E_PASS in e2e/.env');
-		const prev = occ(['config:app:get', 'snackcheck', 'hospitality_enabled']).trim();
+		const prev = hospitalityFlag() ? '1' : '0';
 		await page.setViewportSize({ width: 1440, height: 1000 });
 		try {
-			// Baseline: admin is allowlisted → Company mode chip must exist while ON.
+			// Baseline: hospitality ON (global flag — shared instance may have it
+			// off) → admin is allowlisted → Company mode chip must exist.
 			await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log?siteId=1`);
 			await setUserTheme(page, 'light');
+			await setHospitality(page, true);
 			await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log?siteId=1`);
 			await expect(page.locator('[data-snk-mode][value="hospitality"]')).toHaveCount(1);
 
-			await setHospitality(page, false);
-			await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log?siteId=1`);
-
-			await expect(page.locator('[data-snk-mode][value="hospitality"]')).toHaveCount(0);
+			// hospitality_enabled is a global app flag that sibling farm lanes
+			// toggle on this shared instance — if the flag reads on again after
+			// we switched it off, an external flip raced us; re-assert OFF and
+			// retry. Stale chrome while the flag stays off is a real defect.
+			let offConfirmed = false;
+			for (let attempt = 0; attempt < 4 && !offConfirmed; attempt++) {
+				await setHospitality(page, false);
+				await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log?siteId=1`);
+				offConfirmed = (await page.locator('[data-snk-mode][value="hospitality"]').count()) === 0;
+			}
+			expect(offConfirmed, 'hospitality chip still present after OFF (external flips exhausted retries)').toBe(true);
 			expect(await page.locator('#snk-mode-hospitality').count(), 'stale hospitality panel').toBe(0);
 			const navHosp = page.locator('#app-navigation a[href*="/apps/snackcheck/hospitality"]');
 			expect(await navHosp.count(), 'stale hospitality nav').toBe(0);
@@ -324,21 +325,30 @@ test.describe('SnackCheck ds_chrome web craft (Atlas 3.5.14)', () => {
 			});
 
 			// Direct /hospitality URL must redirect to log — no orphan surface.
-			await page.goto(`${BASE}/index.php/apps/snackcheck/hospitality`, { waitUntil: 'domcontentloaded' });
-			await page.waitForSelector('#app-content.snk-app, #snk-main-content', { timeout: 30_000 });
-			expect(page.url(), '/hospitality must redirect to /log when disabled').toContain('/apps/snackcheck/log');
+			// Same shared-flag race applies: a rendered page while the flag reads
+			// off is a defect; an external re-enable just retries.
+			let redirected = false;
+			for (let attempt = 0; attempt < 4 && !redirected; attempt++) {
+				await page.goto(`${BASE}/index.php/apps/snackcheck/hospitality`, { waitUntil: 'domcontentloaded' });
+				await page.waitForSelector('#app-content.snk-app, #snk-main-content', { timeout: 30_000 });
+				redirected = page.url().includes('/apps/snackcheck/log');
+				if (redirected) {
+					break;
+				}
+				await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log?siteId=1`);
+				if (await page.locator('[data-snk-mode][value="hospitality"]').count() === 0) {
+					break; // flag still off but no redirect — genuine failure
+				}
+				await setHospitality(page, false);
+			}
+			expect(redirected, '/hospitality must redirect to /log when disabled').toBe(true);
 			await shot(page, 'snk-web-hospitality-off-redirect-light-1440.png', {
 				view: 'hospitality', state: 'off-redirect', theme: 'light', width: '1440', role: 'admin',
 			});
 		} finally {
-			if (prev === '1') {
-				// Re-enable via the same web API (server-side APCu invalidation).
-				await page.goto(`${BASE}/index.php/apps/snackcheck/log`, { waitUntil: 'domcontentloaded' }).catch(() => {});
-				await setHospitality(page, true).catch(async () => {
-					// CLI fallback for restore only; verify effect via a fresh fetch.
-					occ(['config:app:set', 'snackcheck', 'hospitality_enabled', '--value=1']);
-				});
-			}
+			// Restore the entry state (not just "re-enable") — the baseline leg
+			// may have switched the flag on, and a sibling lane may flip it too.
+			await restoreHospitality(page, prev);
 		}
 	});
 });

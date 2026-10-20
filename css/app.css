@@ -1939,24 +1939,18 @@ body.snk-nav-open .snk-nav-backdrop {
 .snk-btn--primary {
 	background: var(--snk-primary);
 	color: var(--snk-primary-text);
-	border-color: transparent;
+	/* Border == fill: painted edge (WCAG 1.4.11), never transparent */
+	border-color: var(--snk-primary);
 	min-height: var(--snk-touch-lg);
 }
 .snk-btn--primary:hover { background: var(--snk-primary-hover); }
 .snk-btn--danger {
 	background: var(--snk-danger-fill, #b42318);
 	color: var(--snk-danger-on-fill, #ffffff);
-	border-color: transparent;
+	border-color: var(--snk-danger-fill, #b42318);
 	min-height: var(--snk-touch-lg);
 	/* Beat NC / theme secondary paints on <dialog> outside .snk-app */
 	box-shadow: none;
-}
-.snk-dialog .snk-btn--danger,
-#snk-confirm-dialog .snk-btn--danger,
-#snk-close-dialog .snk-btn--danger {
-	background: #b42318 !important;
-	color: #ffffff !important;
-	border-color: transparent !important;
 }
 .snk-btn--secondary {
 	background: color-mix(in srgb, var(--snk-bg) 82%, var(--snk-text) 18%);
@@ -1970,6 +1964,111 @@ body.snk-nav-open .snk-nav-backdrop {
 .snk-btn--ghost:hover {
 	background: var(--snk-surface);
 	border-color: var(--snk-form-border);
+}
+/* ── <button> armor (button_variant_specificity_collapse) ───────────────
+ * NC core `select,button:not(.button-vue,[class^=vs__]),…` repaints EVERY
+ * <button> at 0-1-1 — background:--color-primary-element-light,
+ * color:--color-primary-element-light-text, border:none — again at 0-2-1
+ * on :hover/:focus, and `button:not(.button-vue):disabled` at 0-2-1. The
+ * single-class rules above (0-1-0) all lose, so <button> collapsed to one
+ * pale fill while anchors carrying the same classes painted correctly.
+ * Armor = scope + !important + full border shorthand (core's border:none
+ * makes border-color alone paint nothing) — contractcheck
+ * css/common/shell-chrome.css:594-617 shape. Scopes cover the app canvas
+ * AND .snk-dialog: JS-built confirm/restock dialogs append to
+ * document.body, outside #app-content. Element-qualified to <button> —
+ * anchors keep the plain rules above. */
+#app-content.snk-app button.snk-btn,
+#app-content-wrapper button.snk-btn,
+.snk-dialog button.snk-btn {
+	padding: 0 var(--snk-space-4) !important;
+	border: 1px solid var(--snk-form-border) !important;
+	border-radius: var(--snk-radius-md) !important;
+	background: var(--snk-bg) !important;
+	color: var(--snk-text) !important;
+	font: inherit !important;
+}
+#app-content.snk-app button.snk-btn--primary,
+#app-content-wrapper button.snk-btn--primary,
+.snk-dialog button.snk-btn--primary {
+	background: var(--snk-primary) !important;
+	color: var(--snk-primary-text) !important;
+	border: 1px solid var(--snk-primary) !important;
+}
+#app-content.snk-app button.snk-btn--secondary,
+#app-content-wrapper button.snk-btn--secondary,
+.snk-dialog button.snk-btn--secondary {
+	background: color-mix(in srgb, var(--snk-bg) 82%, var(--snk-text) 18%) !important;
+	color: var(--snk-text) !important;
+	border: 1px solid var(--snk-form-border) !important;
+}
+#app-content.snk-app button.snk-btn--ghost,
+#app-content-wrapper button.snk-btn--ghost,
+.snk-dialog button.snk-btn--ghost {
+	background: transparent !important;
+	color: var(--snk-text) !important;
+	border: 1px solid transparent !important;
+}
+#app-content.snk-app button.snk-btn--danger,
+#app-content-wrapper button.snk-btn--danger,
+.snk-dialog button.snk-btn--danger {
+	background: var(--snk-danger-fill, #b42318) !important;
+	color: var(--snk-danger-on-fill, #ffffff) !important;
+	border: 1px solid var(--snk-danger-fill, #b42318) !important;
+}
+/* `button:not(.button-vue):disabled` (0-2-1) beats the muted design below —
+ * armor it (1-2-1 also outranks the hover armor so disabled stays put). */
+#app-content.snk-app button.snk-btn:disabled,
+#app-content-wrapper button.snk-btn:disabled,
+.snk-dialog button.snk-btn:disabled,
+#app-content.snk-app button.snk-btn[aria-disabled="true"],
+#app-content-wrapper button.snk-btn[aria-disabled="true"],
+.snk-dialog button.snk-btn[aria-disabled="true"] {
+	opacity: 1 !important;
+	cursor: not-allowed !important;
+	color: var(--snk-muted) !important;
+	background: var(--snk-surface) !important;
+	border: 1px solid var(--snk-form-border) !important;
+}
+#app-content.snk-app button.snk-btn--primary:disabled,
+#app-content-wrapper button.snk-btn--primary:disabled,
+.snk-dialog button.snk-btn--primary:disabled,
+#app-content.snk-app button.snk-btn--danger:disabled,
+#app-content-wrapper button.snk-btn--danger:disabled,
+.snk-dialog button.snk-btn--danger:disabled,
+#app-content.snk-app button.snk-btn--primary[aria-disabled="true"],
+#app-content-wrapper button.snk-btn--primary[aria-disabled="true"],
+.snk-dialog button.snk-btn--primary[aria-disabled="true"],
+#app-content.snk-app button.snk-btn--danger[aria-disabled="true"],
+#app-content-wrapper button.snk-btn--danger[aria-disabled="true"],
+.snk-dialog button.snk-btn--danger[aria-disabled="true"] {
+	border-color: var(--snk-border-strong) !important;
+}
+/* !important also blocks core's :hover repaint — restate each fill at hover
+ * specificity (base hover is 1-1-2 and would otherwise blank variants) and
+ * keep feedback: dedicated hover tint on primary, brightness filter on
+ * danger, surface + border on base/ghost. */
+#app-content.snk-app button.snk-btn:hover,
+#app-content-wrapper button.snk-btn:hover,
+.snk-dialog button.snk-btn:hover {
+	background: var(--snk-surface) !important;
+}
+#app-content.snk-app button.snk-btn--primary:hover,
+#app-content-wrapper button.snk-btn--primary:hover,
+.snk-dialog button.snk-btn--primary:hover {
+	background: var(--snk-primary-hover) !important;
+}
+#app-content.snk-app button.snk-btn--danger:hover,
+#app-content-wrapper button.snk-btn--danger:hover,
+.snk-dialog button.snk-btn--danger:hover {
+	background: var(--snk-danger-fill, #b42318) !important;
+	filter: brightness(0.92);
+}
+#app-content.snk-app button.snk-btn--ghost:hover,
+#app-content-wrapper button.snk-btn--ghost:hover,
+.snk-dialog button.snk-btn--ghost:hover {
+	background: var(--snk-surface) !important;
+	border-color: var(--snk-form-border) !important;
 }
 .snk-btn:disabled,
 .snk-btn[aria-disabled="true"] {
@@ -3527,6 +3626,13 @@ dialog.snk-dialog[open] {
 	.snk-callout,
 	.snk-dialog {
 		border-width: 2px;
+	}
+	/* The <button> armor above pins border-width:1px via !important —
+	 * re-thicken under prefers-contrast. */
+	#app-content.snk-app button.snk-btn,
+	#app-content-wrapper button.snk-btn,
+	.snk-dialog button.snk-btn {
+		border-width: 2px !important;
 	}
 	.snk-callout {
 		border-inline-start-width: 5px;

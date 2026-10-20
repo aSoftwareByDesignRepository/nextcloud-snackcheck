@@ -144,6 +144,14 @@ final class ThemeAndResponsiveContractTest extends TestCase
 		self::assertStringContainsString('#app-content.snk-app .snk-btn', $css);
 		self::assertStringContainsString('#app-content.snk-app .snk-btn--primary', $css);
 		self::assertStringContainsString('#app-content.snk-app .snk-filter', $css);
+		// <button> armor (button_variant_specificity_collapse): core
+		// button:not(.button-vue,[class^=vs__]) repaints every <button> pale +
+		// borderless at 0-1-1 — variants need ID-scope + !important, incl.
+		// .snk-dialog (JS-built dialogs append to document.body).
+		self::assertStringContainsString('#app-content.snk-app button.snk-btn--primary', $css);
+		self::assertStringContainsString('#app-content.snk-app button.snk-btn--danger', $css);
+		self::assertStringContainsString('.snk-dialog button.snk-btn--primary', $css);
+		self::assertStringContainsString('background: var(--snk-primary) !important', $css);
 		self::assertMatchesRegularExpression(
 			'/\.snk-nav__link\.is-active \.snk-nav__hint[\s\S]{0,80}color:\s*var\(--snk-text\)/',
 			$css

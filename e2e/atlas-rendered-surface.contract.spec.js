@@ -11,7 +11,7 @@
  * designs (tile grids, chip rows, rank lists, nav lists) are SnackCheck
  * design language and opt out via listAllow — never silently skipped.
  */
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
 const { gotoApp } = require('./helpers/auth-guard');
 const { assertAtlasRenderedSurface } = require('../../_shared/e2e/atlas-rendered-surface-contract');
 
@@ -71,5 +71,98 @@ test.describe('ATLAS_RENDERED_SURFACE_CONTRACT', () => {
 			test.skip(true, 'Hospitality mode disabled — page redirects to log');
 		}
 		await assertAtlasRenderedSurface(page, CONTRACT_OPTS);
+	});
+
+	// button_variant_specificity_collapse regression probe (visual critic r1
+	// @3.5.17): NC core `button:not(.button-vue,[class^=vs__])` (0-1-1)
+	// repaints every <button> pale + borderless — single-class variant rules
+	// lose. Anchors are the oracle: core never repaints them, so a <button>
+	// must compute the same fill/ink/border as an <a> with identical classes.
+	// Synthetic probe DOM = no fixture dependence; also covers .snk-dialog
+	// (JS-built confirm/restock dialogs append to document.body).
+	test('ATLAS_RENDERED_SURFACE_CONTRACT button variants paint like anchors', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/log?siteId=1`);
+
+		const report = await page.evaluate(() => {
+			const host = document.querySelector('#app-content-wrapper') || document.getElementById('app-content');
+			if (!host) {
+				return { error: 'no app host' };
+			}
+			const VARIANTS = ['', 'snk-btn--primary', 'snk-btn--secondary', 'snk-btn--ghost', 'snk-btn--danger'];
+			const read = (el) => {
+				const cs = getComputedStyle(el);
+				return {
+					bg: cs.backgroundColor,
+					ink: cs.color,
+					border: `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`,
+				};
+			};
+			const mount = document.createElement('div');
+			mount.id = 'atlas-btn-variant-probe';
+			mount.style.display = 'none';
+			host.appendChild(mount);
+			const rows = [];
+			for (const variant of VARIANTS) {
+				const cls = ('snk-btn ' + variant).trim();
+				const a = document.createElement('a');
+				a.className = cls;
+				a.href = '#';
+				const b = document.createElement('button');
+				b.type = 'button';
+				b.className = cls;
+				mount.append(a, b);
+				rows.push({ scope: 'app', variant: variant || '(base)', anchor: read(a), button: read(b) });
+			}
+			// Disabled state — `button:not(.button-vue):disabled` (0-2-1) is
+			// the same collapse class. Anchors can't :disable; compare against
+			// the aria-disabled design.
+			const aDis = document.createElement('a');
+			aDis.className = 'snk-btn';
+			aDis.href = '#';
+			aDis.setAttribute('aria-disabled', 'true');
+			const bDis = document.createElement('button');
+			bDis.type = 'button';
+			bDis.className = 'snk-btn';
+			bDis.disabled = true;
+			mount.append(aDis, bDis);
+			rows.push({ scope: 'app', variant: '(disabled)', anchor: read(aDis), button: read(bDis) });
+			// Collapse signature: the fill core repaints <button> with.
+			const pale = document.createElement('button');
+			pale.style.backgroundColor = 'var(--color-primary-element-light)';
+			mount.appendChild(pale);
+			const paleBg = getComputedStyle(pale).backgroundColor;
+			// Dialog scope — JS-built dialogs append to document.body, outside
+			// #app-content (snk-confirm-dialog / snk-restock-dialog). Mount
+			// first: getComputedStyle is vacuous on detached elements.
+			const dlg = document.createElement('dialog');
+			dlg.className = 'snk-dialog';
+			document.body.appendChild(dlg);
+			for (const variant of ['snk-btn--primary', 'snk-btn--secondary', 'snk-btn--danger']) {
+				const a = document.createElement('a');
+				a.className = `snk-btn ${variant}`;
+				a.href = '#';
+				const b = document.createElement('button');
+				b.type = 'button';
+				b.className = `snk-btn ${variant}`;
+				dlg.append(a, b);
+				rows.push({ scope: 'dialog', variant, anchor: read(a), button: read(b) });
+			}
+			const out = { rows, paleBg };
+			mount.remove();
+			dlg.remove();
+			return out;
+		});
+
+		expect(report.error).toBeUndefined();
+		for (const row of report.rows) {
+			const label = `${row.scope} ${row.variant}`;
+			expect(row.button.bg, `${label}: <button> bg must equal <a> (got ${row.button.bg}, anchor ${row.anchor.bg})`).toBe(row.anchor.bg);
+			expect(row.button.ink, `${label}: <button> ink must equal <a>`).toBe(row.anchor.ink);
+			expect(row.button.border, `${label}: <button> border must equal <a>`).toBe(row.anchor.border);
+		}
+		// No variant may still wear core's pale repaint.
+		for (const row of report.rows.filter((r) => r.variant !== '(base)' && r.variant !== 'snk-btn--ghost')) {
+			expect(row.button.bg, `${row.scope} ${row.variant}: still paints core --color-primary-element-light`).not.toBe(report.paleBg);
+		}
 	});
 });

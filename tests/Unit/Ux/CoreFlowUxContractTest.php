@@ -125,7 +125,7 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringContainsString('.snk-list__row', $css);
 		self::assertStringContainsString('skip-link', $css);
 		self::assertStringContainsString(':focus-visible', $css);
-		self::assertStringContainsString('@media (max-width: 768px)', $css);
+		self::assertStringContainsString('@media (max-width: 768.98px)', $css);
 		foreach (['mymonth.php', 'audit.php', 'periods.php', 'hospitality.php', 'brreport.php', 'users.php', 'catalog.php'] as $page) {
 			$html = (string)file_get_contents($this->root() . '/templates/pages/' . $page);
 			if (str_contains($html, 'snk-table')) {

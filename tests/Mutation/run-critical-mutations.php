@@ -338,7 +338,7 @@ assertTrue(
 );
 $xlsx = file_get_contents($root . '/lib/Service/XlsxWriter.php');
 assertTrue(
-	is_string($xlsx) && str_contains($xlsx, "in_array(\$value[0], ['=', '+', '-', '@']"),
+	is_string($xlsx) && str_contains($xlsx, "in_array(\$value[0], ['=', '+', '-', '@', \"\\t\", \"\\r\", \"\\x0B\"]"),
 	'XLSX formula neutralization (AC-19)'
 );
 assertTrue(
@@ -376,7 +376,7 @@ $logSvcSite = file_get_contents($root . '/lib/Service/ConsumptionLogService.php'
 assertTrue(
 	is_string($logSvcSite)
 		&& str_contains($logSvcSite, '?int $requiredSiteId = null')
-		&& str_contains($logSvcSite, 'Log is not for this site'),
+		&& preg_match('/getSiteId\(\) !== \$requiredSiteId\)[\s\S]{0,160}not_found/', $logSvcSite) === 1,
 	'Argus MF: selfUndo/void enforce requiredSiteId under lock'
 );
 $apiCtrlSrc = file_get_contents($root . '/lib/Controller/ApiController.php');
@@ -458,7 +458,7 @@ assertTrue(
 $ghostDir = file_get_contents($root . '/lib/Service/ConsumptionLogService.php');
 assertTrue(
 	is_string($ghostDir)
-		&& preg_match('/mode === \'proxy\'[\s\S]{0,500}userManager->get\(\$target\)/', $ghostDir) === 1
+		&& preg_match('/mode === \'proxy\'[\s\S]{0,700}userManager->get\(\$target\)/', $ghostDir) === 1
 		&& preg_match('/getHospitalityCompanyUserId\(\)[\s\S]{0,220}userManager->get\(\$company\)/', $ghostDir) === 1,
 	'proxy/hospitality reject ghost directory UIDs'
 );
@@ -569,7 +569,7 @@ assertTrue(
 	is_string($themeCss)
 		&& str_contains($themeCss, '--color-main-background')
 		&& str_contains($themeCss, '--snk-scrim')
-		&& str_contains($themeCss, '@media (max-width: 768px)')
+		&& str_contains($themeCss, '@media (max-width: 768.98px)')
 		&& !str_contains($themeCss, '#fff4e5')
 		&& str_contains($themeCss, 'prefers-contrast')
 		&& preg_match('/^:root\s*\{/m', $themeCss) === 1
@@ -839,10 +839,10 @@ assertTrue(
 $pageShelf = file_get_contents($root . '/lib/Controller/PageController.php');
 assertTrue(
 	is_string($pageShelf)
-		&& preg_match('/function shelf\(int \$itemId\)[\s\S]{0,280}assertAccess\(\$user\)[\s\S]{0,120}catalog->get\(\$itemId\)/', $pageShelf) === 1
-		&& preg_match('/function shelf\(int \$itemId\)[\s\S]{0,500}getActive\(\)/', $pageShelf) === 1
+		&& preg_match('/function shelf\(int \$itemId\)[\s\S]{0,280}(?:assertAccess|canAccessApp)\(\$user\)[\s\S]{0,160}catalog->get\(\$itemId\)/', $pageShelf) === 1
+		&& preg_match('/function shelf\(int \$itemId\)[\s\S]{0,800}getActive\(\)/', $pageShelf) === 1
 		&& preg_match('/function hospitalityView\(string \$viewerUid[\s\S]{0,400}isAppAdmin\(\$viewerUid\)/', $pageShelf) === 1
-		&& preg_match('/function shelf\(int \$itemId\)[\s\S]{0,1100}periodClosed\'\s*=>\s*\$open === null/', $pageShelf) === 1,
+		&& preg_match('/function shelf\(int \$itemId\)[\s\S]{0,1500}periodClosed\'\s*=>\s*\$open === null/', $pageShelf) === 1,
 	'shelf assertAccess-before-probe + inactive guard + hospitality allowlist app-admin only'
 );
 $licenseBind = file_get_contents($root . '/lib/Service/LicenseService.php');

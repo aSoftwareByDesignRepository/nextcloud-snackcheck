@@ -55,4 +55,33 @@ final class MyMonthStatementPresenterTest extends TestCase
 		self::assertCount(1, $doc['breakdown']);
 		self::assertSame(['Item', 'Qty', 'Amount', 'When'], $doc['columns']);
 	}
+
+	public function testPdfNoteCarriesRealFreeItemCount(): void
+	{
+		$l = $this->createMock(IL10N::class);
+		$l->method('t')->willReturnCallback(static fn (string $s, array $a = []): string => $s);
+		$l->method('n')->willReturnCallback(
+			static fn (string $sing, string $plur, int $count): string => str_replace(
+				'%n', (string)$count, $count === 1 ? $sing : $plur
+			)
+		);
+		$p = new MyMonthStatementPresenter();
+		$doc = $p->buildPdfDocument(
+			$l,
+			'2026-08',
+			'Alex',
+			'2026-08-28 10:00',
+			[
+				['name' => 'Coffee', 'qty' => 1, 'line_total_cents' => 0, 'free' => true, 'createdAt' => '2026-08-27 12:00'],
+				['name' => 'Tea', 'qty' => 2, 'line_total_cents' => 0, 'free' => true, 'createdAt' => '2026-08-27 12:30'],
+			],
+			0,
+			0,
+			0,
+			0,
+			3,
+			false,
+		);
+		self::assertStringContainsString('Free items in this period: 3', $doc['note']);
+	}
 }

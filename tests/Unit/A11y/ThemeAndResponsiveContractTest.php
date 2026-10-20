@@ -94,7 +94,7 @@ final class ThemeAndResponsiveContractTest extends TestCase
 	public function testResponsiveBreakpointsAndSafeArea(): void
 	{
 		$css = $this->css();
-		self::assertStringContainsString('@media (max-width: 768px)', $css);
+		self::assertStringContainsString('@media (max-width: 768.98px)', $css);
 		self::assertStringContainsString('@media (max-width: 480px)', $css);
 		self::assertStringContainsString('safe-area-inset-bottom', $css);
 		self::assertStringContainsString('safe-area-inset-left', $css);
@@ -116,7 +116,7 @@ final class ThemeAndResponsiveContractTest extends TestCase
 		self::assertStringContainsString('@media (forced-colors: active)', $css);
 		// Equal tracks: 2-up below 768; single column only on very narrow phones.
 		self::assertMatchesRegularExpression(
-			'/@media \(max-width: 768px\)[\s\S]{0,900}\.snk-tile-grid\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*;/',
+			'/@media \(max-width: 768.98px\)[\s\S]{0,900}\.snk-tile-grid\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*;/',
 			$css
 		);
 		self::assertMatchesRegularExpression(

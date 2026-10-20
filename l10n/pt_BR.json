@@ -184,7 +184,6 @@
 		"Find users": "Procurar usuários",
 		"Free": "Grátis",
 		"Free items": "Itens grátis",
-		"Free items in this period: %n": "Itens gratuitos neste período: %n",
 		"Free items logged": "Itens grátis registrados",
 		"Generated": "Gerado",
 		"Get the App": "Baixar o app",
@@ -603,7 +602,11 @@
 		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "Você não tem acesso ao SnackCheck. Peça ao administrador do SnackCheck para adicionar você.",
 		"You do not have access to this page.": "Você não tem acesso a esta página.",
 		"Your consumption this period": "O seu consumo neste período",
-		"{used} of {total} tablet seats": "{used} de {total} vagas de tablet"
+		"{used} of {total} tablet seats": "{used} de {total} vagas de tablet",
+		"_Free item in this period: %n_::_Free items in this period: %n_": [
+			"Item gratuito neste período: %n",
+			"Itens gratuitos neste período: %n"
+		]
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

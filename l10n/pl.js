@@ -185,7 +185,6 @@ OC.L10N.register(
 	"Find users" : "Znajdź użytkowników",
 	"Free" : "Gratis",
 	"Free items" : "Gratisowe pozycje",
-	"Free items in this period: %n" : "Bezpłatne pozycje w tym okresie: %n",
 	"Free items logged" : "Zarejestrowane pozycje gratisowe",
 	"Generated" : "Wygenerowano",
 	"Get the App" : "Pobierz aplikację",
@@ -604,6 +603,7 @@ OC.L10N.register(
 	"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you." : "Brak dostępu do SnackCheck. Proszę zwrócić się do administratora SnackCheck o dodanie konta.",
 	"You do not have access to this page." : "Nie masz dostępu do tej strony.",
 	"Your consumption this period" : "Zużycie w bieżącym okresie",
-	"{used} of {total} tablet seats" : "{used} z {total} miejsc tabletowych"
+	"{used} of {total} tablet seats" : "{used} z {total} miejsc tabletowych",
+	"_Free item in this period: %n_::_Free items in this period: %n_" : ["Bezpłatna pozycja w tym okresie: %n","Bezpłatne pozycje w tym okresie: %n","Bezpłatnych pozycji w tym okresie: %n"]
 	}
 );

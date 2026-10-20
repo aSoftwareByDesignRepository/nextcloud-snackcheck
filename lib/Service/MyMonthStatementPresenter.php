@@ -98,7 +98,7 @@ final class MyMonthStatementPresenter
 
 		$note = $l->t('Amounts in EUR. Free items are logged for restock and are not charged.');
 		if ($freeQty > 0) {
-			$note .= ' ' . $l->t('Free items in this period: %n', ['n' => (string)$freeQty]);
+			$note .= ' ' . $l->n('Free item in this period: %n', 'Free items in this period: %n', $freeQty);
 		}
 
 		return [

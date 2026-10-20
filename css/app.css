@@ -1456,7 +1456,7 @@ body.snk-nav-open .snk-nav-backdrop {
 	gap: var(--snk-space-3);
 	margin: 0 0 var(--snk-space-3);
 }
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.snk-form--inline {
 		grid-template-columns: 1fr 1fr;
 	}
@@ -2019,9 +2019,16 @@ body.snk-nav-open .snk-nav-backdrop {
 	text-align: left;
 	padding: var(--snk-space-3);
 	border-bottom: 1px solid var(--snk-border);
+	white-space: normal;
 	overflow-wrap: anywhere;
 }
-.snk-table th { color: var(--snk-muted); font-weight: 600; }
+.snk-table th {
+	color: var(--snk-muted);
+	font-weight: 600;
+	/* Headers hold whole words — anywhere-breaks let auto-layout shrink a
+	 * header column below word width ("Pric e"). td keeps `anywhere`. */
+	overflow-wrap: normal;
+}
 
 .snk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--snk-space-3); }
 .snk-list__row {
@@ -2816,7 +2823,9 @@ body[data-theme-dark-highcontrast] .snk-field select option {
 	pointer-events: auto;
 }
 .snk-toast__text {
+	flex: 1 1 auto;
 	min-width: 0;
+	overflow-wrap: anywhere;
 	text-align: center;
 }
 .snk-toast--ok {
@@ -3294,8 +3303,10 @@ dialog.snk-dialog[open] {
 }
 .snk-fieldset legend { font-weight: 700; padding: 0 var(--snk-space-2); }
 
-/* Phone → tablet (design-system breakpoint-md) */
-@media (max-width: 768px) {
+/* Phone → tablet (design-system breakpoint-md) — mobile owns 768; desktop
+ * rules start at min-width:769px so exactly-768px viewports (iPad portrait)
+ * keep NC-mobile chrome: touch floors + card reflow. */
+@media (max-width: 768.98px) {
 	.snk-shell {
 		padding:
 			max(var(--snk-space-3), env(safe-area-inset-top, 0px))
@@ -4049,7 +4060,7 @@ dialog.snk-dialog[open] {
 	border: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768.98px) {
 	.snk-support-us__options {
 		grid-template-columns: 1fr;
 	}

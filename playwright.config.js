@@ -56,7 +56,7 @@ module.exports = defineConfig({
 		{
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
-			testIgnore: /capture-store-screenshots\.spec\.js|capture-ux-audit\.spec\.js/,
+			testIgnore: /capture-store-screenshots\.spec\.js|capture-ux-audit\.spec\.js|capture-screenshot-matrix\.spec\.js/,
 		},
 		{
 			name: 'chromium-store',

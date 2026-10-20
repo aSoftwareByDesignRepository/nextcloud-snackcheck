@@ -1,0 +1,63 @@
+{
+	"prefix": "snk",
+	"outDir": "craft/web",
+	"viewports": [
+		{ "name": "mobile", "width": 320, "height": 800 },
+		{ "name": "tablet", "width": 768, "height": 800 },
+		{ "name": "desktop", "width": 1280, "height": 800 }
+	],
+	"surfaces": [
+		{
+			"id": "log",
+			"path": "/log?siteId=1",
+			"states": ["populated", "empty"],
+			"emptyDriver": "emptySite",
+			"dark": true
+		},
+		{ "id": "my-month", "path": "/my-month", "states": ["current"] },
+		{
+			"id": "catalog",
+			"path": "/catalog?siteId=1",
+			"states": ["populated", "empty"],
+			"emptyDriver": "emptySite",
+			"dark": true
+		},
+		{
+			"id": "pulse",
+			"path": "/pulse?siteId=1",
+			"states": ["populated", "empty"],
+			"emptyDriver": "emptySite",
+			"dark": true
+		},
+		{ "id": "periods", "path": "/periods", "states": ["populated"] },
+		{
+			"id": "users",
+			"path": "/users?siteId=1",
+			"states": ["populated", "empty"],
+			"emptyDriver": "emptySite"
+		},
+		{ "id": "sites", "path": "/sites", "states": ["populated"] },
+		{
+			"id": "hospitality",
+			"path": "/hospitality",
+			"states": ["current"],
+			"needsHospitality": true,
+			"dark": true
+		},
+		{ "id": "audit", "path": "/audit", "states": ["populated"] },
+		{ "id": "br-report", "path": "/br-report", "states": ["populated"] },
+		{
+			"id": "settings-access",
+			"path": "/settings/access",
+			"states": ["current"],
+			"dark": true
+		},
+		{ "id": "settings-benefits", "path": "/settings/benefits", "states": ["current"] },
+		{ "id": "settings-privacy", "path": "/settings/privacy", "states": ["current"] },
+		{ "id": "settings-pulse", "path": "/settings/pulse", "states": ["current"] },
+		{ "id": "settings-digests", "path": "/settings/digests", "states": ["current"] },
+		{ "id": "settings-unlock", "path": "/settings/unlock", "states": ["current"] },
+		{ "id": "settings-license", "path": "/settings/license", "states": ["current"] },
+		{ "id": "settings-support", "path": "/settings/support", "states": ["current"] }
+	]
+}

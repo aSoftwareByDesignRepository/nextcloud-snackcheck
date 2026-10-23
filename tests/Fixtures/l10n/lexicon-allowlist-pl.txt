@@ -1,0 +1,3 @@
+# Reviewed Polish vocabulary the flat pl_PL wordlist cannot spell.
+# One token per line, lowercase; '#'-comments carry the review reason.
+ogólnoorganizacyjne # reviewed — real Polish compound adjective ogólno- + organizacyjny (organization-wide), standard word-formation

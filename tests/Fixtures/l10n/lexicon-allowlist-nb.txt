@@ -1,0 +1,11 @@
+# Reviewed Bokmål vocabulary the flat nb_NO wordlist cannot spell.
+# One token per line, lowercase; '#'-comments carry the review reason.
+# Entries present in a donor dictionary MUST carry a review marker
+# (shared|loanword|proper|abbrev|reviewed) — otherwise the gate treats
+# them as donor laundering.
+deaktiver # shared — reviewed: Bokmål imperative of deaktivere (NAOB); shared Scandinavian form also spelled in da_DK
+snacken # shared — reviewed: Bokmål definite singular of loanword snack (NAOB: snack m.); definite form coincides with da_DK
+brukeridentifikatorer # reviewed — real nb compound: bruker + identifikatorer (plural of identifikator, NAOB)
+tokenet # loanword — reviewed: nb definite singular of technical loanword token (nb wordlist has 'token' but no -et inflection coverage)
+snackchecks # proper — product name SnackCheck + nb genitive -s (SnackChecks ukentlige påfyllingsliste)
+snackregistreringer # reviewed — real nb compound: snack + registreringer (registrering pl.; snack is NAOB-listed loanword)

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.4 - 2026-10-25
+
+### Fixed
+
+- nb/sv lexicon bleed — annullér→annuller, storna→annullera, reviewed allowlists
+- armor snk-btn variant paint on <button> against NC core repaint
+- media-boundary ownership, table wrap, free-item plural, screenshot-matrix
+- dark-theme accent-ink token + e2e user-state reset
+
+### Changed
+
+- baseline-green guard — kill-test must pass unmutated
+- canonical en/de regen (free-item plural + tablet seats) — shared-pack resync leftover
+- assert intro substitutes %s, never literal (shared pack re-sync)
+- normalize tarball modes + host-side signature audit (GH #47)
+- shared e2e instance-lock harness
+- Atlas farm v3.5.15: snackcheck r2 seal — dual critic ACCEPT
+- add UpgradeBackupStateGuard test support; sync contract tests + l10n catalogs
+- fleet sync — drop deprecated clip: rect(), eslint-clean app-feedback regex
+
 ## 1.1.3 - 2026-10-10
 
 ### Changed

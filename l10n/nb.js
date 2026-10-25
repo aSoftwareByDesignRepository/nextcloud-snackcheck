@@ -9,6 +9,7 @@ OC.L10N.register(
 	"4–8 digits. They type this on the tablet keypad." : "4–8 siffer. Personen taster dem på nettbrettets tastatur.",
 	"[data-snk-action]" : "[data-snk-action]",
 	"[data-snk-form]" : "[data-snk-form]",
+	"_Free item in this period: %n_::_Free items in this period: %n_" : ["Gratisvare i denne perioden: %n","Gratisvarer i denne perioden: %n"],
 	"A license key is stored, but this server cannot verify its signature. Re-apply a correctly signed SNK2 key, or contact support after an app update." : "En lisensnøkkel er lagret, men denne serveren kan ikke verifisere signaturen. Bruk en korrekt signert SNK2-nøkkel på nytt, eller kontakt support etter en appoppdatering.",
 	"A scoped change with acceptance criteria and a delivery date — billed as project work." : "En avgrenset endring med akseptkriterier og en leveringsdato — faktureres som prosjektarbeid.",
 	"Access" : "Tilgang",
@@ -603,7 +604,6 @@ OC.L10N.register(
 	"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you." : "Du har ikke tilgang til SnackCheck. Be SnackCheck-administratoren din om å legge deg til.",
 	"You do not have access to this page." : "Du har ikke tilgang til denne siden.",
 	"Your consumption this period" : "Ditt forbruk denne perioden",
-	"{used} of {total} tablet seats" : "{used} av {total} nettbrettplasser",
-	"_Free item in this period: %n_::_Free items in this period: %n_" : ["Gratisvare i denne perioden: %n","Gratisvarer i denne perioden: %n"]
+	"{used} of {total} tablet seats" : "{used} av {total} nettbrettplasser"
 	}
 );

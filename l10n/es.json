@@ -8,6 +8,10 @@
 		"4–8 digits. They type this on the tablet keypad.": "De 4 a 8 dígitos. La persona los introduce en el teclado de la tableta.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_Free item in this period: %n_::_Free items in this period: %n_": [
+			"Artículo gratuito en este periodo: %n",
+			"Artículos gratuitos en este periodo: %n"
+		],
 		"A license key is stored, but this server cannot verify its signature. Re-apply a correctly signed SNK2 key, or contact support after an app update.": "Hay una clave de licencia guardada, pero este servidor no puede verificar su firma. Vuelva a aplicar una clave SNK2 firmada correctamente, o contacte con soporte tras una actualización de la app.",
 		"A scoped change with acceptance criteria and a delivery date — billed as project work.": "Un cambio delimitado con criterios de aceptación y fecha de entrega — facturado como trabajo de proyecto.",
 		"Access": "Acceso",
@@ -65,7 +69,7 @@
 		"Ask about setup or training": "Consultar sobre configuración o formación",
 		"Ask for a license": "Solicitar una licencia",
 		"Ask for a partner offer": "Solicitar una oferta de partner",
-		"Ask your IT": "Pregunte a su departamento de TI",
+		"Ask your IT": "Pregunte a su departamento de informática",
 		"At least 3 characters — e.g. Forgot badge": "Al menos 3 caracteres — p. ej. Olvidé la tarjeta",
 		"At least 3 characters — e.g. Guest visit": "Al menos 3 caracteres — p. ej. Visita",
 		"At least 4 characters. Keep it secret — anyone with this text can unlock as that person.": "Al menos 4 caracteres. Manténgalo en secreto: quien tenga este texto puede desbloquear como esa persona.",
@@ -602,11 +606,7 @@
 		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "No tiene acceso a SnackCheck. Pida a su administrador de SnackCheck que le añada.",
 		"You do not have access to this page.": "No tiene acceso a esta página.",
 		"Your consumption this period": "Su consumo este período",
-		"{used} of {total} tablet seats": "{used} de {total} plazas de tableta",
-		"_Free item in this period: %n_::_Free items in this period: %n_": [
-			"Artículo gratuito en este periodo: %n",
-			"Artículos gratuitos en este periodo: %n"
-		]
+		"{used} of {total} tablet seats": "{used} de {total} plazas de tableta"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

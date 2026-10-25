@@ -8,6 +8,10 @@
 		"4–8 digits. They type this on the tablet keypad.": "4–8 siffror. Personen skriver dem på tablettangentbordet.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_Free item in this period: %n_::_Free items in this period: %n_": [
+			"Gratisartikel denna period: %n",
+			"Gratisartiklar denna period: %n"
+		],
 		"A license key is stored, but this server cannot verify its signature. Re-apply a correctly signed SNK2 key, or contact support after an app update.": "En licensnyckel finns sparad, men den här servern kan inte verifiera signaturen. Ange en korrekt signerad SNK2-nyckel igen, eller kontakta support efter en appuppdatering.",
 		"A scoped change with acceptance criteria and a delivery date — billed as project work.": "En avgränsad ändring med acceptanskriterier och ett leveransdatum — faktureras som projektarbete.",
 		"Access": "Åtkomst",
@@ -602,11 +606,7 @@
 		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "Du har inte åtkomst till SnackCheck. Be din SnackCheck-administratör att lägga till dig.",
 		"You do not have access to this page.": "Du har inte åtkomst till den här sidan.",
 		"Your consumption this period": "Förbrukning denna period",
-		"{used} of {total} tablet seats": "{used} av {total} tablettplatser",
-		"_Free item in this period: %n_::_Free items in this period: %n_": [
-			"Gratisartikel denna period: %n",
-			"Gratisartiklar denna period: %n"
-		]
+		"{used} of {total} tablet seats": "{used} av {total} tablettplatser"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

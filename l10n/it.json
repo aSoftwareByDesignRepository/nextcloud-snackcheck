@@ -8,6 +8,10 @@
 		"4–8 digits. They type this on the tablet keypad.": "Da 4 a 8 cifre. La persona le digita sulla tastiera del tablet.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_Free item in this period: %n_::_Free items in this period: %n_": [
+			"Articolo gratuito in questo periodo: %n",
+			"Articoli gratuiti in questo periodo: %n"
+		],
 		"A license key is stored, but this server cannot verify its signature. Re-apply a correctly signed SNK2 key, or contact support after an app update.": "È memorizzata una chiave di licenza, ma questo server non può verificarne la firma. Riapplicate una chiave SNK2 firmata correttamente, oppure contattate il supporto dopo un aggiornamento dell’app.",
 		"A scoped change with acceptance criteria and a delivery date — billed as project work.": "Una modifica delimitata con criteri di accettazione e data di consegna — fatturata come lavoro di progetto.",
 		"Access": "Accesso",
@@ -530,12 +534,12 @@
 		"That entry no longer exists. Reload the page and try again.": "Questa voce non esiste più. Ricarica la pagina e riprova.",
 		"That snack is no longer available.": "Quello spuntino non è più disponibile.",
 		"The photo is too large. Maximum size is 2 MB.": "La foto è troppo grande. Dimensione massima: 2 MB.",
-		"The SnackCheck web app always stays free. An SNK2 license unlocks kitchen tablets for your organisation — shared devices staff use to log snacks.": "L'app web SnackCheck resta sempre gratuita. Una licenza SNK2 sblocca i tablet di cucina per la vostra organizzazione — dispositivi condivisi per registrare gli spuntini.",
-		"The web app stays free. An SNK2 key unlocks kitchen tablets for your organisation.": "L’app web resta gratuita. Una chiave SNK2 sblocca i tablet di cucina per la vostra organizzazione.",
+		"The SnackCheck web app always stays free. An SNK2 license unlocks kitchen tablets for your organisation — shared devices staff use to log snacks.": "L'app web SnackCheck resta sempre gratuita. Una licenza SNK2 sblocca i tablet di cucina per la Sua organizzazione — dispositivi condivisi che il personale usa per registrare gli spuntini.",
+		"The web app stays free. An SNK2 key unlocks kitchen tablets for your organisation.": "L'app web resta gratuita. Una chiave SNK2 sblocca i tablet di cucina per la Sua organizzazione.",
 		"This area is for kitchen managers. Your Log and My month are still available.": "Questa area è per i responsabili di cucina. Il Suo Registro e Il mio mese restano disponibili.",
 		"This area is for SnackCheck administrators.": "Questa area è per gli amministratori di SnackCheck.",
 		"This is what payroll takes from your pay for this period.": "Questo è quanto viene trattenuto dalla Sua paga in questo periodo.",
-		"This kitchen is not managed by you.": "Questa cucina non è gestita da te.",
+		"This kitchen is not managed by you.": "Questa cucina non è gestita da questo account.",
 		"This license expires in {days} days. Renew to keep kitchen tablets working.": "Questa licenza scade tra {days} giorni. Rinnovate per mantenere operativi i tablet di cucina.",
 		"This license has expired. Apply a new SNK2 key.": "Questa licenza è scaduta. Applicare una nuova chiave SNK2.",
 		"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server.": "Questa licenza è legata ad un'altra istanza Nextcloud. Riapplicare la chiave SNK2 su questo server.",
@@ -602,11 +606,7 @@
 		"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you.": "Non ha accesso a SnackCheck. Chieda al Suo amministratore SnackCheck di aggiungerLa.",
 		"You do not have access to this page.": "Non hai accesso a questa pagina.",
 		"Your consumption this period": "Il Suo consumo in questo periodo",
-		"{used} of {total} tablet seats": "{used} di {total} posti tablet",
-		"_Free item in this period: %n_::_Free items in this period: %n_": [
-			"Articolo gratuito in questo periodo: %n",
-			"Articoli gratuiti in questo periodo: %n"
-		]
+		"{used} of {total} tablet seats": "{used} di {total} posti tablet"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

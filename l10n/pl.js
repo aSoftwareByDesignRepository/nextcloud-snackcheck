@@ -9,6 +9,7 @@ OC.L10N.register(
 	"4–8 digits. They type this on the tablet keypad." : "4–8 cyfr. Osoba wpisuje je na klawiaturze tabletu.",
 	"[data-snk-action]" : "[data-snk-action]",
 	"[data-snk-form]" : "[data-snk-form]",
+	"_Free item in this period: %n_::_Free items in this period: %n_" : ["Bezpłatna pozycja w tym okresie: %n","Bezpłatne pozycje w tym okresie: %n","Bezpłatnych pozycji w tym okresie: %n"],
 	"A license key is stored, but this server cannot verify its signature. Re-apply a correctly signed SNK2 key, or contact support after an app update." : "Klucz licencyjny jest zapisany, ale ten serwer nie może zweryfikować podpisu. Wprowadź ponownie poprawnie podpisany klucz SNK2 albo skontaktuj się z pomocą po aktualizacji aplikacji.",
 	"A scoped change with acceptance criteria and a delivery date — billed as project work." : "Zmiana o ustalonym zakresie, z kryteriami odbioru i terminem dostawy — rozliczana jako praca projektowa.",
 	"Access" : "Dostęp",
@@ -535,8 +536,8 @@ OC.L10N.register(
 	"The web app stays free. An SNK2 key unlocks kitchen tablets for your organisation." : "Aplikacja webowa pozostaje darmowa. Klucz SNK2 odblokowuje tablety kuchenne w Państwa organizacji.",
 	"This area is for kitchen managers. Your Log and My month are still available." : "Ten obszar jest dla zarządców kuchni. Dziennik i Mój miesiąc pozostają dostępne.",
 	"This area is for SnackCheck administrators." : "Ten obszar jest dla administratorów SnackCheck.",
-	"This is what payroll takes from your pay for this period." : "To potrąci lista płac z Twojej wypłaty w tym okresie.",
-	"This kitchen is not managed by you." : "Ta kuchnia nie jest przez Ciebie zarządzana.",
+	"This is what payroll takes from your pay for this period." : "Tyle lista płac potrąci z wynagrodzenia w tym okresie.",
+	"This kitchen is not managed by you." : "Ta kuchnia nie jest zarządzana przez to konto.",
 	"This license expires in {days} days. Renew to keep kitchen tablets working." : "Ta licencja wygasa za {days} dni. Odnów ją, aby tablety kuchenne nadal działały.",
 	"This license has expired. Apply a new SNK2 key." : "Ta licencja wygasła. Zastosuj nowy klucz SNK2.",
 	"This license is bound to another Nextcloud instance. Re-apply your SNK2 key on this server." : "Ta licencja jest związana z inną instancją Nextcloud. Wprowadź ponownie klucz SNK2 na tym serwerze.",
@@ -550,7 +551,7 @@ OC.L10N.register(
 	"Token: {token}" : "Token: {token}",
 	"Too many attempts. Wait a moment and try again." : "Za dużo prób. Poczekaj chwilę i spróbuj jeszcze raz.",
 	"Top-up" : "Uzupełnianie",
-	"Top-up suggestions become your shopping list." : "Propozycje uzupełnień stają się Twoją listą zakupów.",
+	"Top-up suggestions become your shopping list." : "Propozycje uzupełnień stają się listą zakupów.",
 	"Total" : "Suma",
 	"TOTAL TO DEDUCT" : "ŁĄCZNIE DO POTRĄCENIA",
 	"Totals & book for others" : "Sumy i rejestrowanie za innych",
@@ -603,7 +604,6 @@ OC.L10N.register(
 	"You do not have access to SnackCheck. Ask your SnackCheck administrator to add you." : "Brak dostępu do SnackCheck. Proszę zwrócić się do administratora SnackCheck o dodanie konta.",
 	"You do not have access to this page." : "Nie masz dostępu do tej strony.",
 	"Your consumption this period" : "Zużycie w bieżącym okresie",
-	"{used} of {total} tablet seats" : "{used} z {total} miejsc tabletowych",
-	"_Free item in this period: %n_::_Free items in this period: %n_" : ["Bezpłatna pozycja w tym okresie: %n","Bezpłatne pozycje w tym okresie: %n","Bezpłatnych pozycji w tym okresie: %n"]
+	"{used} of {total} tablet seats" : "{used} z {total} miejsc tabletowych"
 	}
 );

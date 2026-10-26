@@ -1,13 +1,19 @@
 (function () {
 	'use strict';
-	function t(key, fallback) {
+	function t(key, fallback, vars) {
 		if (window.OC && OC.L10N && typeof OC.L10N.translate === 'function') {
 			try {
-				const tr = OC.L10N.translate('snackcheck', key);
+				const tr = OC.L10N.translate('snackcheck', key, vars || undefined);
 				if (tr) return tr;
 			} catch (e) { /* fall through */ }
 		}
-		return fallback || key;
+		var out = fallback || key;
+		if (vars) {
+			for (var name in vars) {
+				out = out.split('{' + name + '}').join(String(vars[name]));
+			}
+		}
+		return out;
 	}
 	/**
 	 * Aristoteles: match server parseEuroToCents — reject scientific notation / negatives.

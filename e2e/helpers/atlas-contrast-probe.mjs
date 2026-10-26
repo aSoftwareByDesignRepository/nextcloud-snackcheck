@@ -163,7 +163,8 @@ const PROBES = [
 		rows: [
 			{ sel: '.snk-badge', kind: 'badge', what: 'text' },
 			{ sel: '.snk-input, .snk-select', kind: 'control-border', what: 'border' },
-			{ sel: '.snk-btn--primary, .snk-btn--secondary', kind: 'cta', what: 'text+border' },
+			{ sel: '.snk-btn--primary, .snk-btn--danger', kind: 'cta-fill', what: 'fill' },
+			{ sel: '.snk-btn--secondary', kind: 'cta-outline', what: 'text+border' },
 		],
 	},
 	{
@@ -181,7 +182,7 @@ const PROBES = [
 		ready: '#snk-main-content',
 		rows: [
 			{ sel: '.snk-input, .snk-select, .snk-field input, .snk-field select', kind: 'control-border', what: 'border' },
-			{ sel: '.snk-btn--primary', kind: 'primary-cta', what: 'text+border' },
+			{ sel: '.snk-btn--primary', kind: 'primary-cta-fill', what: 'fill' },
 		],
 	},
 	{
@@ -250,7 +251,16 @@ async function measure(page, probes) {
 								// verdict can flag outlined controls that lost their frame.
 								item.borderTransparent = bAlpha === 0
 								if (bAlpha > 0) {
-									item.borderRatio = window.__snkProbe.borderRatio(cs.borderColor, bg)
+									// WCAG 1.4.11 asks whether the border identifies the
+									// control against the surface it sits ON — the
+									// surrounding background, not the control's own fill.
+									// For opaque-filled controls (button variants) the own
+									// fill is part of the component, so border-vs-fill is
+									// the inner edge; keep it as a diagnostic pair.
+									const surround = window.__snkProbe.ancestorBg(el)
+									item.surroundBg = surround
+									item.borderRatio = window.__snkProbe.borderRatio(cs.borderColor, surround)
+									item.borderRatioFill = window.__snkProbe.borderRatio(cs.borderColor, bg)
 								}
 							}
 						}

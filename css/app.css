@@ -3805,7 +3805,8 @@ dialog.snk-dialog[open] {
 	font-size: var(--snk-fs-sm, 0.875rem);
 	line-height: var(--snk-line-base, 1.45);
 	white-space: normal;
-	overflow-wrap: anywhere;
+	/* Menu labels keep normal word breaks — anywhere tears mid-word. */
+	overflow-wrap: break-word;
 }
 
 .snk-nav-footer__menu-item:hover {

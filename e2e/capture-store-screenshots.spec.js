@@ -100,5 +100,16 @@ test.describe('App Store screenshots', () => {
 			expect(fs.existsSync(full), `missing ${name}`).toBeTruthy();
 			expect(fs.statSync(full).size).toBeGreaterThan(20_000);
 		}
+
+		// Mirror the gallery into screenshots/appstore/NN.png — info.xml advertises
+		// those URLs, so the capture run must keep the two URL families identical.
+		// 07-settings stays legacy-only (published listing still serves it).
+		const appstoreDir = path.join(outDir, 'appstore');
+		fs.mkdirSync(appstoreDir, { recursive: true });
+		for (const [i, name] of files.slice(0, 6).entries()) {
+			const target = path.join(appstoreDir, `0${i + 1}.png`);
+			fs.copyFileSync(path.join(outDir, name), target);
+			expect(fs.statSync(target).size).toBeGreaterThan(20_000);
+		}
 	});
 });

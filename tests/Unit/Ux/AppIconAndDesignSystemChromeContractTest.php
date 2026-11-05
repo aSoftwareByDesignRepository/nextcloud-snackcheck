@@ -196,7 +196,22 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 		self::assertStringContainsString('<category>tools</category>', $info);
 		self::assertStringNotContainsString('<category>productivity</category>', $info);
 		self::assertStringContainsString('nextcloud-snackcheck', $info);
-		$shots = [
+		// Canonical gallery: info.xml points at screenshots/appstore/NN.png since the
+		// Nov-26 marketing refresh; each advertised URL must resolve in the repo.
+		$gallery = ['01', '02', '03', '04', '05', '06'];
+		foreach ($gallery as $num) {
+			$path = $root . '/screenshots/appstore/' . $num . '.png';
+			self::assertFileExists($path, 'appstore/' . $num . '.png');
+			self::assertGreaterThan(20_000, filesize($path), 'appstore/' . $num . '.png');
+			self::assertStringContainsString(
+				'raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/' . $num . '.png',
+				$info
+			);
+		}
+		// Published-URL persistence: already-released store listings still reference
+		// the descriptive names on main — deleting them 404s live store assets
+		// (see the Sep-26 rename incident; all 7 must stay, incl. settings-only 07).
+		$legacy = [
 			'snackcheck-screenshot-01-log.png',
 			'snackcheck-screenshot-02-my-month.png',
 			'snackcheck-screenshot-03-catalog.png',
@@ -205,13 +220,18 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 			'snackcheck-screenshot-06-users.png',
 			'snackcheck-screenshot-07-settings.png',
 		];
-		foreach ($shots as $name) {
+		foreach ($legacy as $name) {
 			$path = $root . '/screenshots/' . $name;
 			self::assertFileExists($path, $name);
 			self::assertGreaterThan(20_000, filesize($path), $name);
-			self::assertStringContainsString(
-				'raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/' . $name,
-				$info
+		}
+		// The appstore mirror must ship the same captures as the legacy set —
+		// a manual copy that drifts is exactly how the two URL families diverge.
+		foreach (array_combine($gallery, array_slice($legacy, 0, 6)) as $num => $name) {
+			self::assertSame(
+				md5_file($root . '/screenshots/' . $name),
+				md5_file($root . '/screenshots/appstore/' . $num . '.png'),
+				'appstore/' . $num . '.png diverged from ' . $name
 			);
 		}
 		self::assertFileExists($root . '/e2e/capture-store-screenshots.spec.js');

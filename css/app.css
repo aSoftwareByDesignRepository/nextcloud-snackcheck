@@ -2451,7 +2451,7 @@ body.snk-nav-open .snk-nav-backdrop {
 	border: 1px solid var(--snk-border-strong);
 	border-radius: var(--snk-radius-sm);
 	font: inherit;
-	background: var(--snk-bg);
+	background-color: var(--snk-bg);
 	color: inherit;
 }
 .snk-select,
@@ -2521,7 +2521,7 @@ body[data-theme-dark-highcontrast] .snk-field select option {
 .snk-field textarea:disabled {
 	opacity: 1;
 	cursor: not-allowed;
-	background: var(--snk-surface);
+	background-color: var(--snk-surface);
 	color: var(--snk-muted);
 	border-color: var(--snk-form-border);
 }

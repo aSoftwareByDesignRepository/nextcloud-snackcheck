@@ -45,6 +45,7 @@ class Application extends App implements IBootstrap
 				$c->get(CatalogItemMapper::class),
 				$c->get(AuditService::class),
 				$c->get(ITimeFactory::class),
+				$c->get(LoggerInterface::class),
 			);
 		});
 		$context->registerService(EnsureSnackCheckSchema::class, function ($c): EnsureSnackCheckSchema {

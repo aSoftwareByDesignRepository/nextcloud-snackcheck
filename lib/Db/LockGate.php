@@ -40,14 +40,10 @@ class LockGate
 		$row = $result->fetch();
 		$result->closeCursor();
 		if ($row === false) {
-			try {
-				$ins = $this->db->getQueryBuilder();
-				$ins->insert('snk_locks')->values([
-					'lock_key' => $ins->createNamedParameter($key),
-				])->executeStatement();
-			} catch (\Throwable) {
-				// concurrent insert race ok — re-select below
-			}
+			// Atomic insert-or-ignore: a concurrent creator wins and the row is
+			// there for the FOR UPDATE re-select either way; non-unique-violation
+			// errors propagate instead of being absorbed (swallowed_write class).
+			$this->db->insertIgnoreConflict('snk_locks', ['lock_key' => $key]);
 			$result = $this->db->executeQuery($sql, $qb->getParameters(), $qb->getParameterTypes());
 			$row = $result->fetch();
 			$result->closeCursor();

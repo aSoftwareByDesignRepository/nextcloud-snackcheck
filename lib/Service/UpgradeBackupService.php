@@ -412,7 +412,15 @@ class UpgradeBackupService
 	{
 		try {
 			$this->getSnapshotFolder($snapshotId)->delete();
-		} catch (\Throwable) {
+		} catch (\Throwable $e) {
+			// best-effort: cleanup must never mask the failure that triggered it
+			// or abort rotation/purge sweeps — the folder stays visible to
+			// listSnapshots() and the next purge pass retries it.
+			$this->logger->warning('SnackCheck: could not delete upgrade backup folder', [
+				'app' => UpgradeBackupCatalog::APP_ID,
+				'snapshot' => $snapshotId,
+				'exception' => $e,
+			]);
 		}
 	}
 
@@ -615,8 +623,14 @@ class UpgradeBackupService
 
 		$destPath = $this->getAppDataPath($folderName);
 		try {
-			$this->rootFolder->get($destPath)->delete();
+			$existing = $this->rootFolder->get($destPath);
 		} catch (NotFoundException) {
+			$existing = null;
+		}
+		if ($existing !== null) {
+			// A failed delete must not silently merge snapshot rows into stale
+			// appdata — let it abort the restore loudly.
+			$existing->delete();
 		}
 
 		try {

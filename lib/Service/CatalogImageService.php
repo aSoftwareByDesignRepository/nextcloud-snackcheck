@@ -12,6 +12,7 @@ use OCP\Files\IAppData;
 use OCP\Files\NotFoundException as FilesNotFoundException;
 use OCP\Files\SimpleFS\ISimpleFolder;
 use OCP\IDBConnection;
+use Psr\Log\LoggerInterface;
 
 /**
  * One optional picture per catalog item via AppData.
@@ -35,6 +36,7 @@ class CatalogImageService
 		private readonly CatalogItemMapper $mapper,
 		private readonly AuditService $audit,
 		private readonly ITimeFactory $timeFactory,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -167,7 +169,15 @@ class CatalogImageService
 	{
 		try {
 			$this->folder()->getFile($fileName)->delete();
-		} catch (\Throwable) {
+		} catch (\Throwable $e) {
+			// best-effort: the row already points at the new image (or is gone),
+			// so a delete failure only orphans a file — warn for housekeeping
+			// instead of failing the committed mutation (swallowed_write class).
+			$this->logger->warning('SnackCheck: could not delete catalog image file', [
+				'app' => 'snackcheck',
+				'file' => $fileName,
+				'exception' => $e,
+			]);
 		}
 	}
 

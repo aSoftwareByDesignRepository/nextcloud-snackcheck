@@ -511,7 +511,7 @@ OC.L10N.register(
 	"Suggest an improvement" : "Verbesserung vorschlagen",
 	"Support" : "Hilfe",
 	"Support & us" : "Hilfe & Support",
-	"Support macros" : "Support-Makros",
+	"Support macros" : "Hilfe-Makros",
 	"Tablet label" : "Tablet-Bezeichnung",
 	"Tablet seats" : "Tablet-Plätze",
 	"Tags" : "Tags",

@@ -368,7 +368,7 @@ OC.L10N.register(
 	"Payroll summary report" : "Lönesammanfattningsrapport",
 	"People here may open SnackCheck. Kitchen managers and app admins are separate. Turn on Restricted only after you have added at least one allowed user or group — otherwise you can lock yourself out." : "Personer här får öppna SnackCheck. Köksansvariga och appadministratörer är åtskilda. Aktivera Begränsad först efter att minst en tillåten användare eller grupp lagts till — annars kan man låsa ute sig själv.",
 	"Period" : "Tidsperiod",
-	"Period %1$s — to deduct: %2$s EUR (gross %3$s, subsidy %4$s). Review: %5$s" : "Period %1$s — att dra av: %2$s EUR (brutto %3$s, bidrag %4$s). Granskning: %5$s",
+	"Period %1$s — to deduct: %2$s EUR (gross %3$s, subsidy %4$s). Review: %5$s" : "Tidsperiod %1$s — att dra av: %2$s EUR (brutto %3$s, bidrag %4$s). Granskning: %5$s",
 	"Period closed. Ask a kitchen admin to open the next period before logging." : "Perioden är stängd. Be en köksansvarig öppna nästa period före loggning.",
 	"Period totals and booking for others." : "Periodtotaler och bokning för andra.",
 	"Periods" : "Perioder",

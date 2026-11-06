@@ -92,3 +92,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Align `appinfo/version` with `info.xml` and prepare first ready4upload production archive.
+
+## [1.1.5] — 2026-11-05
+
+### Fixed
+
+- cleanup, select bg shorthand, l10n label-in-name
+- break-word)
+- + t() vars forwarding
+
+### Changed
+
+- appstore/NN.png gallery
+- tpl
+- Refresh App Store screenshots from clean marketing captures
+- — judge CTA borders vs surrounding surface (WCAG 1.4.11)
+- — atlas-farm artifacts, docs and l10n batch 2026-10-25
+

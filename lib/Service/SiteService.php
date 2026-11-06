@@ -10,6 +10,7 @@ use OCA\SnackCheck\Db\CatalogItemMapper;
 use OCA\SnackCheck\Db\TerminalDeviceMapper;
 use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\DB\Exception as DbException;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 
@@ -44,7 +45,21 @@ class SiteService
 		$site->setManagersJson('[]');
 		$site->setCreatedAt($now);
 		$site->setUpdatedAt($now);
-		return $this->mapper->insert($site);
+		try {
+			return $this->mapper->insert($site);
+		} catch (DbException $e) {
+			// snk_sites_code_uq race: a concurrent first-use caller (page render,
+			// digest cron, manager API) won the find->insert window. Converge to
+			// the winner row; only rethrow when the re-read truly finds nothing
+			// (unique_index_write_no_conflict_path).
+			if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				$winner = $this->mapper->findByCode(self::DEFAULT_CODE);
+				if ($winner !== null) {
+					return $winner;
+				}
+			}
+			throw $e;
+		}
 	}
 
 	public function getDefaultSiteId(): int

@@ -13,6 +13,10 @@ use OCP\IDBConnection;
 class TerminalDeviceService
 {
 	public const TOKEN_PREFIX = 'snkterm_';
+	// unique-conflict:ok every snk_term_devices write runs under
+	// lockGate->lock(CAPACITY_LOCK) inside beginTransaction; the inserted token_hash
+	// is a fresh random_bytes(32) digest and updates only SET revoked/last_seen —
+	// never the unique-indexed column.
 	/**
 	 * Zeus MF-03: capacity seat races use DB LockGate (snk_locks.terminal_capacity FOR UPDATE),
 	 * not node-local file locks. Constant kept for contracts/mutation asserts.

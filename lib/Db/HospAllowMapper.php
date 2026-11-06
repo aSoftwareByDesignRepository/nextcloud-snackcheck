@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OCA\SnackCheck\Db;
 
+use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\Exception as DbException;
 use OCP\IDBConnection;
 
 /** @template-extends QBMapper<HospAllow> */
@@ -53,6 +55,14 @@ class HospAllowMapper extends QBMapper
 				$this->insert($row);
 			}
 			$this->db->commit();
+		} catch (DbException $e) {
+			$this->db->rollBack();
+			// snk_hosp_user_uq race on concurrent replaceAll: surface a friendly
+			// 409 instead of the raw DB exception (unique_index_write_no_conflict_path).
+			if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new DomainException('conflict', 'Hospitality access list changed concurrently — reload and retry', 409);
+			}
+			throw $e;
 		} catch (\Throwable $e) {
 			$this->db->rollBack();
 			throw $e;

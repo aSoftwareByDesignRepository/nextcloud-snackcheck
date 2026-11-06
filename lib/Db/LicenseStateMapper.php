@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OCA\SnackCheck\Db;
 
+use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\Exception as DbException;
 use OCP\IDBConnection;
 
 /** @template-extends QBMapper<LicenseState> */
@@ -52,6 +54,19 @@ class LicenseStateMapper extends QBMapper
 			}
 			$this->db->commit();
 			return $result;
+		} catch (DbException $e) {
+			$this->db->rollBack();
+			if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				// snk_lic_single_uq race: a concurrent apply won. Same license is an
+				// idempotent replay; a different license must surface a real 409,
+				// never the raw DB exception (unique_index_write_no_conflict_path).
+				$winner = $this->findCurrent();
+				if ($winner !== null && $winner->getLicenseFingerprint() === $state->getLicenseFingerprint()) {
+					return $winner;
+				}
+				throw new DomainException('conflict', 'License state updated concurrently — retry', 409);
+			}
+			throw $e;
 		} catch (\Throwable $e) {
 			$this->db->rollBack();
 			throw $e;

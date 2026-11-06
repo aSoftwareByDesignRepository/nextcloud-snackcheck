@@ -9,6 +9,7 @@ use OCA\SnackCheck\Db\ConsumptionLogMapper;
 use OCA\SnackCheck\Db\PeriodMapper;
 use OCA\SnackCheck\Exception\DomainException;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\DB\Exception as DbException;
 use OCP\IDBConnection;
 use OCP\IUserManager;
 
@@ -149,15 +150,18 @@ class ConsumptionLogService
 			throw $e;
 		} catch (\Throwable $e) {
 			$this->db->rollBack();
-			// Unique constraint race → replay only when fingerprint matches
-			$again = $this->mapper->findByIdempotencyKey($key);
-			if ($again !== null) {
-				$bodyHash = $this->requestFingerprint($input);
-				$stored = $this->storedFingerprint($again);
-				if (!hash_equals($bodyHash, $stored)) {
-					throw new DomainException('idempotency_conflict', 'Idempotency conflict', 409);
+			// snk_logs_idem_uq race: the winner committed while we were in-flight →
+			// replay only when the fingerprint matches (unique_index_write_no_conflict_path).
+			if ($e instanceof DbException && $e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				$again = $this->mapper->findByIdempotencyKey($key);
+				if ($again !== null) {
+					$bodyHash = $this->requestFingerprint($input);
+					$stored = $this->storedFingerprint($again);
+					if (!hash_equals($bodyHash, $stored)) {
+						throw new DomainException('idempotency_conflict', 'Idempotency conflict', 409);
+					}
+					return ['log' => $again, 'replay' => true, 'httpStatus' => 200];
 				}
-				return ['log' => $again, 'replay' => true, 'httpStatus' => 200];
 			}
 			throw $e;
 		}
@@ -229,6 +233,9 @@ class ConsumptionLogService
 					throw new DomainException('not_found', 'Log not found', 404);
 				}
 			}
+			// unique-conflict:ok this update writes voided_at/voided_by/void_reason only —
+			// the unique-indexed idempotency_key column is never re-SET, so the write
+			// cannot trip snk_logs_idem_uq; the ->insert race path carries the real catch.
 			$log->setVoidedAt($this->timeFactory->getDateTime());
 			$log->setVoidedBy($actorUid);
 			$log->setVoidReason($reason);

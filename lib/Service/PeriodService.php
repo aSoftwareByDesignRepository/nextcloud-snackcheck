@@ -94,6 +94,10 @@ class PeriodService
 		return $period;
 	}
 
+	// unique-conflict:ok every snk_periods write in this file is serialised by
+	// lockOpenPeriodGate() (snk_locks SELECT … FOR UPDATE) inside beginTransaction —
+	// label/open_guard writes (insertLabeledOpenPeriod, close, reopen) cannot race,
+	// and markHandedToHr updates only non-unique columns.
 	private function insertLabeledOpenPeriod(\DateTimeInterface $now): Period
 	{
 		$baseLabel = $now->format('Y-m');

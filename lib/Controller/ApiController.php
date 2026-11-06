@@ -44,6 +44,12 @@ use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
 
+// unique-conflict:ok this controller executes no direct writes on
+// unique-indexed tables — every ->insert/->update call delegates to a
+// service/mapper that owns the conflict path (ConsumptionLogService replay
+// catch, PeriodService open-period gate, TerminalDeviceService capacity
+// lock, HospAllowMapper/LicenseStateMapper REASON_UNIQUE catches,
+// UnlockService duplicate catches).
 class ApiController extends Controller
 {
 	use ApiJsonTrait;

@@ -6,6 +6,11 @@ declare(strict_types=1);
  * Atlas Lens 2 — live AuthZ / IDOR proofs against real MariaDB services.
  * Run: docker compose exec -u www-data nextcloud php .../atlas-idor-proof.php
  */
+if (PHP_SAPI !== 'cli') {
+	fwrite(STDERR, "cli only\n");
+	exit(2);
+}
+
 require '/var/www/html/lib/base.php';
 
 use OCA\SnackCheck\Exception\DomainException;

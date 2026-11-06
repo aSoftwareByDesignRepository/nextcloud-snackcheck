@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 /** Atlas Lens 2 — rate limit must trip after DEVICE_API_LIMIT (120/min). */
+if (PHP_SAPI !== 'cli') {
+	fwrite(STDERR, "cli only\n");
+	exit(2);
+}
+
 require '/var/www/html/lib/base.php';
 
 $rl = \OC::$server->get(\OCA\SnackCheck\Service\RateLimitService::class);

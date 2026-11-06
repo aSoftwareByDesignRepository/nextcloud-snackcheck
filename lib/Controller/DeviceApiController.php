@@ -338,6 +338,11 @@ class DeviceApiController extends Controller
 			// Over-fetch then filter so a Munich-heavy directory cannot crowd out Berlin peers.
 			$searchLimit = $siteRoster === null ? $limit : min(200, max($limit * 4, 50));
 			foreach ($this->userManager->search($q, $searchLimit) as $user) {
+				// Deactivated accounts can never be booked for — exclude before
+				// the scope checks so dead logins cannot crowd out colleagues.
+				if (!$user->isEnabled()) {
+					continue;
+				}
 				$uid = $user->getUID();
 				if ($uid === $session['userId']) {
 					continue;

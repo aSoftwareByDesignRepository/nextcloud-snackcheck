@@ -884,6 +884,11 @@ class ApiController extends Controller
 			}
 			$out = [];
 			foreach ($this->userManager->search($q, $limit) as $u) {
+				// Deactivated accounts can never sign in — offering them as
+				// editors/proxies would assign responsibilities to dead logins.
+				if (!$u->isEnabled()) {
+					continue;
+				}
 				$uid = $u->getUID();
 				if (!$directory && !$this->access->canAccessApp($uid)) {
 					continue;

@@ -64,16 +64,23 @@ final class SearchUsersDirectoryScopeTest extends TestCase
 		);
 	}
 
+	private function user(string $uid, string $displayName, bool $enabled = true): IUser
+	{
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		$user->method('getDisplayName')->willReturn($displayName);
+		$user->method('isEnabled')->willReturn($enabled);
+		return $user;
+	}
+
 	/** @return list<IUser> */
 	private function directoryUsers(): array
 	{
-		$allowed = $this->createMock(IUser::class);
-		$allowed->method('getUID')->willReturn('alice');
-		$allowed->method('getDisplayName')->willReturn('Alice');
-		$outsider = $this->createMock(IUser::class);
-		$outsider->method('getUID')->willReturn('bob-outside');
-		$outsider->method('getDisplayName')->willReturn('Bob Outside');
-		return [$allowed, $outsider];
+		return [
+			$this->user('alice', 'Alice'),
+			$this->user('bob-outside', 'Bob Outside'),
+			$this->user('dead-dave', 'Dead Dave', false),
+		];
 	}
 
 	public function testAccessScopeFiltersCanAccessApp(): void

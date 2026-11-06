@@ -246,18 +246,26 @@ final class DeviceApiContractTest extends TestCase
 		$munich = $this->createMock(IUser::class);
 		$munich->method('getUID')->willReturn('munich_only');
 		$munich->method('getDisplayName')->willReturn('Munich Only');
+		$munich->method('isEnabled')->willReturn(true);
 		$eater = $this->createMock(IUser::class);
 		$eater->method('getUID')->willReturn('berlin_eater');
 		$eater->method('getDisplayName')->willReturn('Berlin Eater');
+		$eater->method('isEnabled')->willReturn(true);
 		$mgr = $this->createMock(IUser::class);
 		$mgr->method('getUID')->willReturn('berlin_mgr');
 		$mgr->method('getDisplayName')->willReturn('Berlin Manager');
+		$mgr->method('isEnabled')->willReturn(true);
 		$self = $this->createMock(IUser::class);
 		$self->method('getUID')->willReturn('alice');
 		$self->method('getDisplayName')->willReturn('Alice');
+		$self->method('isEnabled')->willReturn(true);
+		$dead = $this->createMock(IUser::class);
+		$dead->method('getUID')->willReturn('dead_berlin');
+		$dead->method('getDisplayName')->willReturn('Dead Berlin');
+		$dead->method('isEnabled')->willReturn(false);
 
 		$users = $this->createMock(IUserManager::class);
-		$users->method('search')->willReturn([$munich, $eater, $mgr, $self]);
+		$users->method('search')->willReturn([$munich, $eater, $mgr, $self, $dead]);
 
 		$ctrl = $this->controller(
 			terminals: $terminals,
@@ -276,6 +284,7 @@ final class DeviceApiContractTest extends TestCase
 		self::assertContains('berlin_mgr', $ids);
 		self::assertNotContains('munich_only', $ids);
 		self::assertNotContains('alice', $ids);
+		self::assertNotContains('dead_berlin', $ids, 'deactivated accounts must never be colleagues');
 	}
 
 	public function testColleaguesSingleSiteKeepsAppAccessDirectorySearch(): void
@@ -306,8 +315,13 @@ final class DeviceApiContractTest extends TestCase
 		$bob = $this->createMock(IUser::class);
 		$bob->method('getUID')->willReturn('bob');
 		$bob->method('getDisplayName')->willReturn('Bob');
+		$bob->method('isEnabled')->willReturn(true);
+		$dead = $this->createMock(IUser::class);
+		$dead->method('getUID')->willReturn('dead_bob');
+		$dead->method('getDisplayName')->willReturn('Dead Bob');
+		$dead->method('isEnabled')->willReturn(false);
 		$users = $this->createMock(IUserManager::class);
-		$users->method('search')->willReturn([$bob]);
+		$users->method('search')->willReturn([$bob, $dead]);
 
 		$ctrl = $this->controller(
 			terminals: $terminals,

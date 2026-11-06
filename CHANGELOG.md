@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.5 - 2026-11-06
+
+### Fixed
+
+- Deactivated Nextcloud accounts are no longer offered in people and
+  colleague pickers — they can never sign in or be booked for.
+- Disabled dropdown fields show their arrow again instead of looking
+  like plain text inputs.
+- Long navigation menu labels now wrap cleanly instead of breaking the
+  menu layout.
+- Concurrent snack logging is hardened against rare write races that
+  could leave duplicate rows.
+- Corrected several translations (Dutch state label, and texts that no
+  longer matched the controls they describe).
+
+### Changed
+
+- Refreshed App Store screenshots from clean marketing captures.
+
 ## 1.1.4 - 2026-10-25
 
 ### Fixed
@@ -92,20 +111,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Align `appinfo/version` with `info.xml` and prepare first ready4upload production archive.
-
-## [1.1.5] — 2026-11-05
-
-### Fixed
-
-- cleanup, select bg shorthand, l10n label-in-name
-- break-word)
-- + t() vars forwarding
-
-### Changed
-
-- appstore/NN.png gallery
-- tpl
-- Refresh App Store screenshots from clean marketing captures
-- — judge CTA borders vs surrounding surface (WCAG 1.4.11)
-- — atlas-farm artifacts, docs and l10n batch 2026-10-25
 

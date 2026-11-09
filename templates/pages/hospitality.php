@@ -27,7 +27,7 @@ $period = $_['period'] ?? null;
 		<form class="snk-form" method="get" action="">
 			<label class="snk-field" for="snk-hosp-period">
 				<span><?php p($l->t('Period')); ?></span>
-				<select id="snk-hosp-period" name="periodId" onchange="this.form.submit()">
+				<select id="snk-hosp-period" name="periodId" data-snk-autosubmit>
 					<?php foreach ($_['periods'] as $p): ?>
 						<option value="<?php p($p->getId()); ?>" <?php if ($period && (int)$period->getId() === (int)$p->getId()) p('selected'); ?>>
 							<?php p(PeriodDisplay::format((string)$p->getLabel())); ?> (<?php p($p->getState() === 'closed' ? $l->t('Closed') : $l->t('Open')); ?>)

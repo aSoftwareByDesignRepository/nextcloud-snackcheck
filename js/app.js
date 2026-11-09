@@ -1270,6 +1270,11 @@
 		});
 	}
 
+	document.addEventListener('change', function (ev) {
+		const sel = ev.target.closest ? ev.target.closest('[data-snk-autosubmit]') : null;
+		if (sel && sel.form) { sel.form.submit(); }
+	});
+
 	document.addEventListener('click', async function (ev) {
 		const btn = ev.target.closest('[data-snk-action]');
 		if (!btn) return;
@@ -1839,4 +1844,69 @@
 	wireUserSearch();
 	wireEditPhotoInputs();
 	/* Mobile nav: NC34 in-page #snk-nav-toggle + js/mobile-nav.js (core header toggle absent). */
+
+
+	// Settings partials: access mode + hospitality benefit conditional UI —
+	// moved here from inline <script> tags (CSP-blocked).
+	(function () {
+		const mode = document.getElementById('snk-access-mode');
+		const restricted = document.getElementById('snk-access-restricted');
+		const openHint = document.getElementById('snk-access-open-hint');
+		const warn = document.getElementById('snk-access-restricted-warn');
+		function restrictedComplete() {
+			const users = document.getElementById('snk-access-users');
+			const groups = document.getElementById('snk-access-groups');
+			return !!((users && users.value.trim()) || (groups && groups.value.trim()));
+		}
+		function syncAccess() {
+			if (!mode) return;
+			const listed = mode.value === 'listed';
+			if (restricted) restricted.hidden = !listed;
+			if (openHint) openHint.hidden = listed;
+			if (warn) warn.hidden = !listed || restrictedComplete();
+		}
+		if (mode) {
+			mode.addEventListener('change', syncAccess);
+			document.addEventListener('snk-chips-changed', syncAccess);
+			syncAccess();
+		}
+	})();
+
+	(function () {
+		const en = document.getElementById('snk-hosp-enabled');
+		const fields = document.getElementById('snk-hosp-fields');
+		const hint = document.getElementById('snk-hosp-save-hint');
+		function hospComplete() {
+			if (!fields) return false;
+			const company = fields.querySelector('[name="hospitalityCompanyUserId"]');
+			const allow = fields.querySelector('[name="hospitalityAllowedUserIds"]');
+			return !!(company && company.value.trim() && allow && allow.value.trim());
+		}
+		function syncHosp() {
+			if (!en || !fields) return;
+			const on = !!en.checked;
+			fields.hidden = !on;
+			const ok = hospComplete();
+			const save = document.getElementById('snk-benefits-save');
+			if (save) {
+				save.disabled = false;
+				save.setAttribute('aria-disabled', 'false');
+			}
+			if (hint) {
+				hint.hidden = !on || ok;
+			}
+		}
+		if (en && fields) {
+			en.addEventListener('change', syncHosp);
+			fields.querySelectorAll('input').forEach(function (el) {
+				el.addEventListener('input', syncHosp);
+				el.addEventListener('change', syncHosp);
+			});
+			const mo = new MutationObserver(syncHosp);
+			mo.observe(fields, { attributes: true, subtree: true, attributeFilter: ['value'] });
+			document.addEventListener('snk-chips-changed', syncHosp);
+			syncHosp();
+		}
+	})();
+
 })();

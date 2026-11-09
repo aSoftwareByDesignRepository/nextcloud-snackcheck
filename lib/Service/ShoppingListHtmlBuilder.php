@@ -31,12 +31,14 @@ final class ShoppingListHtmlBuilder
 		$buf .= 'th{font-weight:700;}';
 		$buf .= 'caption{caption-side:bottom;text-align:left;color:var(--snk-print-muted);margin-top:0.75rem;font-size:0.95rem;}';
 		$buf .= '.empty{font-size:1.15rem;color:var(--snk-print-muted);}';
-		$buf .= 'button{min-height:44px;padding:0.5rem 1rem;font:inherit;cursor:pointer;}';
-		$buf .= '@media print{body{margin:0.5rem;color:#000;background:#fff;} button{display:none;}';
+		$buf .= '.print-hint{font-size:0.95rem;color:var(--snk-print-muted);}';
+		$buf .= '@media print{body{margin:0.5rem;color:#000;background:#fff;} .print-hint{display:none;}';
 		$buf .= 'th,td,caption{color:#000;border-color:#000;}}';
 		$buf .= '</style></head><body>';
 		$buf .= '<h1>' . $titleEsc . '</h1>';
-		$buf .= '<p><button type="button" onclick="window.print()">Print</button></p>';
+		// Inline scripts/handlers are blocked by the platform CSP — the hint
+		// tells the reader how to print instead of shipping a dead button.
+		$buf .= '<p class="print-hint">Print this page with Ctrl+P (Cmd+P on macOS).</p>';
 		if ($rows === []) {
 			$buf .= '<p class="empty">Nothing to buy right now.</p></body></html>';
 			return $buf;

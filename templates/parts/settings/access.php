@@ -89,26 +89,3 @@ $accessListed = ($s['accessMode'] ?? 'open') === 'listed';
 	</div>
 </form>
 
-<script>
-(function () {
-	const mode = document.getElementById('snk-access-mode');
-	const restricted = document.getElementById('snk-access-restricted');
-	const openHint = document.getElementById('snk-access-open-hint');
-	const warn = document.getElementById('snk-access-restricted-warn');
-	function restrictedComplete() {
-		const users = document.getElementById('snk-access-users');
-		const groups = document.getElementById('snk-access-groups');
-		return !!((users && users.value.trim()) || (groups && groups.value.trim()));
-	}
-	function sync() {
-		if (!mode) return;
-		const listed = mode.value === 'listed';
-		if (restricted) restricted.hidden = !listed;
-		if (openHint) openHint.hidden = listed;
-		if (warn) warn.hidden = !listed || restrictedComplete();
-	}
-	if (mode) mode.addEventListener('change', sync);
-	document.addEventListener('snk-chips-changed', sync);
-	sync();
-})();
-</script>

@@ -329,9 +329,10 @@ final class BachusUxJourneyContractTest extends TestCase
 	public function testBenefitsSaveNeverBrickWalls(): void
 	{
 		$src = (string)file_get_contents($this->root() . '/templates/parts/settings/benefits.php');
-		self::assertStringContainsString('save.disabled = false', $src);
-		self::assertStringNotContainsString('save.disabled = block', $src);
+		self::assertStringNotContainsString('<script', $src);
 		$js = (string)file_get_contents($this->root() . '/js/app.js');
+		self::assertStringContainsString('save.disabled = false', $js);
+		self::assertStringNotContainsString('save.disabled = block', $js);
 		self::assertStringContainsString('Company treats left off', $js);
 		self::assertStringContainsString('subsidyAllowanceEuro', $js);
 	}

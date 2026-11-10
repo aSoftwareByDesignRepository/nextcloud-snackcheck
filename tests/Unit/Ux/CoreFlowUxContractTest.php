@@ -78,16 +78,19 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringNotContainsString("'periods'", $shell);
 		// UX-30: hospitality Save stays enabled; incomplete hospitality auto-clears on submit.
 		self::assertStringContainsString('snk-benefits-save', $benefits);
-		self::assertStringContainsString('save.disabled = false', $benefits);
-		self::assertStringContainsString('aria-disabled', $benefits);
 		self::assertStringContainsString('Monthly subsidy (€)', $benefits);
 		self::assertStringContainsString('subsidyAllowanceEuro', $benefits);
 		self::assertStringContainsString('snk-switch-field', $benefits);
 		self::assertStringContainsString('role="switch"', $benefits);
 		self::assertStringContainsString('id="snk-hosp-enabled"', $benefits);
-		self::assertStringContainsString('const on = !!en.checked;', $benefits);
-		self::assertStringNotContainsString('en.value === \'1\'', $benefits);
-		self::assertStringNotContainsString('save.disabled = block', $benefits);
+		// CSP: conditional-UI sync lives in js/app.js, not an inline <script>.
+		self::assertStringNotContainsString('<script', $benefits);
+		$js = (string)file_get_contents($this->root() . '/js/app.js');
+		self::assertStringContainsString('save.disabled = false', $js);
+		self::assertStringContainsString('aria-disabled', $js);
+		self::assertStringContainsString('const on = !!en.checked;', $js);
+		self::assertStringNotContainsString('en.value === \'1\'', $js);
+		self::assertStringNotContainsString('save.disabled = block', $js);
 	}
 
 	public function testChipPickerRequiresExplicitTarget(): void

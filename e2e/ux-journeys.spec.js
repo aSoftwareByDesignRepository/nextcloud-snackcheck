@@ -452,6 +452,81 @@ test.describe('SnackCheck UX journeys', () => {
 		await expect(page.locator('input[name="subsidyAllowanceEuro"]')).toBeVisible();
 	});
 
+	test('Settings benefits: hospitality switch toggles fields (delegated handler)', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/benefits`);
+		const en = page.locator('#snk-hosp-enabled');
+		const fields = page.locator('#snk-hosp-fields');
+		if (!(await en.count()) || !(await fields.count())) {
+			test.skip(true, 'hospitality fields not rendered on this section');
+		}
+		// CSP remediation @4a49905 moved the inline <script> sync into
+		// js/app.js — the delegated listener must still flip `hidden`.
+		const wasChecked = await en.isChecked();
+		const wasHidden = await fields.evaluate((el) => el.hidden);
+		await en.evaluate((el, next) => {
+			el.checked = next;
+			el.dispatchEvent(new Event('change', { bubbles: true }));
+		}, !wasChecked);
+		await expect.poll(async () => fields.evaluate((el) => el.hidden)).toBe(wasChecked);
+		await en.evaluate((el, next) => {
+			el.checked = next;
+			el.dispatchEvent(new Event('change', { bubbles: true }));
+		}, wasChecked);
+		await expect.poll(async () => fields.evaluate((el) => el.hidden)).toBe(wasHidden);
+	});
+
+	test('Settings access: mode select reveals restricted block (delegated handler)', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/access`);
+		const mode = page.locator('#snk-access-mode');
+		const restricted = page.locator('#snk-access-restricted');
+		const openHint = page.locator('#snk-access-open-hint');
+		if (!(await mode.count()) || !(await restricted.count()) || !(await openHint.count())) {
+			test.skip(true, 'access-mode controls not rendered on this section');
+		}
+		const original = await mode.inputValue();
+		try {
+			await mode.selectOption('listed');
+			await expect.poll(async () => restricted.evaluate((el) => el.hidden)).toBe(false);
+			await expect.poll(async () => openHint.evaluate((el) => el.hidden)).toBe(true);
+			await mode.selectOption('open');
+			await expect.poll(async () => restricted.evaluate((el) => el.hidden)).toBe(true);
+			await expect.poll(async () => openHint.evaluate((el) => el.hidden)).toBe(false);
+		} finally {
+			await mode.selectOption(original).catch(() => {});
+		}
+	});
+
+	test('Delegated autosubmit: data-snk-autosubmit change submits its form', async ({ page }) => {
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/access`);
+		const submitted = await page.evaluate(() => {
+			const form = document.createElement('form');
+			form.id = 'snk-autosubmit-probe';
+			const sel = document.createElement('select');
+			sel.setAttribute('data-snk-autosubmit', '');
+			sel.name = 'probe';
+			sel.innerHTML = '<option value="a">a</option><option value="b">b</option>';
+			form.appendChild(sel);
+			document.body.appendChild(form);
+			let hit = null;
+			const orig = HTMLFormElement.prototype.submit;
+			HTMLFormElement.prototype.submit = function () { hit = this.id; };
+			sel.value = 'b';
+			sel.dispatchEvent(new Event('change', { bubbles: true }));
+			HTMLFormElement.prototype.submit = orig;
+			form.remove();
+			return hit;
+		});
+		expect(submitted).toBe('snk-autosubmit-probe');
+
+		// Hospitality period select carries the delegated hook, no inline onchange.
+		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/hospitality`);
+		const period = page.locator('#snk-hosp-period');
+		if (await period.count()) {
+			expect(await period.getAttribute('data-snk-autosubmit')).not.toBeNull();
+			expect(await period.getAttribute('onchange')).toBeNull();
+		}
+	});
+
 	test('Log: mode bar sits above tiles when present', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/`);
 		const modeBar = page.locator('.snk-mode-bar--surface');

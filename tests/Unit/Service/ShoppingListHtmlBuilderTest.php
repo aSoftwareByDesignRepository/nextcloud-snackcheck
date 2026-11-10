@@ -22,14 +22,20 @@ final class ShoppingListHtmlBuilderTest extends TestCase
 			],
 		], 'Buy list');
 		self::assertStringContainsString('<!DOCTYPE html>', $html);
-		self::assertStringContainsString('window.print()', $html);
+		// CSP pins: no inline handler/button — the print affordance is a hint.
+		self::assertStringContainsString('print-hint', $html);
+		self::assertStringContainsString('Ctrl+P', $html);
+		self::assertStringNotContainsString('window.print()', $html);
+		self::assertStringNotContainsString('onclick=', $html);
+		self::assertStringNotContainsString('<button', $html);
 		self::assertStringContainsString('Cola &lt;script&gt;', $html);
 		self::assertStringNotContainsString('<script>', $html);
 		self::assertStringContainsString('<th scope="col">Item</th>', $html);
 		self::assertStringContainsString('>4</td>', $html);
 		self::assertStringContainsString('color-scheme:light dark', $html);
 		self::assertStringContainsString('CanvasText', $html);
-		self::assertStringContainsString('min-height:44px', $html);
+		self::assertStringContainsString('@media print', $html);
+		self::assertStringContainsString('.print-hint{display:none;}', $html);
 	}
 
 	public function testEmptyListHasHonestEmptyState(): void

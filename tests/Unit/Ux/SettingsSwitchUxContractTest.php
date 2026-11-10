@@ -22,9 +22,12 @@ final class SettingsSwitchUxContractTest extends TestCase
 		$benefits = (string)file_get_contents($this->root() . '/templates/parts/settings/benefits.php');
 		$privacy = (string)file_get_contents($this->root() . '/templates/parts/settings/privacy.php');
 		$digests = (string)file_get_contents($this->root() . '/templates/parts/settings/digests.php');
-		self::assertStringContainsString('const on = !!en.checked;', $benefits);
-		self::assertStringNotContainsString('en.value === \'1\'', $benefits);
-		self::assertStringNotContainsString('en.checked || en.value', $benefits);
+		// CSP: the checked-only sync moved from inline <script> to js/app.js.
+		self::assertStringNotContainsString('<script', $benefits);
+		$js = (string)file_get_contents($this->root() . '/js/app.js');
+		self::assertStringContainsString('const on = !!en.checked;', $js);
+		self::assertStringNotContainsString('en.value === \'1\'', $js);
+		self::assertStringNotContainsString('en.checked || en.value', $js);
 		self::assertStringContainsString('id="snk-hosp-enabled"', $benefits);
 		self::assertStringContainsString('role="switch"', $benefits);
 		self::assertMatchesRegularExpression(

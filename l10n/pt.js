@@ -503,7 +503,7 @@ OC.L10N.register(
 	"Something went wrong. Please try again." : "Algo correu mal. Tente novamente.",
 	"span" : "span",
 	"State" : "Estado",
-	"Stock" : "Stock",
+	"Stock" : "Estoque",
 	"Stock & restock" : "Stock e reposição",
 	"Subsidy" : "Subsídio",
 	"Subsidy & kitchens" : "Subsídio e cozinhas",

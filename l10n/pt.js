@@ -504,7 +504,7 @@ OC.L10N.register(
 	"span" : "span",
 	"State" : "Estado",
 	"Stock" : "Estoque",
-	"Stock & restock" : "Stock e reposição",
+	"Stock & restock" : "Estoque e reposição",
 	"Subsidy" : "Subsídio",
 	"Subsidy & kitchens" : "Subsídio e cozinhas",
 	"Subsidy allowance (cents)" : "Subsídio (cêntimos)",

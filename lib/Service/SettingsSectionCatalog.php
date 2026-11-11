@@ -33,6 +33,7 @@ final class SettingsSectionCatalog
 		'pulse',
 		'digests',
 		'unlock',
+		'transfer',
 		'license',
 		'support',
 	];
@@ -72,6 +73,7 @@ final class SettingsSectionCatalog
 			'pulse' => $l->t('Kitchen overview settings'),
 			'digests' => $l->t('Reminder emails'),
 			'unlock' => $l->t('Unlock PIN / QR'),
+			'transfer' => $l->t('Transfer configuration'),
 			'license' => $l->t('Official tablet licenses'),
 			'support' => $l->t('Support & us'),
 			default => $l->t('Settings'),
@@ -90,6 +92,7 @@ final class SettingsSectionCatalog
 			'pulse' => $l->t('Overview'),
 			'digests' => $l->t('Emails'),
 			'unlock' => $l->t('Unlock PIN / QR'),
+			'transfer' => $l->t('Transfer'),
 			'license' => $l->t('License'),
 			/* Short chip label — page H1 still uses “Support & us”. */
 			'support' => $l->t('Support'),
@@ -109,6 +112,7 @@ final class SettingsSectionCatalog
 			'pulse' => $l->t('How many days the overview uses for snacks and restock.'),
 			'digests' => $l->t('Optional emails before month end and weekly restock reminders.'),
 			'unlock' => $l->t('PIN or QR so people can unlock the kitchen tablet. Keep secrets offline.'),
+			'transfer' => $l->t('Copy all settings, catalogues and data between a test and a production instance — one encrypted file, dry-run before anything is written.'),
 			'license' => $l->t('The web app stays free. An SNK2 key unlocks kitchen tablets for your organisation.'),
 			'support' => '',
 			default => '',

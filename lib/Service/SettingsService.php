@@ -230,6 +230,80 @@ class SettingsService
 	}
 
 	/**
+	 * Per-key write normalisation shared with the config-transfer import
+	 * (validator parity, spec NN-08): the exact clamp/enum logic the typed
+	 * setters apply, addressable by appconfig key. Throws
+	 * \InvalidArgumentException for unknown keys so invalid file values are
+	 * rejected identically to what the settings API would accept.
+	 */
+	public function normalizeForWrite(string $key, mixed $raw): string
+	{
+		$v = is_string($raw) ? trim($raw) : '';
+		switch ($key) {
+			case self::KEY_SUBSIDY:
+				return (string)max(0, (int)$v);
+			case self::KEY_HOSP_ENABLED:
+			case self::KEY_MULTI_SITE:
+			case self::KEY_PRIVACY_TOTALS:
+			case self::KEY_WEEKLY_TOPUP:
+			case self::KEY_DIGEST_ENABLED:
+			case self::KEY_DIGEST_SKIP_ZERO:
+				// '' is a legitimately stored state (unset-but-present key the
+				// getters read as false) — normalise it like the getters do.
+				if ($v === '') {
+					return '0';
+				}
+				if (!in_array($v, ['0', '1'], true)) {
+					throw new \InvalidArgumentException('INVALID_BOOL');
+				}
+				return $v;
+			case self::KEY_HOSP_COMPANY:
+				return $v;
+			case self::KEY_PACE_WINDOW:
+				if ($v === '') {
+					return '14';
+				}
+				$d = (int)$v;
+				if (!in_array($d, [7, 14, 30], true)) {
+					throw new \InvalidArgumentException('INVALID_PACE_WINDOW');
+				}
+				return (string)$d;
+			case self::KEY_RESTOCK_HORIZON:
+				return (string)max(1, (int)$v);
+			case 'personal_digest_days_before':
+				if ($v === '') {
+					return '3';
+				}
+				$d = (int)$v;
+				if ($d < 1 || $d > 14) {
+					throw new \InvalidArgumentException('INVALID_DAYS_BEFORE');
+				}
+				return (string)$d;
+			case self::KEY_ACCESS_MODE:
+				if (!in_array($v, ['open', 'listed'], true)) {
+					throw new \InvalidArgumentException('INVALID_ACCESS_MODE');
+				}
+				return $v;
+			case self::KEY_ACCESS_GROUPS:
+			case self::KEY_ACCESS_USERS:
+			case self::KEY_APP_ADMINS:
+				$list = json_decode($v, true, 8, JSON_THROW_ON_ERROR);
+				if (!is_array($list) || array_is_list($list) === false) {
+					throw new \InvalidArgumentException('INVALID_ID_LIST');
+				}
+				$clean = [];
+				foreach ($list as $id) {
+					if (is_string($id) && $id !== '') {
+						$clean[] = $id;
+					}
+				}
+				return json_encode(array_values(array_unique($clean)), JSON_THROW_ON_ERROR);
+			default:
+				throw new \InvalidArgumentException('UNKNOWN_SETTING_KEY');
+		}
+	}
+
+	/**
 	 * @return array<string, mixed>
 	 */
 	public function getAll(): array

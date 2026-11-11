@@ -67,6 +67,7 @@ class PageController extends Controller
 		private readonly IL10N $l10n,
 		private readonly MyMonthStatementPresenter $myMonthStatement,
 		private readonly InstanceId $instanceId,
+		private readonly \OCA\SnackCheck\ConfigTransfer\TransferReceiptStore $transferReceipts,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -611,6 +612,10 @@ class PageController extends Controller
 				. '?subject=' . rawurlencode($licenseSubject);
 			$payload['instanceId'] = $this->instanceId->get();
 		}
+		if ($section === 'transfer') {
+			$payload['isSystemAdmin'] = $this->groupManager->isAdmin($user);
+			$payload['transferLastReceipt'] = $this->transferReceipts->lastReceipt();
+		}
 		if ($section === 'support') {
 			$payload['supportUsLinks'] = new SupportUsLinks(
 				'SnackCheck',
@@ -671,6 +676,11 @@ class PageController extends Controller
 		}
 		Util::addStyle('snackcheck', 'app');
 		Util::addScript('snackcheck', 'app');
+		if (($params['section'] ?? '') === 'transfer') {
+			Util::addStyle('snackcheck', 'common/transfer');
+			Util::addScript('snackcheck', 'transfer-bridge');
+			Util::addScript('snackcheck', 'transfer');
+		}
 		Util::addScript('snackcheck', 'common/app-feedback');
 		$params['pageId'] = $pageId;
 		$params['userId'] = $user;

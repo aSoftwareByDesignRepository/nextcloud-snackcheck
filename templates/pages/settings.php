@@ -19,6 +19,7 @@ $snkSettingsSectionFiles = [
 	'pulse' => 'pulse.php',
 	'digests' => 'digests.php',
 	'unlock' => 'unlock.php',
+	'transfer' => 'transfer.php',
 	'license' => 'license.php',
 	'support' => 'support.php',
 ];

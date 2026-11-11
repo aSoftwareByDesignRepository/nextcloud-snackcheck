@@ -39,6 +39,12 @@ return [
 		['name' => 'api#registerTerminal', 'url' => '/api/admin/license/terminals', 'verb' => 'POST'],
 		['name' => 'api#revokeTerminal', 'url' => '/api/admin/license/terminals/revoke', 'verb' => 'POST'],
 		['name' => 'api#saveSettings', 'url' => '/api/admin/settings', 'verb' => 'POST'],
+		// ── Config & data transfer (test → production) ──────────────────
+		['name' => 'transfer_api#status', 'url' => '/api/admin/transfer/status', 'verb' => 'GET'],
+		['name' => 'transfer_api#export', 'url' => '/api/admin/transfer/export', 'verb' => 'POST'],
+		['name' => 'transfer_api#preview', 'url' => '/api/admin/transfer/preview', 'verb' => 'POST'],
+		['name' => 'transfer_api#apply', 'url' => '/api/admin/transfer/apply', 'verb' => 'POST'],
+		['name' => 'transfer_api#reconcile', 'url' => '/api/admin/transfer/reconcile', 'verb' => 'POST'],
 		['name' => 'api#setUnlockPin', 'url' => '/api/admin/unlock/pin', 'verb' => 'POST'],
 
 		// Device API (Bearer snkterm_)

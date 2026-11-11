@@ -77,6 +77,71 @@ class Application extends App implements IBootstrap
 		$context->registerService(BackupBeforeUpdate::class, function ($c): BackupBeforeUpdate {
 			return new BackupBeforeUpdate($c->get(UpgradeBackupService::class));
 		});
+		// ── Config & data transfer (test → production) ──────────────────
+		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferManifest::class, fn () => new \OCA\SnackCheck\ConfigTransfer\TransferManifest());
+		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferHooks::class, function ($c): \OCA\SnackCheck\ConfigTransfer\TransferHooks {
+			return new \OCA\SnackCheck\ConfigTransfer\TransferHooks(
+				$c->get(\OCA\SnackCheck\Service\SettingsService::class),
+				$c->get(\OCA\SnackCheck\Service\AccessControlService::class),
+				$c->get(UpgradeBackupService::class),
+				$c->get(\OCA\SnackCheck\Service\AuditService::class),
+				$c->get(\OCP\IUserManager::class),
+				$c->get(\OCP\IGroupManager::class),
+			);
+		});
+		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferPendingStore::class, function ($c): \OCA\SnackCheck\ConfigTransfer\TransferPendingStore {
+			return new \OCA\SnackCheck\ConfigTransfer\TransferPendingStore(
+				$c->get(IRootFolder::class),
+				$c->get(IConfig::class),
+				'snackcheck',
+			);
+		});
+		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferReceiptStore::class, function ($c): \OCA\SnackCheck\ConfigTransfer\TransferReceiptStore {
+			return new \OCA\SnackCheck\ConfigTransfer\TransferReceiptStore(
+				$c->get(IConfig::class),
+				'snackcheck',
+			);
+		});
+		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferService::class, function ($c): \OCA\SnackCheck\ConfigTransfer\TransferService {
+			return new \OCA\SnackCheck\ConfigTransfer\TransferService(
+				$c->get(IDBConnection::class),
+				$c->get(IConfig::class),
+				$c->get(\OCP\IUserManager::class),
+				$c->get(\OCP\IGroupManager::class),
+				$c->get(IRootFolder::class),
+				$c->get(IAppManager::class),
+				$c->get(ILockingProvider::class),
+				$c->get(\OCP\IURLGenerator::class),
+				$c->get(LoggerInterface::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferManifest::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferHooks::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferPendingStore::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferReceiptStore::class),
+				'snackcheck',
+				$c->get(\OCP\IAppConfig::class),
+			);
+		});
+		$context->registerService(\OCA\SnackCheck\BackgroundJob\TransferApplyJob::class, function ($c): \OCA\SnackCheck\BackgroundJob\TransferApplyJob {
+			return new \OCA\SnackCheck\BackgroundJob\TransferApplyJob(
+				$c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferService::class),
+				$c->get(ILockingProvider::class),
+				$c->get(\OCP\BackgroundJob\IJobList::class),
+				$c->get(LoggerInterface::class),
+			);
+		});
+		$context->registerService(\OCA\SnackCheck\Controller\TransferApiController::class, function ($c): \OCA\SnackCheck\Controller\TransferApiController {
+			return new \OCA\SnackCheck\Controller\TransferApiController(
+				'snackcheck',
+				$c->get(\OCP\IRequest::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferHooks::class),
+				$c->get(\OCA\SnackCheck\ConfigTransfer\TransferService::class),
+				$c->get(\OCP\BackgroundJob\IJobList::class),
+				$c->get(\OCP\Security\Bruteforce\IThrottler::class),
+				$c->get(\OCP\IGroupManager::class),
+				$c->get(\OCP\IUserSession::class),
+			);
+		});
 	}
 
 	public function boot(IBootContext $context): void

@@ -3337,6 +3337,18 @@ dialog.snk-dialog[open] {
 	inset: 0;
 	margin: auto !important;
 }
+/* The synced config-transfer pack renders its dialogs as full-bleed
+ * sheets at ≤480px (css/common/transfer.css `dialog.snk-dialog{margin:0}`
+ * — transfer.css only loads on settings/transfer, so every .snk-dialog on
+ * that page is a pack dialog). The !important centering above would still
+ * win by specificity and pin the sheet ~33px off the top edge — re-assert
+ * the sheet margin for the two pack dialogs by id. */
+@media (max-width: 480px) {
+	dialog.snk-dialog[open]#snk-transfer-report,
+	dialog.snk-dialog[open]#snk-transfer-progress {
+		margin: 0 !important;
+	}
+}
 .snk-dialog::backdrop { background: var(--snk-scrim); }
 .snk-dialog form,
 .snk-dialog__form {

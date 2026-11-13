@@ -55,14 +55,76 @@
 			}));
 		},
 	};
-	window.SnackCheckMessaging = {
-		alert(text) {
-			if (window.OC && OC.Notification && OC.Notification.showTemporary) {
-				OC.Notification.showTemporary(text);
+	// Messaging: the synced transfer.js asks for .alert/.polite — route both
+	// through the app-owned #snk-toast banner (visible, replace-text dedup,
+	// role=alert|status) and mirror into the snk-transfer-result-live status
+	// region the synced part renders. OC.Notification is gone from NC≥31
+	// bundles — it may only ever be a fallback behind the app-owned channel,
+	// never the only write.
+	const t = (s) => (window.OC && OC.L10N && OC.L10N.translate)
+		? OC.L10N.translate('snackcheck', s) : s;
+	function toast(text, kind) {
+		const el = document.getElementById('snk-toast');
+		if (!el) {
+			throw new Error('SnackCheck: missing #snk-toast');
+		}
+		const isErr = kind === 'error';
+		el.hidden = false;
+		el.classList.remove('snk-toast--ok', 'snk-toast--error');
+		el.classList.add(isErr ? 'snk-toast--error' : 'snk-toast--ok');
+		el.setAttribute('role', isErr ? 'alert' : 'status');
+		el.setAttribute('aria-live', isErr ? 'assertive' : 'polite');
+		el.textContent = '';
+		const span = document.createElement('span');
+		span.className = 'snk-toast__text';
+		span.textContent = String(text);
+		el.appendChild(span);
+		if (isErr) {
+			// §13 family contract: error toasts offer a "Report this
+			// problem" mailto when the shared feedback pack is loaded —
+			// same shape as app.js's own toast().
+			try {
+				const feedback = window.SbdAppFeedback;
+				if (feedback && typeof feedback.buildMailto === 'function') {
+					const link = document.createElement('a');
+					link.className = 'snk-nav-footer__toast-link';
+					link.href = feedback.buildMailto('problem', {});
+					link.textContent = t('Report this problem');
+					el.appendChild(link);
+				}
+			} catch (e) { /* never break the toast */ }
+		}
+		window.clearTimeout(el._snkHide);
+		el._snkHide = window.setTimeout(function () {
+			if (!el.querySelector('[data-snk-action="undo"]')) {
+				el.hidden = true;
+				el.textContent = '';
+				el.classList.remove('snk-toast--ok', 'snk-toast--error');
 			}
-			const el = document.getElementById('snk-transfer-result-live');
-			if (el) el.textContent = text;
-		},
-		polite(text) { this.alert(text); },
-	};
+		}, isErr ? 7000 : 4000);
+	}
+	function announce(text, kind) {
+		try {
+			toast(text, kind);
+			return;
+		} catch (e) { /* fall through to the platform fallback */ }
+		if (window.OC && OC.Notification && OC.Notification.showTemporary) {
+			OC.Notification.showTemporary(text);
+		}
+	}
+	function live(text) {
+		const el = document.getElementById('snk-transfer-result-live');
+		if (el) el.textContent = text;
+	}
+	const msg = window.SnackCheckMessaging || {};
+	if (typeof msg.announce !== 'function') {
+		msg.announce = announce;
+	}
+	if (typeof msg.alert !== 'function') {
+		msg.alert = function (text) { msg.announce(text, 'error'); live(text); };
+	}
+	if (typeof msg.polite !== 'function') {
+		msg.polite = function (text) { msg.announce(text, 'success'); live(text); };
+	}
+	window.SnackCheckMessaging = msg;
 })();

@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.6 - 2026-11-13
+
+### Fixed
+
+- toast channel, 90 runtime strings, ≤480 sheet margin
+- margin:auto on pack dialog — NC core reset uncenters top-layer dialogs
+- sync config-transfer pack — schema cache, file-input specificity, sheet clip
+- sync config-transfer pack — positional t() interpolation
+- zh_CN canonical order + parity coverage, pt label-in-name dep
+- hospitality/settings templates + shopping-list builder
+- converge ensureDefaultSite to winner on snk_sites_code_uq race
+- PHP_SAPI cli guards on Atlas probe scripts
+- unique-index writes carry real conflict paths (unique_index_write_no_conflict_path)
+- people and colleague search skip deactivated accounts
+
+### Added
+
+- config & data transfer — encrypted test→prod pack
+
+### Changed
+
+- pack re-sync — replace-confirm token width (cramped_form_controls)
+- l10n: zh-Hant/zh_TW catalog + locale wiring
+- l10n: add zh_CN catalog
+- l10n: complete translations across the app language set
+- settings/shopping-list contracts follow CSP-migrated handlers
+- repair 1.1.5 section — position, format, real bullets
+
 ## 1.1.5 - 2026-11-06
 
 ### Fixed

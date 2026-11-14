@@ -13,7 +13,6 @@ final class XlsxFormulaEscapeTest extends TestCase
 	public function testInlineCellNeutralizesFormulaPrefixes(): void
 	{
 		$m = new ReflectionMethod(XlsxWriter::class, 'inlineCell');
-		$m->setAccessible(true);
 		$xml = $m->invoke(null, 'A1', '=1+1');
 		self::assertStringContainsString("'=1+1", $xml);
 		$xml2 = $m->invoke(null, 'B1', '+cmd');

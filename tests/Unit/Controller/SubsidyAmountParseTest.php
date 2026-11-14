@@ -17,7 +17,6 @@ final class SubsidyAmountParseTest extends TestCase
 	private function parse(string $raw): int
 	{
 		$ref = new ReflectionMethod(ApiController::class, 'parseEuroToCents');
-		$ref->setAccessible(true);
 		/** @var ApiController $dummy */
 		$dummy = (new \ReflectionClass(ApiController::class))->newInstanceWithoutConstructor();
 		return (int)$ref->invoke($dummy, $raw);
@@ -61,7 +60,8 @@ final class SubsidyAmountParseTest extends TestCase
 		);
 		self::assertStringNotContainsString('Final invariant (defense in depth after apply)', $src);
 		self::assertStringContainsString('never 422 after writes', $src);
-		self::assertStringContainsString('copyBtn.focus()', (string)file_get_contents(dirname(__DIR__, 3) . '/js/app.js'));
+		// Terminal-token UX lives in the shared license page (synced asset).
+		self::assertStringContainsString('tokenCopy', (string)file_get_contents(dirname(__DIR__, 3) . '/js/common/license-page.js'));
 	}
 
 	public function testCatalogLockRowExistsForCreatePath(): void

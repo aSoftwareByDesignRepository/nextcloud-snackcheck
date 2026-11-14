@@ -18,29 +18,46 @@ final class TerminalRevokeUiContractTest extends TestCase
 
 	public function testLicenseSettingsListsTerminalsWithRevoke(): void
 	{
+		// Settings partial is a thin wrapper mounting the canonical shared page;
+		// the terminal list + revoke controls live in templates/common/.
 		$src = (string)file_get_contents($this->root() . '/templates/parts/settings/license.php');
-		self::assertStringContainsString('snk-term-list', $src);
-		self::assertStringContainsString('data-snk-action="revoke-terminal"', $src);
-		self::assertStringContainsString("\$_['terminals']", $src);
-		self::assertStringContainsString('Revoke a tablet if it is lost', $src);
-		self::assertStringContainsString('What this license does', $src);
-		self::assertStringContainsString('SupportUsLinks::SITE_ORIGIN', $src);
-		self::assertStringContainsString('productsUrl', $src);
-		self::assertStringContainsString('data-snk-action="clear-license"', $src);
-		self::assertStringContainsString('Ask for a license', $src);
+		self::assertStringContainsString("common/license-page.php", $src);
+		self::assertStringContainsString('snk-license-key', $src);
+
+		$shared = (string)file_get_contents($this->root() . '/templates/common/license-page.php');
+		self::assertStringContainsString('id="snk-terminal-list-body"', $shared);
+		self::assertStringContainsString('snk-terminal-revoke', $shared);
+		self::assertStringContainsString('data-device-id', $shared);
+		self::assertStringContainsString('<dialog', $shared);
+		self::assertStringNotContainsString('window.confirm', $shared);
+
+		// PageController must feed the device card + revoke endpoint.
+		$ctrl = (string)file_get_contents($this->root() . '/lib/Controller/PageController.php');
+		foreach (['terminals', 'terminalDevicesUsed', 'terminalDevicesLimit',
+			'showTerminal', 'apiRegisterDeviceUrl', 'apiRevokeDeviceUrl',
+			'apiLicenseUrl', 'apiClearLicenseUrl'] as $param) {
+			self::assertStringContainsString("'{$param}'", $ctrl);
+		}
+		self::assertStringContainsString('productsUrl', $ctrl);
+		self::assertStringContainsString('SupportUsLinks', $ctrl);
 	}
 
 	public function testJsWiresRevokeAndClearLicense(): void
 	{
-		$js = (string)file_get_contents($this->root() . '/js/app.js');
-		self::assertStringContainsString("action === 'revoke-terminal'", $js);
-		self::assertStringContainsString('/api/admin/license/terminals/revoke', $js);
+		// Register/revoke/clear are handled by the canonical shared JS against
+		// the data-api-* endpoints — no bespoke app.js license handlers remain.
+		$js = (string)file_get_contents($this->root() . '/js/common/license-page.js');
+		self::assertStringContainsString('apiRevokeDevice', $js);
 		self::assertStringContainsString('deviceId', $js);
-		self::assertStringContainsString("action === 'clear-license'", $js);
-		self::assertStringContainsString("api('DELETE'", $js);
-		self::assertStringContainsString('/api/admin/license', $js);
-		// Danger dialogs focus Cancel first.
-		self::assertStringContainsString('button[value="cancel"]', $js);
+		self::assertStringContainsString('apiClearLicense', $js);
+		self::assertStringContainsString('apiRegisterDevice', $js);
+		self::assertStringNotContainsString('window.confirm', $js);
+
+		$appJs = (string)file_get_contents($this->root() . '/js/app.js');
+		self::assertStringNotContainsString("action === 'revoke-terminal'", $appJs);
+		self::assertStringNotContainsString("action === 'clear-license'", $appJs);
+		self::assertStringNotContainsString("kind === 'license'", $appJs);
+		self::assertStringNotContainsString("kind === 'terminal'", $appJs);
 	}
 
 	public function testSettingsRouteRedirectsLegacyPeriodsSitesNotSupportBody(): void

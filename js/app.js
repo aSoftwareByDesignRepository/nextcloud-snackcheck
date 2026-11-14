@@ -1553,27 +1553,6 @@
 			} else if (action === 'activate-site') {
 				await api('PUT', OC.generateUrl('/apps/snackcheck/api/sites/' + btn.getAttribute('data-site-id')), { active: '1' });
 				window.location.reload();
-			} else if (action === 'revoke-terminal') {
-				const okRevoke = await snkConfirm(
-					t('Revoke this kitchen tablet? It will stop working immediately.', 'Revoke this kitchen tablet? It will stop working immediately.'),
-					t('Revoke tablet', 'Revoke tablet'),
-					{ danger: true }
-				);
-				if (!okRevoke) return;
-				await post(OC.generateUrl('/apps/snackcheck/api/admin/license/terminals/revoke'), {
-					deviceId: btn.getAttribute('data-device-id') || '',
-				});
-				window.location.reload();
-			} else if (action === 'clear-license') {
-				const okClearLic = await snkConfirm(
-					t('Remove this license? Kitchen tablets stop working immediately. The web app stays free.', 'Remove this license? Kitchen tablets stop working immediately. The web app stays free.'),
-					t('Remove license', 'Remove license'),
-					{ danger: true }
-				);
-				if (!okClearLic) return;
-				await api('DELETE', OC.generateUrl('/apps/snackcheck/api/admin/license'));
-				toast(t('License removed', 'License removed'));
-				window.location.reload();
 			}
 		} catch (e) {
 			toast(userFacingError(e), null, true);
@@ -1597,50 +1576,7 @@
 		submitBtns.forEach(function (b) { b.disabled = true; });
 		announce(t('Saving…', 'Saving…'));
 		try {
-			if (kind === 'license') {
-				await post(OC.generateUrl('/apps/snackcheck/api/admin/license'), body);
-				window.location.reload();
-			} else if (kind === 'terminal') {
-				const data = await post(OC.generateUrl('/apps/snackcheck/api/admin/license/terminals'), body);
-				const tok = (data.data && data.data.deviceToken) || '';
-				const panel = document.getElementById('snk-terminal-token-panel') || (function () {
-					const p = document.createElement('div');
-					p.id = 'snk-terminal-token-panel';
-					p.className = 'snk-callout snk-callout--ok';
-					p.setAttribute('role', 'status');
-					form.parentNode.insertBefore(p, form.nextSibling);
-					return p;
-				})();
-				panel.hidden = false;
-				panel.innerHTML = '';
-				const label = document.createElement('p');
-				label.textContent = t('Copy this token onto the kitchen tablet now — it is shown only once.', 'Copy this token onto the kitchen tablet now — it is shown only once.');
-				panel.appendChild(label);
-				const code = document.createElement('code');
-				code.className = 'snk-token';
-				code.textContent = tok;
-				panel.appendChild(code);
-				const copyBtn = document.createElement('button');
-				copyBtn.type = 'button';
-				copyBtn.className = 'snk-btn snk-btn--primary';
-				copyBtn.textContent = t('Copy token', 'Copy token');
-				copyBtn.addEventListener('click', function () {
-					if (navigator.clipboard && navigator.clipboard.writeText) {
-						navigator.clipboard.writeText(tok).then(function () {
-							toast(t('Copied', 'Copied'));
-						}).catch(function () {
-							toast(tok);
-						});
-					} else {
-						toast(tok);
-					}
-				});
-				panel.appendChild(copyBtn);
-				try {
-					copyBtn.focus();
-				} catch (err) { /* ignore */ }
-				toast(t('Token ready — copy it below', 'Token ready — copy it below'));
-			} else if (kind === 'settings') {
+			if (kind === 'settings') {
 				if (Object.prototype.hasOwnProperty.call(body, 'subsidyAllowanceEuro')) {
 					const cents = parseEuroToCentsClient(body.subsidyAllowanceEuro);
 					if (cents === null) {

@@ -139,9 +139,11 @@ final class CoreFlowUxContractTest extends TestCase
 
 	public function testTerminalTokenSurfacesInlinePanel(): void
 	{
-		$js = (string)file_get_contents($this->root() . '/js/app.js');
-		self::assertStringContainsString('snk-terminal-token-panel', $js);
-		self::assertStringContainsString('Copy token', $js);
+		// One-time token + copy affordance: shared license page modal.
+		$tpl = (string)file_get_contents($this->root() . '/templates/common/license-page.php');
+		self::assertStringContainsString('id="snk-license-token-modal"', $tpl);
+		self::assertStringContainsString('id="snk-license-token-copy"', $tpl);
+		self::assertStringContainsString('Copy token', $tpl);
 	}
 
 	public function testAccessibilityTreeBasicsInChrome(): void

@@ -611,6 +611,49 @@ class PageController extends Controller
 			$payload['licenseRenewMailto'] = 'mailto:' . SupportUsLinks::CONTACT_EMAIL
 				. '?subject=' . rawurlencode($licenseSubject);
 			$payload['instanceId'] = $this->instanceId->get();
+			// Shared license page (_shared/license-page) params.
+			$payload['productCode'] = 'SNK2';
+			$payload['companionText'] = $this->l10n->t('the kitchen tablets');
+			$payload['terminalDevicesUsed'] = (int)($payload['terminalUsed'] ?? 0);
+			$payload['terminalDevicesLimit'] = (int)($payload['terminalLimit'] ?? 0);
+			$payload['showTerminal'] = $payload['terminalDevicesLimit'] > 0;
+			$payload['terminalMode'] = 'register';
+			$payload['deviceFields'] = [[
+				'name' => 'siteId',
+				'type' => 'number',
+				'label' => $this->l10n->t('Site ID'),
+				'hint' => $this->l10n->t('Numeric ID of the site this kitchen tablet belongs to.'),
+				'required' => true,
+			]];
+			$payload['deviceStrings'] = [
+				'title' => $this->l10n->t('Kitchen tablets'),
+				'lead' => $this->l10n->t('Each registered kitchen tablet uses one license slot.'),
+				'nameLabel' => $this->l10n->t('Tablet name'),
+				'namePlaceholder' => $this->l10n->t('e.g. Kitchen 1 pass'),
+				'registerLabel' => $this->l10n->t('Register tablet'),
+				'revokeLabel' => $this->l10n->t('Revoke'),
+				'colLabel' => $this->l10n->t('Tablet'),
+				'colDetail' => $this->l10n->t('Site'),
+				'colRegistered' => $this->l10n->t('Registered'),
+				'emptyTitle' => $this->l10n->t('No kitchen tablets yet'),
+				'emptyText' => $this->l10n->t('Register a tablet above to give it access.'),
+			];
+			$siteNames = [];
+			foreach (is_array($payload['sites'] ?? null) ? $payload['sites'] : [] as $siteRow) {
+				$sid = (int)($siteRow['id'] ?? 0);
+				if ($sid > 0) {
+					$siteNames[$sid] = (string)($siteRow['name'] ?? $siteRow['label'] ?? '');
+				}
+			}
+			$payload['terminals'] = array_map(
+				static fn (array $t): array => $t + ['meta' => (string)($siteNames[(int)($t['siteId'] ?? 0)] ?? '')],
+				is_array($payload['terminals'] ?? null) ? $payload['terminals'] : [],
+			);
+			$payload['apiLicenseUrl'] = $this->urlGenerator->linkToRoute('snackcheck.api.applyLicense');
+			$payload['apiClearLicenseUrl'] = $this->urlGenerator->linkToRoute('snackcheck.api.clearLicense');
+			$payload['apiRegisterDeviceUrl'] = $this->urlGenerator->linkToRoute('snackcheck.api.registerTerminal');
+			$payload['apiRevokeDeviceUrl'] = $this->urlGenerator->linkToRoute('snackcheck.api.revokeTerminal');
+			$payload['requesttoken'] = \OCP\Util::callRegister();
 		}
 		if ($section === 'transfer') {
 			$payload['isSystemAdmin'] = $this->groupManager->isAdmin($user);
@@ -676,6 +719,10 @@ class PageController extends Controller
 		}
 		Util::addStyle('snackcheck', 'app');
 		Util::addScript('snackcheck', 'app');
+		if (($params['section'] ?? '') === 'license') {
+			Util::addStyle('snackcheck', 'common/license-page');
+			Util::addScript('snackcheck', 'common/license-page');
+		}
 		if (($params['section'] ?? '') === 'transfer') {
 			Util::addStyle('snackcheck', 'common/transfer');
 			Util::addScript('snackcheck', 'transfer-bridge');

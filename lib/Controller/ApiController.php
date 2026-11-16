@@ -889,20 +889,38 @@ class ApiController extends Controller
 				$this->access->assertAppAdmin($user);
 			}
 			$out = [];
-			foreach ($this->userManager->search($q, $limit) as $u) {
-				// Deactivated accounts can never sign in — offering them as
-				// editors/proxies would assign responsibilities to dead logins.
-				if (!$u->isEnabled()) {
-					continue;
+			// search() only matches the user id on some backends — merge with the
+			// display-name search so people are found by name regardless of uid shape.
+			$byName = [];
+			try {
+				$byName = (array)$this->userManager->searchDisplayName($q, $limit * 2, 0);
+			} catch (\Throwable) {
+				$byName = [];
+			}
+			$seen = [];
+			foreach ([(array)$this->userManager->search($q, $limit * 2, 0), $byName] as $batch) {
+				foreach ($batch as $u) {
+					// Deactivated accounts can never sign in — offering them as
+					// editors/proxies would assign responsibilities to dead logins.
+					if (!$u->isEnabled()) {
+						continue;
+					}
+					$uid = $u->getUID();
+					if ($uid === '' || isset($seen[$uid])) {
+						continue;
+					}
+					$seen[$uid] = true;
+					if (!$directory && !$this->access->canAccessApp($uid)) {
+						continue;
+					}
+					$out[] = [
+						'userId' => $uid,
+						'displayName' => $u->getDisplayName() ?: $uid,
+					];
+					if (count($out) >= $limit) {
+						break 2;
+					}
 				}
-				$uid = $u->getUID();
-				if (!$directory && !$this->access->canAccessApp($uid)) {
-					continue;
-				}
-				$out[] = [
-					'userId' => $uid,
-					'displayName' => $u->getDisplayName() ?: $uid,
-				];
 			}
 			return $this->ok(['users' => $out]);
 		} catch (\Throwable $e) {

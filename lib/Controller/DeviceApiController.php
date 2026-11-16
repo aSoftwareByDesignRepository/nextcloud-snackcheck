@@ -337,13 +337,27 @@ class DeviceApiController extends Controller
 			$colleagues = [];
 			// Over-fetch then filter so a Munich-heavy directory cannot crowd out Berlin peers.
 			$searchLimit = $siteRoster === null ? $limit : min(200, max($limit * 4, 50));
-			foreach ($this->userManager->search($q, $searchLimit) as $user) {
+			// search() only matches the user id on some backends — merge with the
+			// display-name search so colleagues are found by name either way.
+			$byName = [];
+			try {
+				$byName = (array)$this->userManager->searchDisplayName($q, $searchLimit, 0);
+			} catch (\Throwable) {
+				$byName = [];
+			}
+			$seenUids = [];
+			foreach ([(array)$this->userManager->search($q, $searchLimit, 0), $byName] as $batch) {
+			foreach ($batch as $user) {
 				// Deactivated accounts can never be booked for — exclude before
 				// the scope checks so dead logins cannot crowd out colleagues.
 				if (!$user->isEnabled()) {
 					continue;
 				}
 				$uid = $user->getUID();
+				if ($uid === '' || isset($seenUids[$uid])) {
+					continue;
+				}
+				$seenUids[$uid] = true;
 				if ($uid === $session['userId']) {
 					continue;
 				}
@@ -358,8 +372,9 @@ class DeviceApiController extends Controller
 					'displayName' => $user->getDisplayName() ?: $uid,
 				];
 				if (count($colleagues) >= $limit) {
-					break;
+					break 2;
 				}
+			}
 			}
 			usort($colleagues, static fn (array $a, array $b): int => strcasecmp($a['displayName'], $b['displayName']));
 			return new JSONResponse(['colleagues' => $colleagues]);

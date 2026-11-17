@@ -153,4 +153,61 @@ final class SearchUsersDirectoryScopeTest extends TestCase
 		$res = $this->controller($request, $access, $users)->searchUsers();
 		self::assertSame(Http::STATUS_FORBIDDEN, $res->getStatus());
 	}
+
+	public function testDisplayNameOnlyHitMerged(): void
+	{
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(static function (string $k, $default = null) {
+			return match ($k) {
+				'q' => 'carol',
+				'limit' => 20,
+				'scope' => 'directory',
+				default => $default,
+			};
+		});
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('assertKitchenManager');
+		$access->method('assertAppAdmin');
+		$users = $this->createMock(IUserManager::class);
+		// uid-opaque backend: search() cannot see the display-name match.
+		$users->method('search')->willReturn([]);
+		$users->method('searchDisplayName')->willReturn([
+			$this->user('carol-uid', 'Carol Lid'),
+			$this->user('dead-erin', 'Erin Dead', false),
+		]);
+
+		$res = $this->controller($request, $access, $users)->searchUsers();
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		$data = $res->getData();
+		$ids = array_column($data['data']['users'] ?? [], 'userId');
+		self::assertSame(['carol-uid'], $ids);
+	}
+
+	public function testSearchAndDisplayNameUnionDedupedByUid(): void
+	{
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(static function (string $k, $default = null) {
+			return match ($k) {
+				'q' => 'al',
+				'limit' => 20,
+				'scope' => 'directory',
+				default => $default,
+			};
+		});
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('assertKitchenManager');
+		$access->method('assertAppAdmin');
+		$users = $this->createMock(IUserManager::class);
+		$users->method('search')->willReturn([$this->user('alice', 'Alice')]);
+		$users->method('searchDisplayName')->willReturn([
+			$this->user('alice', 'Alice'),
+			$this->user('al-bert', 'Albert'),
+		]);
+
+		$res = $this->controller($request, $access, $users)->searchUsers();
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		$data = $res->getData();
+		$ids = array_column($data['data']['users'] ?? [], 'userId');
+		self::assertSame(['alice', 'al-bert'], $ids);
+	}
 }

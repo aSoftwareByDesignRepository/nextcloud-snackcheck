@@ -338,6 +338,51 @@ final class DeviceApiContractTest extends TestCase
 		self::assertSame(['bob'], $ids);
 	}
 
+	public function testColleaguesDisplayNameOnlyHitMerged(): void
+	{
+		$device = $this->device(1, 1);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$license = $this->createMock(LicenseService::class);
+		$license->method('isTerminalPlanActive')->willReturn(true);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => true,
+			'hospitalityAllowed' => false,
+		]);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+		$access->method('isAppAdmin')->with('alice')->willReturn(true);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isMultiSiteEnabled')->willReturn(false);
+
+		$carol = $this->createMock(IUser::class);
+		$carol->method('getUID')->willReturn('carol-uid');
+		$carol->method('getDisplayName')->willReturn('Carol Lid');
+		$carol->method('isEnabled')->willReturn(true);
+		$users = $this->createMock(IUserManager::class);
+		// uid-opaque backend: search() cannot see the display-name match.
+		$users->method('search')->willReturn([]);
+		$users->method('searchDisplayName')->willReturn([$carol]);
+
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			license: $license,
+			unlock: $unlock,
+			access: $access,
+			settings: $settings,
+			users: $users,
+		);
+		$res = $ctrl->colleagues();
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		$ids = array_column($res->getData()['colleagues'], 'userId');
+		self::assertSame(['carol-uid'], $ids);
+	}
+
 	/**
 	 * Momos: UI hides Unpair behind kitchen-admin, but bearer-only /unpair let any stolen
 	 * snkterm_ brick the kitchen slot. Server must require a live kitchen-admin unlock.

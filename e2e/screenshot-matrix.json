@@ -57,7 +57,8 @@
 		{ "id": "settings-pulse", "path": "/settings/pulse", "states": ["current"] },
 		{ "id": "settings-digests", "path": "/settings/digests", "states": ["current"] },
 		{ "id": "settings-unlock", "path": "/settings/unlock", "states": ["current"] },
-		{ "id": "settings-license", "path": "/settings/license", "states": ["current"] },
+		{ "id": "settings-license", "path": "/settings/license", "states": ["current"], "dark": true },
+		{ "id": "settings-transfer", "path": "/settings/transfer", "states": ["current"], "dark": true },
 		{ "id": "settings-support", "path": "/settings/support", "states": ["current"] }
 	]
 }

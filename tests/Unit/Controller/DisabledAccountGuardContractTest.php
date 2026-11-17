@@ -35,7 +35,7 @@ final class DisabledAccountGuardContractTest extends TestCase
 	{
 		$src = $this->src('lib/Controller/DeviceApiController.php');
 		$this->assertMatchesRegularExpression(
-			'/userManager->search\(\$q, \$searchLimit\)[\s\S]{0,1500}if \(!\$user->isEnabled\(\)\)/',
+			'/userManager->search\(\$q, \$searchLimit[,0-9\s]*\)[\s\S]{0,1500}if \(!\$user->isEnabled\(\)\)/',
 			$src,
 			'DeviceApiController colleague search must skip deactivated accounts'
 		);

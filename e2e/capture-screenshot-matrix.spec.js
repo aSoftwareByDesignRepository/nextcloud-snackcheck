@@ -65,7 +65,8 @@ const READY = {
 	'settings-pulse': { current: '.snk-form' },
 	'settings-digests': { current: '.snk-form' },
 	'settings-unlock': { current: '.snk-form' },
-	'settings-license': { current: '.snk-form' },
+	'settings-license': { current: '#snk-license-page' },
+	'settings-transfer': { current: '#snk-transfer-export-card' },
 	'settings-support': { current: '.snk-support-extra, .snk-support-us' },
 };
 

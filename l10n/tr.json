@@ -2,15 +2,9 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "%2$d cihaz yuvasından %1$d tanesi kullanımda.",
 		"%1$d of %2$d seats assigned": "%2$d lisans hakkından %1$d'i atandı",
-		"%d row(s) need a value on this instance": "%d satırın bu örnekte bir değere ihtiyacı var",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d satır atlandı ve %d başvuru çözümlenemedi — aşağıdaki gruplara bakın.",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s, Nextcloud'unuzda ücretsiz (AGPL) kalır. GitHub'daki hata bildirimleri ve fikirler her zaman beklenir — bu, ücretsiz açık kaynak desteğidir. Kurumunuzun faturalı, rezerve edilebilir yardıma — veya resmi mobil lisanslara — ihtiyacı varsa aşağıdan bir seçenek belirleyin:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s, Nextcloud'unuzda ücretsiz (AGPL) kalır. GitHub'daki hata bildirimleri ve fikirler her zaman beklenir — bu, ücretsiz açık kaynak desteğidir. Kurumunuzun faturalı, rezerve edilebilir yardıma ihtiyacı varsa aşağıdan bir seçenek belirleyin:",
 		"%s%% of logs": "kayıtların %%%s'i",
-		"(%d env-bound value(s) emptied)": "(%d örneğe bağlı değer boşaltıldı)",
-		"(%d filtered)": "(%d filtrelendi)",
-		"(%d secret(s) redacted)": "(%d sır gizlendi)",
-		"(%d unresolved ref)": "(%d çözümlenemeyen başvuru)",
 		"(opens in a new tab)": "(yeni sekmede açılır)",
 		"(unknown — skipped)": "(bilinmiyor — atlandı)",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "10″ Android tablet (Wi‑Fi), Android 10+ — duvara montaj kitleri tercih edin",
@@ -152,7 +146,7 @@
 		"Copy all settings, catalogues and data between a test and a production instance — one encrypted file, dry-run before anything is written.": "Bir test ve bir üretim ortamı arasında tüm ayarları, katalogları ve verileri kopyalayın — tek şifreli dosya, yazmadan önce deneme çalıştırması.",
 		"Copy this token onto the kitchen tablet now — it is shown only once.": "Bu jetonu şimdi mutfak tabletine kopyalayın — yalnızca bir kez gösterilir.",
 		"Copy to site": "Konuma kopyala",
-		"Copy token": "Belirteci kopyala",
+		"Copy token": "Tokenı kopyala",
 		"Could not assign seat.": "Lisans hakkı atanamadı.",
 		"Could not generate a pairing code.": "Eşleştirme kodu oluşturulamadı.",
 		"Could not register device.": "Cihaz kaydedilemedi.",
@@ -199,6 +193,7 @@
 		"Drink": "İçecek",
 		"Drinks": "İçecekler",
 		"EUR": "EUR",
+		"Each registered kitchen tablet uses one license slot.": "Kayıtlı her mutfak tableti bir lisans hakkı kullanır.",
 		"Each registered tablet uses one seat from your SNK2 license.": "Kayıtlı her tablet, SNK2 lisansınızdan bir lisans hakkı kullanır.",
 		"Earlier periods — download again or reopen with a reason.": "Önceki dönemler — yeniden indirin veya bir gerekçeyle yeniden açın.",
 		"Edit": "Düzenle",
@@ -364,6 +359,7 @@
 		"No groups added yet — search above": "Henüz grup eklenmedi — yukarıda arayın",
 		"No items in this period.": "Bu dönemde kalem yok.",
 		"No items.": "Kalem yok.",
+		"No kitchen tablets yet": "Henüz mutfak tableti yok",
 		"No license yet": "Henüz lisans yok",
 		"No matches": "Eşleşme yok",
 		"No matching people found.": "Eşleşen kişi bulunamadı.",
@@ -389,6 +385,7 @@
 		"Nothing logged this month yet.": "Bu ay henüz bir şey kaydedilmedi.",
 		"Nothing needs restocking": "Stok tamamlama gereken bir şey yok",
 		"Nothing needs restocking.": "Stok tamamlama gereken bir şey yok.",
+		"Numeric ID of the site this kitchen tablet belongs to.": "Bu mutfak tabletinin ait olduğu konumun sayısal ID değeri.",
 		"OK (replay)": "Tamam (tekrar)",
 		"OK — a longer passphrase is safer.": "Tamam — daha uzun bir parola daha güvenlidir.",
 		"Off": "Kapalı",
@@ -502,8 +499,10 @@
 		"Refurbished business tablet + VESA mount for cost-effective LOI path": "Uygun maliyetli LOI yolu için yenilenmiş kurumsal tablet + VESA montajı",
 		"Register": "Kaydet",
 		"Register a device above to give it access.": "Erişim vermek için yukarıdan bir cihaz kaydet.",
+		"Register a tablet above to give it access.": "Erişim vermek için yukarıdan bir tablet kaydedin.",
 		"Register device": "Cihaz kaydet",
 		"Register kitchen tablet": "Mutfak tableti kaydet",
+		"Register tablet": "Tablet kaydet",
 		"Registered": "Kayıtlı",
 		"Reminder email before month end": "Ay sonundan önce hatırlatma e-postası",
 		"Reminder emails": "Hatırlatma e-postaları",
@@ -512,7 +511,7 @@
 		"Remove %s": "%s kaldır",
 		"Remove license": "Lisansı kaldır",
 		"Remove mobile seat": "Mobil lisansı kaldır",
-		"Remove mobile seat for this person?": "Bu kişinin mobil koltuğu kaldırılsın mı?",
+		"Remove mobile seat for this person?": "Bu kişinin mobil lisansı kaldırılsın mı?",
 		"Remove picture": "Resmi kaldır",
 		"Remove the organisation license and revoke all seats and devices? This cannot be undone.": "Kuruluş lisansı kaldırılsın ve tüm koltuklar ile cihazlar iptal edilsin mi? Bu işlem geri alınamaz.",
 		"Remove this license? Kitchen tablets stop working immediately. The web app stays free.": "Bu lisans kaldırılsın mı? Mutfak tabletleri hemen çalışmayı bırakır. Web uygulaması ücretsiz kalır.",
@@ -590,6 +589,7 @@
 		"Signature mismatch": "İmza uyuşmazlığı",
 		"Site": "Konum",
 		"Site %1$s:": "%1$s konumu:",
+		"Site ID": "Konum ID",
 		"Site scope": "Konum kapsamı",
 		"Sites": "Konumlar",
 		"Skip email when nothing to deduct (€0)": "Kesinti yokken (€0) e-postayı atla",
@@ -620,7 +620,9 @@
 		"Support & us": "Destek ve biz",
 		"Support macros": "Destek makroları",
 		"TOTAL TO DEDUCT": "KESİLECEK TOPLAM",
+		"Tablet": "Tablet",
 		"Tablet label": "Tablet etiketi",
+		"Tablet name": "Tablet adı",
 		"Tablet seats": "Tablet lisansları",
 		"Tags": "Etiketler",
 		"Tap Add… on a list below, then type a name here. Results go into the list you activated.": "Aşağıdaki listede Ekle…'ye dokunun, sonra buraya bir ad yazın. Sonuçlar etkinleştirdiğiniz listeye girer.",
@@ -658,7 +660,7 @@
 		"This page or item was not found.": "Bu sayfa veya öğe bulunamadı.",
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "Bu sunucunun Nextcloud örnek kimliği (destek / satış referansı için). Lisanslar örneğe bağlı değildir.",
 		"This snack cannot be logged right now.": "Bu atıştırmalık şu anda kaydedilemiyor.",
-		"This token is shown only once. Paste it into the companion app on the device.": "Bu belirteç yalnızca bir kez gösterilir. Cihazdaki eşlik uygulamasına yapıştır.",
+		"This token is shown only once. Paste it into the companion app on the device.": "Bu token yalnızca bir kez gösterilir. Cihazdaki eşlik uygulamasına yapıştır.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Bu işlem %d ayarı ve %d satırı güncelleyecek — hiçbir şey silinmeyecek.",
 		"To deduct": "Kesilecek",
 		"Toggle mobile menu": "Mobil menüyü aç/kapat",
@@ -712,7 +714,6 @@
 		"Void log": "Kayıt iptali",
 		"Waiting for the job…": "İş bekleniyor…",
 		"Warn if stock lasts under (days)": "Stok (gün) içinde tükenirse uyar",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Uyarı: %d satır kalıcı olarak silinecek, ardından dosya verileri yüklenecek.",
 		"Weekly restock email": "Haftalık stok tamamlama e-postası",
 		"What is running low and what to restock.": "Neler azalıyor ve nelerin stoğu tamamlanmalı.",
 		"What payroll will deduct this period.": "Bordronun bu dönem keseceği tutar.",
@@ -743,9 +744,41 @@
 		"Your license expires within 30 days. Contact your vendor to renew.": "Lisansınız 30 gün içinde sona eriyor. Yenilemek için tedarikçinize başvurun.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 örneğe bağlı değer boşaltıldı)",
+			"(%n örneğe bağlı değer boşaltıldı)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtrelendi)",
+			"(%n filtrelendi)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 sır gizlendi)",
+			"(%n sır gizlendi)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 çözümlenemeyen başvuru)",
+			"(%n çözümlenemeyen başvuru)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 başvuru çözümlenemedi — aşağıdaki gruplara bakın.",
+			"%n başvuru çözümlenemedi — aşağıdaki gruplara bakın."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 satırın bu örnekte bir değere ihtiyacı var",
+			"%n satırın bu örnekte bir değere ihtiyacı var"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 satır atlandı.",
+			"%n satır atlandı."
+		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"Bu dönemde ücretsiz kalem: %n",
 			"Bu dönemde ücretsiz kalem: %n"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Uyarı: 1 satır kalıcı olarak silinecek, ardından dosya verileri yüklenecek.",
+			"Uyarı: %n satır kalıcı olarak silinecek, ardından dosya verileri yüklenecek."
 		],
 		"add and update; nothing is deleted": "ekle ve güncelle; hiçbir şey silinmez",
 		"applied": "uygulandı",
@@ -755,6 +788,7 @@
 		"content-type": "content-type",
 		"dialog": "dialog",
 		"e.g. Fridge": "örn. Buzdolabı",
+		"e.g. Kitchen 1 pass": "örn. Mutfak 1",
 		"failed": "başarısız",
 		"kept as-is": "olduğu gibi tutuldu",
 		"li": "li",
@@ -770,6 +804,7 @@
 		"snk-chips-changed": "snk-chips-changed",
 		"span": "span",
 		"the companion apps": "eşlik uygulamaları",
+		"the kitchen tablets": "mutfak tabletleri",
 		"the mobile companion app": "mobil eşlik uygulaması",
 		"undo via snapshot": "anlık görüntüyle geri al",
 		"will be skipped": "atlanacak",

@@ -1,16 +1,10 @@
 {
 	"translations": {
-		"%1$d of %2$d device slots in use.": "%1$d de %2$d espaços para dispositivos em uso.",
+		"%1$d of %2$d device slots in use.": "%1$d de %2$d lugares para dispositivos em uso.",
 		"%1$d of %2$d seats assigned": "%1$d de %2$d lugares atribuídos",
-		"%d row(s) need a value on this instance": "%d linha(s) precisam de um valor nesta instância",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d linha(s) ignorada(s) e %d referência(s) por resolver — vê os grupos abaixo.",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s permanece gratuito (AGPL) no seu Nextcloud. Relatórios de erros e ideias no GitHub são bem-vindos — isso é cuidado open-source gratuito. Se a sua organização precisar de ajuda faturável — ou de licenças móveis oficiais — escolha uma opção abaixo:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s permanece gratuito (AGPL) no seu Nextcloud. Relatórios de erros e ideias no GitHub são bem-vindos — isso é cuidado open-source gratuito. Se a sua organização precisar de ajuda faturável, escolha uma opção abaixo:",
 		"%s%% of logs": "%s%% dos registos",
-		"(%d env-bound value(s) emptied)": "(%d valor(es) ligados à instância esvaziados)",
-		"(%d filtered)": "(%d filtrada(s))",
-		"(%d secret(s) redacted)": "(%d segredo(s) ocultado(s))",
-		"(%d unresolved ref)": "(%d referência(s) por resolver)",
 		"(opens in a new tab)": "(abre num novo separador)",
 		"(unknown — skipped)": "(desconhecido — ignorado)",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "Tablet Android de 10″ (Wi‑Fi), Android 10+ — preferível com kit de montagem na parede",
@@ -56,7 +50,7 @@
 		"Aggregate report": "Relatório agregado",
 		"Alcohol": "Álcool",
 		"All": "Todos",
-		"All device slots are in use. Revoke a device or upgrade your license.": "Todos os espaços para dispositivos estão em uso. Revoga um dispositivo ou aumenta a tua licença.",
+		"All device slots are in use. Revoke a device or upgrade your license.": "Todos os lugares para dispositivos estão em uso. Revoga um dispositivo ou aumenta a tua licença.",
 		"All kitchens": "Todas as cozinhas",
 		"All mobile seats are assigned. Remove a user or upgrade your license.": "Todos os lugares móveis são atribuídos. Remova um utilizador ou atualize a sua licença.",
 		"All sites": "Todos os locais",
@@ -199,6 +193,7 @@
 		"Drink": "Bebida",
 		"Drinks": "Bebidas",
 		"EUR": "EUR",
+		"Each registered kitchen tablet uses one license slot.": "Cada tablet de cozinha registado usa um lugar de licença.",
 		"Each registered tablet uses one seat from your SNK2 license.": "Cada tablet registado usa um lugar da sua licença SNK2.",
 		"Earlier periods — download again or reopen with a reason.": "Períodos anteriores — descarregue novamente ou reabra com um motivo.",
 		"Edit": "Editar",
@@ -364,6 +359,7 @@
 		"No groups added yet — search above": "Ainda sem grupos adicionados — pesquise acima",
 		"No items in this period.": "Sem itens neste período.",
 		"No items.": "Sem itens.",
+		"No kitchen tablets yet": "Ainda sem tablets de cozinha",
 		"No license yet": "Ainda não há licença",
 		"No matches": "Sem correspondências",
 		"No matching people found.": "Nenhuma pessoa correspondente encontrada.",
@@ -389,6 +385,7 @@
 		"Nothing logged this month yet.": "Ainda nada registado este mês.",
 		"Nothing needs restocking": "Nada precisa de reposição",
 		"Nothing needs restocking.": "Nada precisa de reposição.",
+		"Numeric ID of the site this kitchen tablet belongs to.": "ID numérico do local a que este tablet de cozinha pertence.",
 		"OK (replay)": "OK (repetição)",
 		"OK — a longer passphrase is safer.": "OK — uma frase-passe mais longa é mais segura.",
 		"Off": "Desativado",
@@ -430,7 +427,7 @@
 		"PIN unlock": "Desbloqueio por PIN",
 		"Packages and terms:": "Pacotes e condições:",
 		"Page not found": "Página não encontrada",
-		"Pair devices from the linked administration area. Each paired device uses one license slot.": "Emparelha dispositivos a partir da área de administração ligada. Cada dispositivo emparelhado usa um espaço de licença.",
+		"Pair devices from the linked administration area. Each paired device uses one license slot.": "Emparelha dispositivos a partir da área de administração ligada. Cada dispositivo emparelhado usa um lugar de licença.",
 		"Par": "Nível ideal",
 		"Par and on hand power Kitchen pulse Top-up. Leave blank only if you do not track stock.": "O nível ideal e o stock alimentam a Reposição do pulso da cozinha. Deixe em branco só se não acompanhar o stock.",
 		"Passphrase generated and copied.": "Frase-passe gerada e copiada.",
@@ -502,8 +499,10 @@
 		"Refurbished business tablet + VESA mount for cost-effective LOI path": "Tablet empresarial recondicionado + suporte VESA para um percurso LOI económico",
 		"Register": "Registar",
 		"Register a device above to give it access.": "Regista um dispositivo acima para lhe dar acesso.",
+		"Register a tablet above to give it access.": "Registe um tablet acima para lhe dar acesso.",
 		"Register device": "Registar dispositivo",
 		"Register kitchen tablet": "Registar tablet de cozinha",
+		"Register tablet": "Registar tablet",
 		"Registered": "Registado",
 		"Reminder email before month end": "E-mail de lembrete antes do fim do mês",
 		"Reminder emails": "E-mails de lembrete",
@@ -590,6 +589,7 @@
 		"Signature mismatch": "Incompatibilidade de assinatura",
 		"Site": "Local",
 		"Site %1$s:": "Local %1$s:",
+		"Site ID": "ID do local",
 		"Site scope": "Âmbito do local",
 		"Sites": "Locais",
 		"Skip email when nothing to deduct (€0)": "Não enviar e-mail quando não há nada a deduzir (€0)",
@@ -620,7 +620,9 @@
 		"Support & us": "Suporte e nós",
 		"Support macros": "Macros de suporte",
 		"TOTAL TO DEDUCT": "TOTAL A DEDUZIR",
+		"Tablet": "Tablet",
 		"Tablet label": "Etiqueta do tablet",
+		"Tablet name": "Nome do tablet",
 		"Tablet seats": "Lugares de tablet",
 		"Tags": "Etiquetas",
 		"Tap Add… on a list below, then type a name here. Results go into the list you activated.": "Toque em Adicionar… numa lista abaixo e digite um nome aqui. Os resultados entram na lista que ativou.",
@@ -712,7 +714,6 @@
 		"Void log": "Anular registo",
 		"Waiting for the job…": "À espera da tarefa…",
 		"Warn if stock lasts under (days)": "Avisar se o stock durar menos de (dias)",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Aviso: %d linha(s) serão eliminadas permanentemente e, depois, os dados do ficheiro serão carregados.",
 		"Weekly restock email": "E-mail semanal de reposição",
 		"What is running low and what to restock.": "O que está a acabar e o que repor.",
 		"What payroll will deduct this period.": "O que os salários vão deduzir neste período.",
@@ -743,9 +744,41 @@
 		"Your license expires within 30 days. Contact your vendor to renew.": "A sua licença expira em 30 dias. Entre em contacto com seu fornecedor para renovar.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 valor ligado à instância esvaziado)",
+			"(%n valores ligados à instância esvaziados)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtrada)",
+			"(%n filtradas)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 segredo ocultado)",
+			"(%n segredos ocultados)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 referência por resolver)",
+			"(%n referências por resolver)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 referência por resolver — vê os grupos abaixo.",
+			"%n referências por resolver — vê os grupos abaixo."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 linha precisa de um valor nesta instância",
+			"%n linhas precisam de um valor nesta instância"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 linha ignorada.",
+			"%n linhas ignoradas."
+		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"Item gratuito neste período: %n",
 			"Itens gratuitos neste período: %n"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Aviso: 1 linha será eliminada permanentemente e, depois, os dados do ficheiro serão carregados.",
+			"Aviso: %n linhas serão eliminadas permanentemente e, depois, os dados do ficheiro serão carregados."
 		],
 		"add and update; nothing is deleted": "adicionar e atualizar; nada é eliminado",
 		"applied": "aplicado",
@@ -755,6 +788,7 @@
 		"content-type": "content-type",
 		"dialog": "dialog",
 		"e.g. Fridge": "p. ex. Frigorífico",
+		"e.g. Kitchen 1 pass": "p. ex., Cozinha 1",
 		"failed": "falhou",
 		"kept as-is": "mantido como está",
 		"li": "li",
@@ -770,6 +804,7 @@
 		"snk-chips-changed": "snk-chips-changed",
 		"span": "span",
 		"the companion apps": "as aplicações complementares",
+		"the kitchen tablets": "os tablets de cozinha",
 		"the mobile companion app": "a aplicação complementar móvel",
 		"undo via snapshot": "anular via instantâneo",
 		"will be skipped": "será ignorado",

@@ -2,15 +2,9 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "%1$d af %2$d enhedspladser i brug.",
 		"%1$d of %2$d seats assigned": "%1$d af %2$d pladser tildelt",
-		"%d row(s) need a value on this instance": "%d række(r) kræver en værdi på denne instans",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d række(r) sprunget over og %d reference(r) uopløst — se grupperne nedenfor.",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp — eller officielle mobile licenser — vælg en mulighed nedenfor:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp, vælg en mulighed nedenfor:",
 		"%s%% of logs": "%s%% af registreringer",
-		"(%d env-bound value(s) emptied)": "(%d instansbundne værdier tømt)",
-		"(%d filtered)": "(%d filtreret)",
-		"(%d secret(s) redacted)": "(%d hemmelighed(er) sløret)",
-		"(%d unresolved ref)": "(%d uopløst reference)",
 		"(opens in a new tab)": "(åbner i en ny fane)",
 		"(unknown — skipped)": "(ukendt — sprunget over)",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "10″ Android-tablet (Wi-Fi), Android 10+ — foretræk vægbeslag",
@@ -199,6 +193,7 @@
 		"Drink": "Drik",
 		"Drinks": "Drikkevarer",
 		"EUR": "EUR",
+		"Each registered kitchen tablet uses one license slot.": "Hver registreret køkkentablet bruger én licensplads.",
 		"Each registered tablet uses one seat from your SNK2 license.": "Hver registreret tablet bruger én plads fra SNK2-licensen.",
 		"Earlier periods — download again or reopen with a reason.": "Tidligere perioder — download igen eller genåbn med en begrundelse.",
 		"Edit": "Rediger",
@@ -364,6 +359,7 @@
 		"No groups added yet — search above": "Ingen grupper endnu — søg ovenfor",
 		"No items in this period.": "Ingen varer i denne periode.",
 		"No items.": "Ingen ting.",
+		"No kitchen tablets yet": "Endnu ingen køkkentablets",
 		"No license yet": "Ingen licens endnu",
 		"No matches": "Ingen resultater",
 		"No matching people found.": "Ingen matchende personer fundet.",
@@ -389,6 +385,7 @@
 		"Nothing logged this month yet.": "Intet logget denne måned endnu.",
 		"Nothing needs restocking": "Intet skal genopfyldes",
 		"Nothing needs restocking.": "Intet skal genopfyldes.",
+		"Numeric ID of the site this kitchen tablet belongs to.": "Numerisk ID for det sted, denne køkkentablet hører til.",
 		"OK (replay)": "OK (gentagelse)",
 		"OK — a longer passphrase is safer.": "OK — en længere adgangssætning er sikrere.",
 		"Off": "Fra",
@@ -479,7 +476,7 @@
 		"Print list": "Udskriv liste",
 		"Privacy": "Privatliv",
 		"Privacy mode": "Privatlivstilstand",
-		"Provide this ID when ordering a license so the key can be bound to this server.": "Angiv dette ID, Når bestiller en licens, så nøglen kan knyttes til denne server.",
+		"Provide this ID when ordering a license so the key can be bound to this server.": "Angiv dette ID, når du afgiver en licensordre, så nøglen kan knyttes til denne server.",
 		"Proxy logged": "Logget for en anden",
 		"Pulse": "Oversigt",
 		"Purchase or renew license": "Køb eller forny licens",
@@ -502,8 +499,10 @@
 		"Refurbished business tablet + VESA mount for cost-effective LOI path": "Renoveret business-tablet + VESA-beslag til omkostningseffektiv LOI-vej",
 		"Register": "Registér",
 		"Register a device above to give it access.": "Registrér en enhed ovenfor for at give den adgang.",
+		"Register a tablet above to give it access.": "Registrér en tablet ovenfor for at give den adgang.",
 		"Register device": "Registrér enhed",
 		"Register kitchen tablet": "Registrér køkkentablet",
+		"Register tablet": "Registrér tablet",
 		"Registered": "Registreret",
 		"Reminder email before month end": "Påmindelsesmail før månedsafslutning",
 		"Reminder emails": "Påmindelsesmails",
@@ -511,7 +510,7 @@
 		"Remove": "Fjerne",
 		"Remove %s": "Fjern %s",
 		"Remove license": "Fjern licens",
-		"Remove mobile seat": "Fjern mobil plads",
+		"Remove mobile seat": "Fjern mobilplads",
 		"Remove mobile seat for this person?": "Fjern mobilplads for denne person?",
 		"Remove picture": "Fjern billede",
 		"Remove the organisation license and revoke all seats and devices? This cannot be undone.": "Fjern organisationslicensen og tilbagekald alle pladser og enheder? Dette kan ikke fortrydes.",
@@ -590,6 +589,7 @@
 		"Signature mismatch": "Signatur stemmer ikke",
 		"Site": "Sted",
 		"Site %1$s:": "Lokation %1$s:",
+		"Site ID": "Sted-ID",
 		"Site scope": "Stedomfang",
 		"Sites": "Steder",
 		"Skip email when nothing to deduct (€0)": "Spring e-mail over, når der ikke er noget at fratrække (0 €)",
@@ -620,7 +620,9 @@
 		"Support & us": "Support & os",
 		"Support macros": "Supportmakroer",
 		"TOTAL TO DEDUCT": "I ALT AT TRÆKKE",
+		"Tablet": "Tablet",
 		"Tablet label": "Tabletnavn",
+		"Tablet name": "Tabletnavn",
 		"Tablet seats": "Tablet-pladser",
 		"Tags": "Mærker",
 		"Tap Add… on a list below, then type a name here. Results go into the list you activated.": "Tryk Tilføj… på en liste nedenfor, og skriv et navn her. Resultater går til den aktiverede liste.",
@@ -712,7 +714,6 @@
 		"Void log": "Annullér log",
 		"Waiting for the job…": "Venter på jobbet…",
 		"Warn if stock lasts under (days)": "Advar, hvis lageret rækker under (dage)",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Advarsel: %d række(r) slettes permanent, derefter indlæses fildataene.",
 		"Weekly restock email": "Ugentlig genopfyldningsmail",
 		"What is running low and what to restock.": "Hvad der er ved at slippe op, og hvad der skal genopfyldes.",
 		"What payroll will deduct this period.": "Hvad lønnen trækker fra i denne periode.",
@@ -743,9 +744,41 @@
 		"Your license expires within 30 days. Contact your vendor to renew.": "Dine licens udløber inden for 30 dage. kontakt din leverandør for at forny.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 instansbunden værdi tømt)",
+			"(%n instansbundne værdier tømt)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtreret)",
+			"(%n filtreret)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 hemmelighed sløret)",
+			"(%n hemmeligheder sløret)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 uopløst reference)",
+			"(%n uopløste referencer)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 reference uopløst — se grupperne nedenfor.",
+			"%n referencer uopløst — se grupperne nedenfor."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 række kræver en værdi på denne instans",
+			"%n rækker kræver en værdi på denne instans"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 række sprunget over.",
+			"%n rækker sprunget over."
+		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"Gratis vare i denne periode: %n",
 			"Gratis varer i denne periode: %n"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Advarsel: 1 række slettes permanent, derefter indlæses fildataene.",
+			"Advarsel: %n rækker slettes permanent, derefter indlæses fildataene."
 		],
 		"add and update; nothing is deleted": "tilføj og opdatér; intet slettes",
 		"applied": "anvendt",
@@ -755,6 +788,7 @@
 		"content-type": "content-type",
 		"dialog": "dialog",
 		"e.g. Fridge": "fx Køleskab",
+		"e.g. Kitchen 1 pass": "f.eks. Køkken 1",
 		"failed": "mislykket",
 		"kept as-is": "bevaret uændret",
 		"li": "li",
@@ -770,6 +804,7 @@
 		"snk-chips-changed": "snk-chips-changed",
 		"span": "span",
 		"the companion apps": "companion-apps",
+		"the kitchen tablets": "køkkentablets",
 		"the mobile companion app": "mobil-companion-appen",
 		"undo via snapshot": "fortryd via snapshot",
 		"will be skipped": "springes over",

@@ -2,15 +2,9 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "%1$d of %2$d device slots in use.",
 		"%1$d of %2$d seats assigned": "%1$d of %2$d seats assigned",
-		"%d row(s) need a value on this instance": "%d row(s) need a value on this instance",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d row(s) skipped and %d reference(s) unresolved — see the groups below.",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:",
 		"%s%% of logs": "%s%% of logs",
-		"(%d env-bound value(s) emptied)": "(%d env-bound value(s) emptied)",
-		"(%d filtered)": "(%d filtered)",
-		"(%d secret(s) redacted)": "(%d secret(s) redacted)",
-		"(%d unresolved ref)": "(%d unresolved ref)",
 		"(opens in a new tab)": "(opens in a new tab)",
 		"(unknown — skipped)": "(unknown — skipped)",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits",
@@ -199,6 +193,7 @@
 		"Drink": "Drink",
 		"Drinks": "Drinks",
 		"EUR": "EUR",
+		"Each registered kitchen tablet uses one license slot.": "Each registered kitchen tablet uses one license slot.",
 		"Each registered tablet uses one seat from your SNK2 license.": "Each registered tablet uses one seat from your SNK2 license.",
 		"Earlier periods — download again or reopen with a reason.": "Earlier periods — download again or reopen with a reason.",
 		"Edit": "Edit",
@@ -364,6 +359,7 @@
 		"No groups added yet — search above": "No groups added yet — search above",
 		"No items in this period.": "No items in this period.",
 		"No items.": "No items.",
+		"No kitchen tablets yet": "No kitchen tablets yet",
 		"No license yet": "No license yet",
 		"No matches": "No matches",
 		"No matching people found.": "No matching people found.",
@@ -389,6 +385,7 @@
 		"Nothing logged this month yet.": "Nothing logged this month yet.",
 		"Nothing needs restocking": "Nothing needs restocking",
 		"Nothing needs restocking.": "Nothing needs restocking.",
+		"Numeric ID of the site this kitchen tablet belongs to.": "Numeric ID of the site this kitchen tablet belongs to.",
 		"OK (replay)": "OK (replay)",
 		"OK — a longer passphrase is safer.": "OK — a longer passphrase is safer.",
 		"Off": "Off",
@@ -502,8 +499,10 @@
 		"Refurbished business tablet + VESA mount for cost-effective LOI path": "Refurbished business tablet + VESA mount for cost-effective LOI path",
 		"Register": "Register",
 		"Register a device above to give it access.": "Register a device above to give it access.",
+		"Register a tablet above to give it access.": "Register a tablet above to give it access.",
 		"Register device": "Register device",
 		"Register kitchen tablet": "Register kitchen tablet",
+		"Register tablet": "Register tablet",
 		"Registered": "Registered",
 		"Reminder email before month end": "Reminder email before month end",
 		"Reminder emails": "Reminder emails",
@@ -590,6 +589,7 @@
 		"Signature mismatch": "Signature mismatch",
 		"Site": "Site",
 		"Site %1$s:": "Site %1$s:",
+		"Site ID": "Site ID",
 		"Site scope": "Site scope",
 		"Sites": "Sites",
 		"Skip email when nothing to deduct (€0)": "Skip email when nothing to deduct (€0)",
@@ -620,7 +620,9 @@
 		"Support & us": "Support & us",
 		"Support macros": "Support macros",
 		"TOTAL TO DEDUCT": "TOTAL TO DEDUCT",
+		"Tablet": "Tablet",
 		"Tablet label": "Tablet label",
+		"Tablet name": "Tablet name",
 		"Tablet seats": "Tablet seats",
 		"Tags": "Tags",
 		"Tap Add… on a list below, then type a name here. Results go into the list you activated.": "Tap Add… on a list below, then type a name here. Results go into the list you activated.",
@@ -712,7 +714,6 @@
 		"Void log": "Void log",
 		"Waiting for the job…": "Waiting for the job…",
 		"Warn if stock lasts under (days)": "Warn if stock lasts under (days)",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Warning: %d row(s) will be permanently deleted, then the file data is loaded.",
 		"Weekly restock email": "Weekly restock email",
 		"What is running low and what to restock.": "What is running low and what to restock.",
 		"What payroll will deduct this period.": "What payroll will deduct this period.",
@@ -743,9 +744,41 @@
 		"Your license expires within 30 days. Contact your vendor to renew.": "Your license expires within 30 days. Contact your vendor to renew.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 env-bound value emptied)",
+			"(%n env-bound values emptied)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtered)",
+			"(%n filtered)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 secret redacted)",
+			"(%n secrets redacted)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 unresolved ref)",
+			"(%n unresolved refs)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 reference unresolved — see the groups below.",
+			"%n references unresolved — see the groups below."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 row needs a value on this instance",
+			"%n rows need a value on this instance"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 row skipped.",
+			"%n rows skipped."
+		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"Free item in this period: %n",
 			"Free items in this period: %n"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Warning: 1 row will be permanently deleted, then the file data is loaded.",
+			"Warning: %n rows will be permanently deleted, then the file data is loaded."
 		],
 		"add and update; nothing is deleted": "add and update; nothing is deleted",
 		"applied": "applied",
@@ -755,6 +788,7 @@
 		"content-type": "content-type",
 		"dialog": "dialog",
 		"e.g. Fridge": "e.g. Fridge",
+		"e.g. Kitchen 1 pass": "e.g. Kitchen 1 pass",
 		"failed": "failed",
 		"kept as-is": "kept as-is",
 		"li": "li",
@@ -770,6 +804,7 @@
 		"snk-chips-changed": "snk-chips-changed",
 		"span": "span",
 		"the companion apps": "the companion apps",
+		"the kitchen tablets": "the kitchen tablets",
 		"the mobile companion app": "the mobile companion app",
 		"undo via snapshot": "undo via snapshot",
 		"will be skipped": "will be skipped",

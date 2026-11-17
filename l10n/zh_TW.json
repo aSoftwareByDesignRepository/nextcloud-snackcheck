@@ -3,15 +3,9 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "已使用 %2$d 個裝置名額中的 %1$d 個。",
 		"%1$d of %2$d seats assigned": "已指派 %2$d 個席位中的 %1$d 個",
-		"%d row(s) need a value on this instance": "%d 列需要在此實例上填寫值",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "已略過 %d 列，%d 個參照未能解析——請查看下方群組。",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s 在您的 Nextcloud 上保持免費（AGPL）。歡迎在 GitHub 提交缺陷報告和建議——這是自由開源的關懷。如果您的組織需要可開票的幫助或官方行動端授權，請選擇下方選項：",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s 在您的 Nextcloud 上保持免費（AGPL）。歡迎在 GitHub 提交缺陷報告和建議——這是自由開源的關懷。如果您的組織需要可開票的幫助，請選擇下方選項：",
 		"%s%% of logs": "佔日誌的 %s%%",
-		"(%d env-bound value(s) emptied)": "（已清空 %d 個實例綁定值）",
-		"(%d filtered)": "（已篩選 %d 項）",
-		"(%d secret(s) redacted)": "（已遮蔽 %d 個密鑰）",
-		"(%d unresolved ref)": "（%d 個參照未解析）",
 		"(opens in a new tab)": "（在新標籤頁中開啟）",
 		"(unknown — skipped)": "（未知——已跳過）",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "10″ 安卓平板（Wi‑Fi），Android 10+——推薦壁掛套件",
@@ -200,6 +194,7 @@
 		"Drink": "飲料",
 		"Drinks": "飲料",
 		"EUR": "EUR",
+		"Each registered kitchen tablet uses one license slot.": "每臺已註冊廚房平板佔用一個授權席位。",
 		"Each registered tablet uses one seat from your SNK2 license.": "每臺已註冊平板佔用 SNK2 授權的一個席位。",
 		"Earlier periods — download again or reopen with a reason.": "更早的週期——重新下載或填原因重新開啟。",
 		"Edit": "編輯",
@@ -365,6 +360,7 @@
 		"No groups added yet — search above": "尚未新增組——請在上方搜尋",
 		"No items in this period.": "本週期沒有商品。",
 		"No items.": "暫無商品。",
+		"No kitchen tablets yet": "尚無廚房平板",
 		"No license yet": "尚無授權",
 		"No matches": "無匹配項",
 		"No matching people found.": "找不到相符的成員。",
@@ -390,6 +386,7 @@
 		"Nothing logged this month yet.": "本月尚無記錄。",
 		"Nothing needs restocking": "無需補貨",
 		"Nothing needs restocking.": "無需補貨。",
+		"Numeric ID of the site this kitchen tablet belongs to.": "此廚房平板所屬站點的數字 ID。",
 		"OK (replay)": "OK（重放）",
 		"OK — a longer passphrase is safer.": "好——更長的密碼短語更安全。",
 		"Off": "關",
@@ -503,8 +500,10 @@
 		"Refurbished business tablet + VESA mount for cost-effective LOI path": "翻新商務平板 + VESA 支架，低成本方案",
 		"Register": "註冊",
 		"Register a device above to give it access.": "在上方註冊一台裝置以授予其存取權限。",
+		"Register a tablet above to give it access.": "請在上方註冊平板以授予存取權限。",
 		"Register device": "註冊裝置",
 		"Register kitchen tablet": "註冊廚房平板",
+		"Register tablet": "註冊平板",
 		"Registered": "已註冊",
 		"Reminder email before month end": "月末前提醒郵件",
 		"Reminder emails": "提醒郵件",
@@ -591,6 +590,7 @@
 		"Signature mismatch": "簽章不符",
 		"Site": "站點",
 		"Site %1$s:": "站點 %1$s：",
+		"Site ID": "站點 ID",
 		"Site scope": "站點範圍",
 		"Sites": "站點",
 		"Skip email when nothing to deduct (€0)": "無扣款時跳過郵件（€0）",
@@ -621,7 +621,9 @@
 		"Support & us": "支援與我們聯絡",
 		"Support macros": "支援宏",
 		"TOTAL TO DEDUCT": "應扣合計",
+		"Tablet": "平板",
 		"Tablet label": "平板標籤",
+		"Tablet name": "平板名稱",
 		"Tablet seats": "平板席位",
 		"Tags": "標籤",
 		"Tap Add… on a list below, then type a name here. Results go into the list you activated.": "點按下方列表的“新增……”，然後在此輸入姓名。結果進入您啟用的列表。",
@@ -713,7 +715,6 @@
 		"Void log": "作廢記錄",
 		"Waiting for the job…": "正在等待任務……",
 		"Warn if stock lasts under (days)": "庫存不足多少天時警告（天）",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "警告：%d 列將被永久刪除，然後載入檔案資料。",
 		"Weekly restock email": "每週補貨郵件",
 		"What is running low and what to restock.": "哪些快沒了、該補什麼。",
 		"What payroll will deduct this period.": "本週期工資將扣除的金額。",
@@ -744,8 +745,40 @@
 		"Your license expires within 30 days. Contact your vendor to renew.": "您的授權將在 30 天內到期。請聯絡供應商續訂。",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"（已清空 1 個實例綁定值）",
+			"（已清空 %n 個實例綁定值）"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"（已篩選 1 項）",
+			"（已篩選 %n 項）"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"（已遮蔽 1 個密鑰）",
+			"（已遮蔽 %n 個密鑰）"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"（1 個參照未解析）",
+			"（%n 個參照未解析）"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 個參照未能解析——請查看下方群組。",
+			"%n 個參照未能解析——請查看下方群組。"
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 列需要在此實例上填寫值",
+			"%n 列需要在此實例上填寫值"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"已略過 1 列。",
+			"已略過 %n 列。"
+		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"本週期免費品：%n"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"警告：1 列將被永久刪除，然後載入檔案資料。",
+			"警告：%n 列將被永久刪除，然後載入檔案資料。"
 		],
 		"add and update; nothing is deleted": "新增並更新；不刪除任何內容",
 		"applied": "已應用",
@@ -755,6 +788,7 @@
 		"content-type": "content-type",
 		"dialog": "對話方塊",
 		"e.g. Fridge": "例如 冰箱",
+		"e.g. Kitchen 1 pass": "例如：廚房 1",
 		"failed": "失敗",
 		"kept as-is": "保持原樣",
 		"li": "li",
@@ -770,6 +804,7 @@
 		"snk-chips-changed": "snk-chips-changed",
 		"span": "span",
 		"the companion apps": "配套應用程式",
+		"the kitchen tablets": "廚房平板",
 		"the mobile companion app": "行動版配套應用程式",
 		"undo via snapshot": "透過快照撤銷",
 		"will be skipped": "將被跳過",

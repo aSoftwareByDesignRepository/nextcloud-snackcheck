@@ -639,11 +639,8 @@ class PageController extends Controller
 				'emptyText' => $this->l10n->t('Register a tablet above to give it access.'),
 			];
 			$siteNames = [];
-			foreach (is_array($payload['sites'] ?? null) ? $payload['sites'] : [] as $siteRow) {
-				$sid = (int)($siteRow['id'] ?? 0);
-				if ($sid > 0) {
-					$siteNames[$sid] = (string)($siteRow['name'] ?? $siteRow['label'] ?? '');
-				}
+			foreach ($payload['sites'] ?? [] as $site) {
+				$siteNames[(int)$site->getId()] = (string)$site->getName();
 			}
 			$payload['terminals'] = array_map(
 				static fn (array $t): array => $t + ['meta' => (string)($siteNames[(int)($t['siteId'] ?? 0)] ?? '')],

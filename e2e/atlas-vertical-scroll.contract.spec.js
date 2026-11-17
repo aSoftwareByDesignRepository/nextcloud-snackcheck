@@ -18,7 +18,7 @@ test.describe('ATLAS_VERTICAL_SCROLL_CONTRACT', () => {
 
 		await assertAtlasVerticalScrollReachable(page, {
 			scrollport: '#app-content',
-			target: '#snk-term-list-title, #snk-license-key-hint, #snk-license-page',
+			target: '#snk-terminal-heading, #snk-license-key-hint, #snk-license-page',
 			bottomSlopPx: 12,
 		});
 	});
@@ -31,7 +31,7 @@ test.describe('ATLAS_VERTICAL_SCROLL_CONTRACT', () => {
 
 		await assertAtlasVerticalScrollReachable(page, {
 			scrollport: '#app-content',
-			target: '#snk-term-list-title, #snk-license-key-hint, #snk-license-page',
+			target: '#snk-terminal-heading, #snk-license-key-hint, #snk-license-page',
 			bottomSlopPx: 16,
 		});
 	});

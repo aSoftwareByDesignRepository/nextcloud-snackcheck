@@ -229,18 +229,34 @@ test.describe('SnackCheck UX journeys', () => {
 
 	test('Settings license: register form + revoke wiring present', async ({ page }) => {
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/settings/license`);
-		await expect(page.locator('#snk-license-intro-title')).toBeVisible();
-		await expect(page.locator('a.snk-license-cta__link[href^="https://"][href*="software-by-design.de"]')).toBeVisible();
-		await expect(page.locator('a.snk-license-cta__link[href^="mailto:"]')).toBeVisible();
-		await expect(page.locator('form[data-snk-form="terminal"]')).toBeVisible();
-		await expect(page.locator('form[data-snk-form="license"]')).toBeVisible();
+		const root = page.locator('#snk-license-page');
+		await expect(root).toBeVisible();
+		// Pack API wiring lives on the root element.
+		await expect(root).toHaveAttribute('data-api-register-device', /.+/);
+		await expect(root).toHaveAttribute('data-api-revoke-device', /.+/);
+		// Contact actions (mailto renew + vendor https products link).
+		await expect(root.locator('a[href^="mailto:"]').first()).toBeVisible();
+		await expect(root.locator('a[href^="https://"][href*="software-by-design.de"]').first()).toBeVisible();
+		// License key card + legacy deep-link anchor kept by the section wrapper.
 		await expect(page.locator('#snk-license-key')).toBeVisible();
-		// List may be empty without SNK2 devices — contract is Register + JS revoke handler.
-		const revokeBtns = page.locator('[data-snk-action="revoke-terminal"]');
-		const count = await revokeBtns.count();
-		if (count > 0) {
-			await expect(revokeBtns.first()).toBeVisible();
-			await expect(page.locator('.snk-term-list')).toBeVisible();
+		await expect(page.locator('#snk-license-key-input')).toBeVisible();
+		await expect(page.locator('#snk-license-save')).toBeVisible();
+		// Remove-license only renders once a license is installed ($hasLicense).
+		if (await page.locator('#snk-license-clear').count() > 0) {
+			await expect(page.locator('#snk-license-clear')).toBeVisible();
+		}
+		// terminalMode=register: card only renders with device slots
+		// (showTerminal = terminalLimit > 0); when present the register
+		// form + revoke hook are the contract.
+		const termCard = page.locator('.snk-license-section[aria-labelledby="snk-terminal-heading"]');
+		if (await termCard.count() > 0) {
+			await expect(page.locator('#snk-terminal-label')).toBeVisible();
+			await expect(page.locator('#snk-terminal-register')).toBeVisible();
+			await expect(page.locator('#snk-terminal-list-body')).toBeAttached();
+			const revokeBtns = page.locator('.snk-terminal-revoke[data-device-id]');
+			if (await revokeBtns.count() > 0) {
+				await expect(revokeBtns.first()).toBeVisible();
+			}
 		}
 	});
 

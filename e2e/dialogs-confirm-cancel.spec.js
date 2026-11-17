@@ -215,10 +215,12 @@ test.describe('SnackCheck dialogs confirm/cancel (Atlas 3.5.10)', () => {
 	test('dlg-web-confirm (snkConfirm): open ≠ cancel ≠ confirm gated', async ({ page }) => {
 		const dialog = page.locator('#snk-confirm-dialog');
 
+		// snkConfirm call-sites: license actions moved to the shared pack's own
+		// -license-confirm-modal (donor-covered); catalog delete-item uses the
+		// dedicated #snk-deactivate-dialog. deactivate-site remains the app
+		// snkConfirm driver.
 		const attempts = [
 			{ url: `${BASE}/index.php/apps/snackcheck/sites`, sel: '[data-snk-action="deactivate-site"]' },
-			{ url: `${BASE}/index.php/apps/snackcheck/settings/license`, sel: '[data-snk-action="clear-license"]' },
-			{ url: `${BASE}/index.php/apps/snackcheck/settings/license`, sel: '[data-snk-action="revoke-terminal"]' },
 		];
 
 		/** @type {string | null} */
@@ -241,7 +243,7 @@ test.describe('SnackCheck dialogs confirm/cancel (Atlas 3.5.10)', () => {
 		}
 
 		if (!usedUrl) {
-			test.skip(true, 'No snkConfirm call-site button visible (sites/license)');
+			test.skip(true, 'No snkConfirm call-site button visible (sites)');
 		}
 
 		await expectDialogOpen(dialog);

@@ -47,7 +47,7 @@ const CONTRACT_OPTS = {
 	// list-style:none intentionally on these components).
 	listAllow:
 		'.snk-list, .snk-tile-grid, .snk-rank-list, .snk-chip-list, .snk-nav__list, ' +
-		'.snk-nav__sublist, .snk-site-list, .snk-term-list, .snk-user-results, ' +
+		'.snk-nav__sublist, .snk-site-list, .snk-license-terminals-table, .snk-user-results, ' +
 		'.snk-nav-footer__menu',
 };
 

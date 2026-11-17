@@ -408,13 +408,15 @@ assertTrue(
 	'Restock sub-label keeps full contrast (no opacity fade)'
 );
 $uxSettings = file_get_contents($root . '/templates/parts/settings/benefits.php');
+$uxSettingsJs = file_get_contents($root . '/js/app.js');
 assertTrue(
 	is_string($uxSettings)
-		&& str_contains($uxSettings, 'save.disabled = false')
-		&& str_contains($uxSettings, 'const on = !!en.checked;')
-		&& !str_contains($uxSettings, 'en.value === \'1\'')
-		&& !str_contains($uxSettings, 'save.disabled = block')
-		&& str_contains($uxSettings, 'subsidyAllowanceEuro'),
+		&& str_contains($uxSettings, 'subsidyAllowanceEuro')
+		&& is_string($uxSettingsJs)
+		&& str_contains($uxSettingsJs, 'save.disabled = false')
+		&& str_contains($uxSettingsJs, 'const on = !!en.checked;')
+		&& !str_contains($uxSettingsJs, 'en.value === \'1\'')
+		&& !str_contains($uxSettingsJs, 'save.disabled = block'),
 	'UX-30 hospitality Save always enabled; euro subsidy; checked-only sync'
 );
 $uxJsSwitch = file_get_contents($root . '/js/app.js');
@@ -900,7 +902,9 @@ assertTrue(
 );
 $logAllergen = file_get_contents($root . '/templates/parts/snk-log-tile.php');
 $settingsTermUi = file_get_contents($root . '/templates/parts/settings/license.php');
-$appJsRevoke = file_get_contents($root . '/js/app.js');
+$packTermUi = file_get_contents($root . '/templates/common/license-page.php');
+$packJsRevoke = file_get_contents($root . '/js/common/license-page.js');
+$apiRevoke = file_get_contents($root . '/lib/Controller/ApiController.php');
 $unlockUnique = file_get_contents($root . '/lib/Service/UnlockService.php');
 $starterCount = file_get_contents($root . '/lib/Service/CatalogService.php');
 assertTrue(
@@ -908,15 +912,23 @@ assertTrue(
 		&& str_contains($logAllergen, 'contains_nuts')
 		&& str_contains($logAllergen, '$ariaParts')
 		&& is_string($settingsTermUi)
-		&& str_contains($settingsTermUi, 'revoke-terminal')
-		&& is_string($appJsRevoke)
-		&& str_contains($appJsRevoke, "action === 'revoke-terminal'")
-		&& str_contains($appJsRevoke, 'button[value="cancel"]')
+		&& str_contains($settingsTermUi, 'common/license-page.php')
+		&& is_string($packTermUi)
+		&& str_contains($packTermUi, '-terminal-revoke')
+		&& str_contains($packTermUi, 'data-api-revoke-device')
+		&& is_string($packJsRevoke)
+		&& str_contains($packJsRevoke, "-terminal-revoke")
+		&& str_contains($packJsRevoke, 'openConfirm')
+		&& str_contains($packJsRevoke, 'apiMutate(apiRevokeDevice')
+		&& str_contains($packJsRevoke, '-license-confirm-cancel')
+		&& is_string($apiRevoke)
+		&& str_contains($apiRevoke, 'function revokeTerminal')
+		&& str_contains($apiRevoke, '->revoke(')
 		&& is_string($unlockUnique)
 		&& str_contains($unlockUnique, 'REASON_UNIQUE_CONSTRAINT_VIOLATION')
 		&& is_string($starterCount)
 		&& str_contains($starterCount, 'countBySite'),
-	'allergen tile a11y + terminal revoke UI + PIN unique race + starter countBySite'
+	'allergen tile a11y + terminal revoke UI (pack license-page) + PIN unique race + starter countBySite'
 );
 
 exit($failures === 0 ? 0 : 1);

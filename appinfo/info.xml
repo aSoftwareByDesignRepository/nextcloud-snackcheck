@@ -9,40 +9,56 @@
 	<summary>Trust ledger for office snacks &amp; drinks — one-tap log, monthly payroll export, kitchen tablet</summary>
 	<summary lang="de">Vertrauensbuch für Snacks &amp; Getränke — tippen, monatsweise abrechnen, Tablet am Kühlschrank</summary>
 	<description><![CDATA[
-# SnackCheck — kitchen trust ledger
+# SnackCheck — the office kitchen ledger that pays for itself
 
-Employees one-tap log snacks and drinks against their Nextcloud account. Managers run catalog, kitchen overview, restock hints, period close, and cent-reconciled payroll CSV/XLSX for HR deduction outside the app.
+Someone takes a cola, taps once, done. SnackCheck logs snacks and drinks against the person's Nextcloud account — no cash tin, no spreadsheet taped to the fridge — and hands HR a cent-exact payroll CSV/XLSX at period close.
 
-**Free AGPL web app.** Kitchen Tablet companion is licensed separately (`SNK2` device licences). Web is never gated by the device licence.
+## Why teams install it
+
+- **One-tap logging** — at the kitchen tablet or in the web app
+- **Catalog and kitchen overview** — items, prices, stock scalars, restock hints
+- **Monthly close that reconciles** — cent-exact totals per person for payroll deduction outside the app
+- **A trust ledger** — everyone sees their own log; corrections stay transparent
 
 ## Clear limits
 
-- Not a POS / TSE / gastro Kassensystem
-- Not DATEV Lohn live posting
-- Not InventoryCheck — optional on-hand/par scalars only; never stock movements; logs never auto-decrement stock
+- Not a POS, not a TSE/Kassensystem.
+- Not a DATEV payroll posting — export only.
+- Optional on-hand/par scalars only; no stock movements — for real warehouse flows, see InventoryCheck.
 
-## Feedback welcome
-
-We improve this app with real-world use. Bug reports, rough edges, and ideas help — open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-snackcheck/issues) or write to info@software-by-design.de. Your feedback directly shapes what we build next.
+**Free AGPL web app.** The Kitchen Tablet companion is licensed separately (`SNK2`); the web app is never gated.
 
 ## Requirements
 
-- Nextcloud 32–35 · PHP 8.2–8.5 · MySQL or PostgreSQL
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL or PostgreSQL
 	]]></description>
 	<description lang="de"><![CDATA[
-# SnackCheck — Honor-System für die Büroküche
+# SnackCheck — die Büroküchen-Strichliste, die sich selbst rechnet
 
-Mitarbeitende tippen Snacks und Getränke auf ihr Nextcloud-Konto. Verwaltung: Katalog, Kitchen Pulse, Nachfüllhinweise, Periodenabschluss und centgenaue Lohn-CSV/XLSX.
+Jemand nimmt eine Cola, ein Tap, fertig. SnackCheck bucht Snacks und Getränke auf das Nextcloud-Konto der Person — keine Kasse, kein Zettel am Kühlschrank — und übergibt HR zum Periodenabschluss eine cent-genaue Lohnabzug-CSV/XLSX.
 
-**Kostenlose AGPL-Web-App.** Das Küchen-Tablet wird separat lizenziert (`SNK2`).
+## Warum Teams es installieren
 
-## Feedback willkommen
+- **Ein-Tap-Buchung** — am Küchentablet oder in der Web-App
+- **Katalog und Küchenübersicht** — Artikel, Preise, Bestands-Skalare, Nachbestell-Hinweise
+- **Monatsabschluss, der stimmt** — cent-genaue Summen je Person für den Lohnabzug außerhalb der App
+- **Ein Vertrauens-Ledger** — jede:r sieht das eigene Log; Korrekturen bleiben transparent
 
-Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stolpersteine und Ideen helfen — öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-snackcheck/issues) oder schreiben Sie an info@software-by-design.de. Ihr Feedback prägt direkt, was wir als Nächstes bauen.
+## Klare Grenzen
+
+- Kein POS, kein TSE/Kassensystem.
+- Kein DATEV-Lohnposting — nur Export.
+- Nur optionale Bestands-/Soll-Skalare; keine Warenbewegungen — für echte Lagerflüsse: InventoryCheck.
+
+**Kostenlose AGPL-Web-App.** Der Kitchen-Tablet-Companion ist separat lizenziert (`SNK2`); die Web-App ist nie gesperrt.
 
 ## Voraussetzungen
 
-- Nextcloud 32–35 · PHP 8.2–8.5 · MySQL oder PostgreSQL
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL oder PostgreSQL
 	]]></description>
 	<description lang="fr"><![CDATA[
 # SnackCheck — tenir le registre de la cuisine
@@ -213,12 +229,6 @@ Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer h
 - Nextcloud 32–35 · PHP 8.2–8.5 · MySQL eller PostgreSQL
 	]]></description>
 
-	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/01.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/02.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/03.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/04.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/05.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/06.png</screenshot>
 	<version>1.1.6</version>
 	<licence>agpl</licence>
 	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de/">Software by Design GbR</author>
@@ -228,6 +238,12 @@ Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer h
 	<website>https://nextcloud.software-by-design.de/</website>
 	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-snackcheck/issues</bugs>
 	<repository type="git">https://github.com/aSoftwareByDesignRepository/nextcloud-snackcheck.git</repository>
+	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/01.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/02.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/03.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/04.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/05.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-snackcheck/refs/heads/main/screenshots/appstore/06.png</screenshot>
 	<dependencies>
 		<nextcloud min-version="32" max-version="35"/>
 		<php min-version="8.2" max-version="8.5"/>

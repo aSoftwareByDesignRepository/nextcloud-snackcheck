@@ -2,11 +2,15 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "%1$d av %2$d enhetsplasser i bruk.",
 		"%1$d of %2$d seats assigned": "%1$d av %2$d plasser tildelt",
+		"%n rows": "%n rader",
+		"%n settings": "%n innstillinger",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s forblir gratis (AGPL) på Nextcloud. Feilrapporter og ideer på GitHub er velkomne — det er gratis open source-støtte. Hvis organisasjonen trenger fakturerbar hjelp — eller offisielle mobile lisenser — velg et alternativ nedenfor:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s forblir gratis (AGPL) på Nextcloud. Feilrapporter og ideer på GitHub er velkomne — det er gratis open source-støtte. Hvis organisasjonen trenger fakturerbar hjelp, velg et alternativ nedenfor:",
 		"%s%% of logs": "%s%% av logger",
 		"(opens in a new tab)": "(åpnes i en ny fane)",
 		"(unknown — skipped)": "(ukjent — hoppet over)",
+		"1 row": "1 rad",
+		"1 setting": "1 innstilling",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "10″ Android-nettbrett (Wi-Fi), Android 10+ — foretrekk veggfester",
 		"4–8 digits. They type this on the tablet keypad.": "4–8 siffer. Personen taster dem på nettbrettets tastatur.",
 		"[data-snk-action]": "[data-snk-action]",
@@ -38,6 +42,14 @@
 		"_1 row skipped._::_%n rows skipped._": [
 			"1 rad hoppet over.",
 			"%n rader hoppet over."
+		],
+		"_1 row_::_%n rows_": [
+			"1 rad",
+			"%n rader"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 innstilling",
+			"%n innstillinger"
 		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"Gratisvare i denne perioden: %n",
@@ -297,6 +309,7 @@
 		"How many days to use for restock tips and popular snacks.": "Hvor mange dager til påfyllingstips og populære snacks.",
 		"How many?": "Hvor mange?",
 		"How this adds up": "Slik beregnes det",
+		"Import applied. %1$s and %2$s written.": "Importert. %1$s og %2$s skrevet.",
 		"Import applied. %d settings and %d rows written.": "Importert. %d innstillinger og %d rader skrevet.",
 		"Import configuration": "Importer konfigurasjon",
 		"Import failed — nothing was changed.": "Import mislyktes — ingenting ble endret.",
@@ -724,6 +737,7 @@
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "Denne serverens Nextcloud-instans-ID (for referanse til brukerstøtte / salg). Lisenser er ikke instansbundet.",
 		"This snack cannot be logged right now.": "Denne snacken kan ikke logges nå.",
 		"This token is shown only once. Paste it into the companion app on the device.": "Denne tokenen vises kun én gang. Lim den inn i følge-appen på enheten.",
+		"This will update %1$s and %2$s — nothing is deleted.": "Dette oppdaterer %1$s og %2$s — ingenting slettes.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Dette oppdaterer %d innstillinger og %d rader — ingenting slettes.",
 		"To deduct": "Til trekk",
 		"Toggle mobile menu": "Bytt mobilmeny",
@@ -808,21 +822,7 @@
 		"You selected %1$d people but only %2$d seats remain. Only free seats will be assigned.": "Du valgte %1$d personer, men bare %2$d plasser gjenstår. Kun ledige plasser tildeles.",
 		"Your consumption this period": "Ditt forbruk denne perioden",
 		"Your license expires within 30 days. Contact your vendor to renew.": "Lisensen din utløper innen 30 dager. Kontakt leverandøren for å fornye.",
-		"{used} of {total} tablet seats": "{used} av {total} nettbrettplasser",
-		"1 setting": "1 innstilling",
-		"%n settings": "%n innstillinger",
-		"1 row": "1 rad",
-		"%n rows": "%n rader",
-		"_1 row_::_%n rows_": [
-			"1 rad",
-			"%n rader"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 innstilling",
-			"%n innstillinger"
-		],
-		"This will update %1$s and %2$s — nothing is deleted.": "Dette oppdaterer %1$s og %2$s — ingenting slettes.",
-		"Import applied. %1$s and %2$s written.": "Importert. %1$s og %2$s skrevet."
+		"{used} of {total} tablet seats": "{used} av {total} nettbrettplasser"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

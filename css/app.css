@@ -36,6 +36,7 @@
 	--snk-line-tight: 1.2;
 	--snk-line-base: 1.45;
 	--snk-tab-num: tabular-nums;
+	--snk-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Consolas, monospace;
 
 	/* Touch — WCAG 2.5.5 / DS §0.4 */
 	--snk-touch: 44px;

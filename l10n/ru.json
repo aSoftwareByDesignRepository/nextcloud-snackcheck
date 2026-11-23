@@ -2,24 +2,74 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "Используется %1$d из %2$d слотов для устройств.",
 		"%1$d of %2$d seats assigned": "Назначено %1$d из %2$d мест",
+		"%n rows": "строк: %n",
+		"%n settings": "настроек: %n",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s остаётся бесплатным (AGPL) в вашем Nextcloud. Сообщения об ошибках и идеи на GitHub по-прежнему приветствуются — это бесплатная забота открытого кода. Если вашей организации нужна помощь по счёту — или официальные мобильные лицензии — выберите вариант ниже:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s остаётся бесплатным (AGPL) в вашем Nextcloud. Сообщения об ошибках и идеи на GitHub по-прежнему приветствуются — это бесплатная забота открытого кода. Если вашей организации нужна помощь по счёту, выберите вариант ниже:",
 		"%s%% of logs": "%s%% записей",
 		"(opens in a new tab)": "(открывается в новой вкладке)",
 		"(unknown — skipped)": "(неизвестно — пропущено)",
+		"1 row": "1 строка",
+		"1 setting": "1 настройка",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "Планшет Android 10″ (Wi‑Fi), Android 10+ — желательно с настенным креплением",
 		"4–8 digits. They type this on the tablet keypad.": "4–8 цифр. Вводятся на клавиатуре планшета.",
 		"[data-snk-action]": "[data-snk-action]",
 		"[data-snk-form]": "[data-snk-form]",
-		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": ["(1 привязанное к инстансу значение очищено)","(%n привязанных к инстансу значения очищены)","(%n привязанных к инстансу значений очищено)"],
-		"_(1 filtered)_::_(%n filtered)_": ["(отфильтрована 1 строка)","(отфильтрованы %n строки)","(отфильтровано %n строк)"],
-		"_(1 secret redacted)_::_(%n secrets redacted)_": ["(скрыт 1 секрет)","(скрыты %n секрета)","(скрыто %n секретов)"],
-		"_(1 unresolved ref)_::_(%n unresolved refs)_": ["(1 неразрешённая ссылка)","(%n неразрешённые ссылки)","(%n неразрешённых ссылок)"],
-		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": ["1 ссылка не разрешена — см. группы ниже.","%n ссылки не разрешены — см. группы ниже.","%n ссылок не разрешены — см. группы ниже."],
-		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": ["Для 1 строки требуется значение на этом инстансе","Для %n строки требуется значение на этом инстансе","Для %n строк требуется значение на этом инстансе"],
-		"_1 row skipped._::_%n rows skipped._": ["Пропущена 1 строка.","Пропущены %n строки.","Пропущено %n строк."],
-		"_Free item in this period: %n_::_Free items in this period: %n_": ["Бесплатная позиция в этом периоде: %n","Бесплатные позиции в этом периоде: %n","Бесплатных позиций в этом периоде: %n"],
-		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": ["Внимание: будет безвозвратно удалена 1 строка, затем данные файла будут загружены.","Внимание: будут безвозвратно удалены %n строки, затем данные файла будут загружены.","Внимание: будет безвозвратно удалено %n строк, затем данные файла будут загружены."],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 привязанное к инстансу значение очищено)",
+			"(%n привязанных к инстансу значения очищены)",
+			"(%n привязанных к инстансу значений очищено)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(отфильтрована 1 строка)",
+			"(отфильтрованы %n строки)",
+			"(отфильтровано %n строк)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(скрыт 1 секрет)",
+			"(скрыты %n секрета)",
+			"(скрыто %n секретов)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 неразрешённая ссылка)",
+			"(%n неразрешённые ссылки)",
+			"(%n неразрешённых ссылок)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 ссылка не разрешена — см. группы ниже.",
+			"%n ссылки не разрешены — см. группы ниже.",
+			"%n ссылок не разрешены — см. группы ниже."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"Для 1 строки требуется значение на этом инстансе",
+			"Для %n строки требуется значение на этом инстансе",
+			"Для %n строк требуется значение на этом инстансе"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"Пропущена 1 строка.",
+			"Пропущены %n строки.",
+			"Пропущено %n строк."
+		],
+		"_1 row_::_%n rows_": [
+			"1 строка",
+			"%n строки",
+			"%n строк"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 настройка",
+			"%n настройки",
+			"%n настроек"
+		],
+		"_Free item in this period: %n_::_Free items in this period: %n_": [
+			"Бесплатная позиция в этом периоде: %n",
+			"Бесплатные позиции в этом периоде: %n",
+			"Бесплатных позиций в этом периоде: %n"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Внимание: будет безвозвратно удалена 1 строка, затем данные файла будут загружены.",
+			"Внимание: будут безвозвратно удалены %n строки, затем данные файла будут загружены.",
+			"Внимание: будет безвозвратно удалено %n строк, затем данные файла будут загружены."
+		],
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Ключ лицензии сохранён, но сервер не может проверить его подпись открытым ключом поставщика. Приложения-компаньоны будут отклонять лицензию, пока ключ не подписан соответствующим ключом поставщика. Примените корректно подписанную лицензию заново или обратитесь в поддержку, если проблема сохраняется после обновления приложения.",
 		"A license key is stored, but this server cannot verify its signature. Re-apply a correctly signed SNK2 key, or contact support after an app update.": "Ключ лицензии сохранён, но сервер не может проверить его подпись. Примените корректно подписанный ключ SNK2 заново или обратитесь в поддержку после обновления приложения.",
 		"A pre-flight check failed — see the report for details.": "Не удалась предварительная проверка — подробности в отчёте.",
@@ -270,6 +320,7 @@
 		"How many days to use for restock tips and popular snacks.": "За сколько дней учитывать подсказки пополнения и популярные перекусы.",
 		"How many?": "Сколько?",
 		"How this adds up": "Как это складывается",
+		"Import applied. %1$s and %2$s written.": "Импорт применён. Записаны %1$s и %2$s.",
 		"Import applied. %d settings and %d rows written.": "Импорт применён. Записано настроек: %d, строк: %d.",
 		"Import configuration": "Импорт конфигурации",
 		"Import failed — nothing was changed.": "Импорт не удался — ничего не изменено.",
@@ -697,6 +748,7 @@
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "ID инстанса Nextcloud этого сервера (для поддержки и продаж). Лицензии не привязаны к инстансу.",
 		"This snack cannot be logged right now.": "Этот перекус сейчас нельзя записать.",
 		"This token is shown only once. Paste it into the companion app on the device.": "Этот токен показывается только один раз. Вставьте его в приложение-компаньон на устройстве.",
+		"This will update %1$s and %2$s — nothing is deleted.": "Будут обновлены %1$s и %2$s — ничего не удаляется.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Будут обновлены настройки (%d) и строки (%d) — ничего не удаляется.",
 		"To deduct": "К удержанию",
 		"Toggle mobile menu": "Переключить мобильное меню",
@@ -781,14 +833,6 @@
 		"You selected %1$d people but only %2$d seats remain. Only free seats will be assigned.": "Вы выбрали %1$d человек, но осталось только %2$d мест. Будут назначены только свободные места.",
 		"Your consumption this period": "Ваше потребление в этом периоде",
 		"Your license expires within 30 days. Contact your vendor to renew.": "Срок действия вашей лицензии истекает в течение 30 дней. Обратитесь к поставщику для продления.",
-		"{used} of {total} tablet seats": "{used} из {total} мест для планшетов",
-		"1 setting": "1 настройка",
-		"%n settings": "настроек: %n",
-		"1 row": "1 строка",
-		"%n rows": "строк: %n",
-		"_1 row_::_%n rows_": ["1 строка","%n строки","%n строк"],
-		"_1 setting_::_%n settings_": ["1 настройка","%n настройки","%n настроек"],
-		"This will update %1$s and %2$s — nothing is deleted.": "Будут обновлены %1$s и %2$s — ничего не удаляется.",
-		"Import applied. %1$s and %2$s written.": "Импорт применён. Записаны %1$s и %2$s."
+		"{used} of {total} tablet seats": "{used} из {total} мест для планшетов"
 	}
 }

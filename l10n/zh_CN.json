@@ -3,11 +3,15 @@
 	"translations": {
 		"%1$d of %2$d device slots in use.": "已使用 %2$d 个设备名额中的 %1$d 个。",
 		"%1$d of %2$d seats assigned": "已指派 %2$d 个席位中的 %1$d 个",
+		"%n rows": "%n 行",
+		"%n settings": "%n 项设置",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷报告和建议——这是自由开源的关怀。如果您的组织需要可开票的帮助或官方移动端许可证，请选择下方选项：",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷报告和建议——这是自由开源的关怀。如果您的组织需要可开票的帮助，请选择下方选项：",
 		"%s%% of logs": "占日志的 %s%%",
 		"(opens in a new tab)": "（在新标签页中打开）",
 		"(unknown — skipped)": "（未知——已跳过）",
+		"1 row": "1 行",
+		"1 setting": "1 项设置",
 		"10″ Android tablet (Wi‑Fi), Android 10+ — prefer wall-mount kits": "10″ 安卓平板（Wi‑Fi），Android 10+——推荐壁挂套件",
 		"4–8 digits. They type this on the tablet keypad.": "4–8 位数字。员工在平板上输入。",
 		"[data-snk-action]": "[data-snk-action]",
@@ -32,6 +36,12 @@
 		],
 		"_1 row skipped._::_%n rows skipped._": [
 			"已跳过 %n 行。"
+		],
+		"_1 row_::_%n rows_": [
+			"%n 行"
+		],
+		"_1 setting_::_%n settings_": [
+			"%n 项设置"
 		],
 		"_Free item in this period: %n_::_Free items in this period: %n_": [
 			"本周期免费品：%n"
@@ -289,6 +299,7 @@
 		"How many days to use for restock tips and popular snacks.": "用于补货建议和热门零食的天数。",
 		"How many?": "多少？",
 		"How this adds up": "费用如何计算",
+		"Import applied. %1$s and %2$s written.": "导入已应用。已写入 %1$s 和 %2$s。",
 		"Import applied. %d settings and %d rows written.": "导入已应用。已写入 %d 项设置和 %d 行。",
 		"Import configuration": "导入配置",
 		"Import failed — nothing was changed.": "导入失败——未做任何更改。",
@@ -716,6 +727,7 @@
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "此服务器的 Nextcloud 实例 ID（供支持/销售参考）。许可证不绑定实例。",
 		"This snack cannot be logged right now.": "此零食暂时无法记录。",
 		"This token is shown only once. Paste it into the companion app on the device.": "此令牌仅显示一次。请将其粘贴到设备上的配套应用中。",
+		"This will update %1$s and %2$s — nothing is deleted.": "这将更新 %1$s 和 %2$s——不会删除任何内容。",
 		"This will update %d settings and %d rows — nothing is deleted.": "这将更新 %d 项设置和 %d 行数据——不会删除任何内容。",
 		"To deduct": "应扣金额",
 		"Toggle mobile menu": "切换移动菜单",
@@ -800,18 +812,6 @@
 		"You selected %1$d people but only %2$d seats remain. Only free seats will be assigned.": "您选择了 %1$d 人，但仅剩 %2$d 个席位。只会指派空闲席位。",
 		"Your consumption this period": "您本周期的消费",
 		"Your license expires within 30 days. Contact your vendor to renew.": "您的许可证将在 30 天内到期。请联系供应商续订。",
-		"{used} of {total} tablet seats": "已用 {used} / {total} 个平板席位",
-		"1 setting": "1 项设置",
-		"%n settings": "%n 项设置",
-		"1 row": "1 行",
-		"%n rows": "%n 行",
-		"_1 row_::_%n rows_": [
-			"%n 行"
-		],
-		"_1 setting_::_%n settings_": [
-			"%n 项设置"
-		],
-		"This will update %1$s and %2$s — nothing is deleted.": "这将更新 %1$s 和 %2$s——不会删除任何内容。",
-		"Import applied. %1$s and %2$s written.": "导入已应用。已写入 %1$s 和 %2$s。"
+		"{used} of {total} tablet seats": "已用 {used} / {total} 个平板席位"
 	}
 }

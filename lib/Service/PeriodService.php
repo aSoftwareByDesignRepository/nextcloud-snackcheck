@@ -101,18 +101,18 @@ class PeriodService
 	private function insertLabeledOpenPeriod(\DateTimeInterface $now): Period
 	{
 		$baseLabel = $now->format('Y-m');
-		$label = $baseLabel;
-		$suffix = 2;
-		while (($existing = $this->mapper->findByLabel($label)) !== null) {
-			if ($existing->getState() === 'open') {
-				return $existing;
-			}
-			$label = $baseLabel . '-' . $suffix;
-			$suffix++;
-			if ($suffix > 40) {
-				throw new DomainException('period_open_exists', 'Cannot open period', 409);
+		// Next successor label = max(existing suffixes) + 1, resolved in one query.
+		// Unbounded on purpose: a prior capped probe loop permanently wedged period
+		// creation after N close→open cycles within one calendar month.
+		$maxSuffix = 0;
+		foreach ($this->mapper->findLabelsByPrefix($baseLabel) as $existing) {
+			if ($existing === $baseLabel) {
+				$maxSuffix = max($maxSuffix, 1);
+			} elseif (preg_match('/^' . preg_quote($baseLabel, '/') . '-(\d+)$/', $existing, $m) === 1) {
+				$maxSuffix = max($maxSuffix, (int)$m[1]);
 			}
 		}
+		$label = $maxSuffix === 0 ? $baseLabel : $baseLabel . '-' . ($maxSuffix + 1);
 		$start = new \DateTimeImmutable($now->format('Y-m-d'));
 		$end = new \DateTimeImmutable($now->format('Y-m-t'));
 		$period = new Period();

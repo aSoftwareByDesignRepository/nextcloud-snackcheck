@@ -872,7 +872,13 @@
 		"the mobile companion app": "den mobila kompanjonappen",
 		"undo via snapshot": "ångra via ögonblicksbild",
 		"will be skipped": "kommer att hoppas över",
-		"{used} of {total} tablet seats": "{used} av {total} tablettplatser"
+		"{used} of {total} tablet seats": "{used} av {total} tablettplatser",
+		"ExpenseCheck category ID": "ExpenseCheck-kategori-ID",
+		"ExpenseCheck cost center ID": "ExpenseCheck-kostnadsställe-ID",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "Kategori- och kostnadsställe-ID:n hämtas från ExpenseCheck-inställningarna (adminområdet).",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "Utläggsroutning är inaktiv tills båda ID:n pekar på befintliga ExpenseCheck-poster — utgifter krediteras fortfarande direkt tills dess.",
+		"Open claim": "Öppna utlägg",
+		"This was already submitted with different details — nothing was duplicated.": "Detta skickades redan in med andra uppgifter — inget duplicerades."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

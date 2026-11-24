@@ -200,6 +200,28 @@
       ],
       "mobile": null,
       "mobile_reason": "kiosk never reopens accounting periods — admin web surface only"
+    },
+    {
+      "id": "expense.claim_mapping",
+      "param": "expenseClaimCategoryId",
+      "server": [
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["getParam('expenseClaimCategoryId')", "getParam('expenseClaimCostCenterId')", "setExpenseClaimCategoryId", "setExpenseClaimCostCenterId", "parseNonNegativeId"]
+        },
+        {
+          "file": "lib/Service/SettingsService.php",
+          "needles": ["KEY_EXPENSE_CLAIM_CATEGORY", "KEY_EXPENSE_CLAIM_COST_CENTER"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/parts/settings/benefits.php",
+          "needles": ["name=\"expenseClaimCategoryId\"", "name=\"expenseClaimCostCenterId\"", "id=\"snk-expense-claim-category\""]
+        }
+      ],
+      "mobile": null,
+      "mobile_reason": "admin settings surface — companions never configure claim mapping"
     }
   ]
 }

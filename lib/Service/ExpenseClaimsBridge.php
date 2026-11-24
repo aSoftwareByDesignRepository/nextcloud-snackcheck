@@ -100,12 +100,19 @@ class ExpenseClaimsBridge
 		string $sourceRef,
 		int $categoryId,
 		int $costCenterId,
+		?string $actorUid = null,
 	): array {
+		// The claim belongs to the member; the audit chain attributes line
+		// writes to whoever actually recorded them (manager proxy ≠ member).
+		$actorUid = $actorUid ?? $memberUid;
 		try {
 			$claimMapper = Server::get(self::CLAIM_MAPPER);
 			$requestKey = $memberUid . ':ingress:' . $sourceRef;
-			$existing = $claimMapper->findByRequestKey($requestKey);
+			$title = mb_substr('SnackCheck: ' . trim($reason), 0, 191);
+			$title = $title !== 'SnackCheck:' ? $title : 'SnackCheck expense';
+			$existing = self::awaitSettledClaim($claimMapper, $requestKey);
 			if ($existing !== null) {
+				self::assertReplayMatches($existing, $amountCents, $title);
 				return [
 					'ref' => (string)$existing->getClaimNo(),
 					'url' => $this->claimUrl($existing->getId()),
@@ -113,27 +120,72 @@ class ExpenseClaimsBridge
 				];
 			}
 
-			$title = mb_substr('SnackCheck: ' . trim($reason), 0, 191);
-			$claim = Server::get(self::LIFECYCLE)->createDraft(
-				$memberUid,
-				$title !== 'SnackCheck:' ? $title : 'SnackCheck expense',
-				'EUR',
-				$requestKey,
-				['kind' => 'standard'],
-			);
-			Server::get(self::LINE_SERVICE)->addLine($claim, [
-				'line_type' => 'receipt',
-				'occurred_on' => (new \DateTimeImmutable('today'))->format('Y-m-d'),
-				'category_id' => $categoryId,
-				'amount' => number_format($amountCents / 100, 2, '.', ''),
-				'merchant' => 'SnackCheck',
-				'description' => mb_substr($reason, 0, 2000),
-				'source_app' => self::SOURCE_APP,
-				'source_ref' => $sourceRef,
-			], [[
-				'cost_center_id' => $costCenterId,
-				'amount_minor' => $amountCents,
-			]], $memberUid);
+			$claim = null;
+			try {
+				$claim = Server::get(self::LIFECYCLE)->createDraft(
+					$memberUid,
+					$title,
+					'EUR',
+					$requestKey,
+					['kind' => 'standard'],
+				);
+			} catch (\Throwable $e) {
+				// TOCTOU: a concurrent submit can win the request_key unique
+				// index between our findByRequestKey probe and this insert —
+				// the honest answer is the existing draft, not an error.
+				if (self::isExpUniqueViolation($e)) {
+					$winner = self::awaitSettledClaim($claimMapper, $requestKey);
+					if ($winner !== null) {
+						self::assertReplayMatches($winner, $amountCents, $title);
+						return [
+							'ref' => (string)$winner->getClaimNo(),
+							'url' => $this->claimUrl($winner->getId()),
+							'deduplicated' => true,
+						];
+					}
+				}
+				throw $e;
+			}
+			try {
+				Server::get(self::LINE_SERVICE)->addLine($claim, [
+					'line_type' => 'receipt',
+					'occurred_on' => (new \DateTimeImmutable('today'))->format('Y-m-d'),
+					'category_id' => $categoryId,
+					'amount' => number_format($amountCents / 100, 2, '.', ''),
+					'merchant' => 'SnackCheck',
+					'description' => mb_substr($reason, 0, 2000),
+					'source_app' => self::SOURCE_APP,
+					'source_ref' => $sourceRef,
+				], [[
+					'cost_center_id' => $costCenterId,
+					'amount_minor' => $amountCents,
+				]], $actorUid);
+			} catch (\Throwable $e) {
+				// Partial failure: the draft insert already committed — an empty
+				// orphan claim (plus its 'created' chain event) must not survive
+				// a rejected line. EXP has no claim-delete; remove the composite
+				// write's rows atomically.
+				try {
+					$db = Server::get(\OCP\IDBConnection::class);
+					$db->beginTransaction();
+					$db->executeStatement(
+						'DELETE FROM *PREFIX*exp_claim_allocations WHERE line_id IN (SELECT id FROM *PREFIX*exp_claim_lines WHERE claim_id = ?)',
+						[$claim->getId()],
+					);
+					$db->executeStatement('DELETE FROM *PREFIX*exp_claim_lines WHERE claim_id = ?', [$claim->getId()]);
+					$db->executeStatement('DELETE FROM *PREFIX*exp_claim_events WHERE claim_id = ?', [$claim->getId()]);
+					$db->executeStatement('DELETE FROM *PREFIX*exp_claims WHERE id = ?', [$claim->getId()]);
+					$db->commit();
+				} catch (\Throwable $cleanup) {
+					try {
+						$db->rollBack();
+					} catch (\Throwable) {
+					}
+					// Compensation is best-effort; the original error is the
+					// one that matters to the caller.
+				}
+				throw $e;
+			}
 
 			return [
 				'ref' => (string)$claim->getClaimNo(),
@@ -145,6 +197,49 @@ class ExpenseClaimsBridge
 		} catch (\Throwable $e) {
 			throw self::mapExpError($e);
 		}
+	}
+
+	/**
+	 * A concurrent createDraft commits the claim row (with its request_key)
+	 * before its first line lands — total_minor reads 0 for that window, so a
+	 * dedupe hit would compare a half-written fingerprint and spuriously
+	 * conflict. Poll briefly until the line's amount settles (or the row
+	 * vanishes under compensation), then compare the completed claim.
+	 */
+	private static function awaitSettledClaim(object $claimMapper, string $requestKey): ?object
+	{
+		$claim = null;
+		for ($i = 0; $i < 40; $i++) {
+			$claim = $claimMapper->findByRequestKey($requestKey);
+			if ($claim === null || (int)$claim->getTotalMinor() > 0) {
+				return $claim;
+			}
+			usleep(50_000);
+		}
+		return $claim;
+	}
+
+	/**
+	 * Idempotency-key reuse is only honest when the payload matches — same
+	 * key + different amount or reason is an idempotency_conflict, exactly
+	 * like the ledger path's canon-hash check (never a silent wrong replay).
+	 */
+	private static function assertReplayMatches(object $claim, int $amountCents, string $title): void
+	{
+		if ((int)$claim->getTotalMinor() !== $amountCents || (string)$claim->getTitle() !== $title) {
+			throw new DomainException('idempotency_conflict', 'Idempotency conflict', 409);
+		}
+	}
+
+	/** Unique-constraint detection across MySQL/PgSQL/SQLite (EXP's own taxonomy). */
+	private static function isExpUniqueViolation(\Throwable $e): bool
+	{
+		$sqlErrors = 'OCA\\ExpenseCheck\\Db\\SqlErrors';
+		if (class_exists($sqlErrors)) {
+			return (bool)$sqlErrors::isUniqueViolation($e);
+		}
+		return str_contains(strtolower($e->getMessage()), 'unique')
+			|| str_contains(strtolower($e->getMessage()), 'duplicate');
 	}
 
 	/**
@@ -169,6 +264,8 @@ class ExpenseClaimsBridge
 
 	private function claimUrl(int $claimId): string
 	{
-		return $this->urlGenerator->linkToRoute('expensecheck.page.claimDetail', ['id' => $claimId]);
+		// linkToRoute cannot resolve a sibling app's route table outside the
+		// sibling's own request — build the stable detail path directly.
+		return $this->urlGenerator->linkTo('', 'apps/' . self::EXP_APP_ID . '/claims/' . $claimId);
 	}
 }

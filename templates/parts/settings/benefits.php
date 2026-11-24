@@ -128,18 +128,33 @@ $subsidyEuro = number_format($subsidyCents / 100, 2, '.', '');
 			<?php if (!empty($_['expenseClaimsCapability'])): ?>
 				<fieldset class="snk-settings-block snk-expense-routing">
 					<legend class="snk-settings-block__legend"><?php p($l->t('Where expenses go')); ?></legend>
+					<?php $storedRouting = (string)($s['expenseRoutingStored'] ?? $s['expenseRouting'] ?? 'ledger_credit'); ?>
 					<label class="snk-choice">
-						<input type="radio" name="expenseRouting" value="ledger_credit" <?php if (($s['expenseRouting'] ?? 'ledger_credit') !== 'expense_claim') { ?>checked<?php } ?> />
+						<input type="radio" name="expenseRouting" value="ledger_credit" <?php if ($storedRouting !== 'expense_claim') { ?>checked<?php } ?> />
 						<span><?php p($l->t('Credit directly (default)')); ?>
 							<span class="snk-muted"><?php p($l->t('Approved instantly, nets against this period.')); ?></span>
 						</span>
 					</label>
 					<label class="snk-choice">
-						<input type="radio" name="expenseRouting" value="expense_claim" <?php if (($s['expenseRouting'] ?? '') === 'expense_claim') { ?>checked<?php } ?> />
+						<input type="radio" name="expenseRouting" value="expense_claim" <?php if ($storedRouting === 'expense_claim') { ?>checked<?php } ?> />
 						<span><?php p($l->t('Submit as ExpenseCheck claim')); ?>
 							<span class="snk-muted"><?php p($l->t('Goes through ExpenseCheck review; the credit lands after approval.')); ?></span>
 						</span>
 					</label>
+					<div class="snk-expense-claim-mapping">
+						<label class="snk-field" for="snk-expense-claim-category">
+							<span class="snk-field__label"><?php p($l->t('ExpenseCheck category ID')); ?></span>
+							<input class="snk-input" type="number" min="0" step="1" inputmode="numeric" name="expenseClaimCategoryId" id="snk-expense-claim-category" value="<?php p((int)($s['expenseClaimCategoryId'] ?? 0)); ?>" />
+						</label>
+						<label class="snk-field" for="snk-expense-claim-costcenter">
+							<span class="snk-field__label"><?php p($l->t('ExpenseCheck cost center ID')); ?></span>
+							<input class="snk-input" type="number" min="0" step="1" inputmode="numeric" name="expenseClaimCostCenterId" id="snk-expense-claim-costcenter" value="<?php p((int)($s['expenseClaimCostCenterId'] ?? 0)); ?>" />
+						</label>
+						<p class="snk-muted"><?php p($l->t('Category and cost center IDs come from ExpenseCheck settings (admin area).')); ?></p>
+						<?php if ($storedRouting === 'expense_claim' && empty($_['expenseClaimMappingReady'])): ?>
+							<p class="snk-field-error" role="alert"><?php p($l->t('Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.')); ?></p>
+						<?php endif; ?>
+					</div>
 				</fieldset>
 			<?php endif; ?>
 		</div>

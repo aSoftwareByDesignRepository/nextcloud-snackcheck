@@ -34,12 +34,19 @@ class PeriodMapper extends QBMapper
 		try { return $this->findEntity($qb); } catch (\OCP\AppFramework\Db\DoesNotExistException) { return null; }
 	}
 
-	public function findByLabel(string $label): ?Period
+	/**
+	 * Labels sharing a Y-m prefix ('2026-11' + '2026-11-N' successors). Used by
+	 * PeriodService to pick the next successor label without a capped probe loop.
+	 * The prefix is a formatted date (digits + dash) so LIKE needs no escaping.
+	 *
+	 * @return list<string>
+	 */
+	public function findLabelsByPrefix(string $prefix): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('*')->from($this->getTableName())
-			->where($qb->expr()->eq('label', $qb->createNamedParameter($label)));
-		try { return $this->findEntity($qb); } catch (\OCP\AppFramework\Db\DoesNotExistException) { return null; }
+		$qb->select('label')->from($this->getTableName())
+			->where($qb->expr()->like('label', $qb->createNamedParameter($prefix . '%')));
+		return array_map('strval', array_column($qb->executeQuery()->fetchAll(), 'label'));
 	}
 
 	/** @return list<Period> */

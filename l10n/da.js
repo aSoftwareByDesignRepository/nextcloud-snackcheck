@@ -840,6 +840,12 @@ OC.L10N.register(
 	"the mobile companion app" : "mobil-companion-appen",
 	"undo via snapshot" : "fortryd via snapshot",
 	"will be skipped" : "springes over",
-	"{used} of {total} tablet seats" : "{used} af {total} tablet-pladser"
+	"{used} of {total} tablet seats" : "{used} af {total} tablet-pladser",
+	"ExpenseCheck category ID" : "ExpenseCheck-kategori-ID",
+	"ExpenseCheck cost center ID" : "ExpenseCheck-koststed-ID",
+	"Category and cost center IDs come from ExpenseCheck settings (admin area)." : "Kategori- og koststeds-ID'er findes i ExpenseCheck-indstillingerne (administratorens område).",
+	"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then." : "Kravrouting er inaktiv, indtil begge ID'er peger på eksisterende ExpenseCheck-poster – udgifter krediteres stadig direkte indtil da.",
+	"Open claim" : "Åbn krav",
+	"This was already submitted with different details — nothing was duplicated." : "Dette blev allerede indsendt med andre oplysninger – intet blev duplikeret."
 	}
 );

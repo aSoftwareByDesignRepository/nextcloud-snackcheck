@@ -840,6 +840,12 @@ OC.L10N.register(
 	"the mobile companion app" : "la app complementaria móvil",
 	"undo via snapshot" : "deshacer mediante instantánea",
 	"will be skipped" : "se omitirá",
-	"{used} of {total} tablet seats" : "{used} de {total} plazas de tableta"
+	"{used} of {total} tablet seats" : "{used} de {total} plazas de tableta",
+	"ExpenseCheck category ID" : "ID de categoría de ExpenseCheck",
+	"ExpenseCheck cost center ID" : "ID de centro de coste de ExpenseCheck",
+	"Category and cost center IDs come from ExpenseCheck settings (admin area)." : "Los IDs de categoría y centro de coste se obtienen en los ajustes de ExpenseCheck (zona de administración).",
+	"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then." : "El envío como reclamación está inactivo hasta que ambos IDs apunten a entradas existentes de ExpenseCheck; hasta entonces los gastos se abonan directamente.",
+	"Open claim" : "Abrir reclamación",
+	"This was already submitted with different details — nothing was duplicated." : "Esto ya se envió con datos distintos — no se duplicó nada."
 	}
 );

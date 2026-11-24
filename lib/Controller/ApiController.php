@@ -181,6 +181,12 @@ class ApiController extends Controller
 			$this->rateLimit->assertUserLog($user);
 			$siteId = $this->sites->requireExplicitSiteId((int)$this->request->getParam('siteId') ?: null);
 			$amountCents = $this->parseExpenseAmountCents();
+			// Reason is validated here — the claim branch returns before
+			// createExpense and must never skip SNK's own reason floor.
+			$expenseReason = trim((string)($this->request->getParam('expenseReason') ?? ''));
+			if (mb_strlen($expenseReason) < 3 || mb_strlen($expenseReason) > ConsumptionLogService::REASON_MAX_LEN) {
+				throw new DomainException('expense_reason_required', 'Expense reason required', 422);
+			}
 			$target = trim((string)($this->request->getParam('targetUserId') ?? ''));
 			$isAdminEntry = $target !== '' && $target !== $user;
 			$isKitchenAdmin = $this->access->isAppAdmin($user)
@@ -192,11 +198,13 @@ class ApiController extends Controller
 				}
 			}
 
-			// Claim routing (F24): when org routes expenses into ExpenseCheck and the
-			// capability is present, the request becomes a claim draft — the credit
-			// endpoint is never invoked (no personal_credit row is written here).
+			// Claim routing (F24 / INT-05): the STORED choice decides — when the
+			// org routes expenses into ExpenseCheck but the route cannot be
+			// honored right now (capability lost mid-flight, stale mapping),
+			// the submit hard-fails expense_route_unavailable. It must NEVER
+			// silently write a native credit the admin believes is a claim.
 			if ($this->settings->isExpenseEnabled()
-				&& $this->settings->getExpenseRouting($this->expenseClaimRoutingReady()) === SettingsService::EXPENSE_ROUTING_CLAIM) {
+				&& $this->settings->getExpenseRoutingStored() === SettingsService::EXPENSE_ROUTING_CLAIM) {
 				return $this->routeExpenseClaim($user, $isAdminEntry ? $target : $user, $amountCents, $siteId);
 			}
 
@@ -327,14 +335,20 @@ class ApiController extends Controller
 		$idem = trim((string)($this->request->getHeader('Idempotency-Key')
 			?: $this->request->getParam('idempotencyKey') ?? ''));
 		$idem = preg_replace('/[^A-Za-z0-9_-]/', '', $idem) ?? '';
-		$sourceRef = 'snkexp:' . ($idem !== '' ? mb_substr($idem, 0, 64) : bin2hex(random_bytes(16)));
+		if ($idem === '') {
+			// Same contract as the ledger path: no key, no write. A generated
+			// ref would mint a fresh claim per retry — silent duplicates.
+			throw new DomainException('validation_failed', 'Idempotency key required', 422);
+		}
+		$sourceRef = 'snkexp:' . mb_substr($idem, 0, 64);
 		$result = $bridge->submitDraft(
 			$memberUid,
 			$amountCents,
-			(string)($this->request->getParam('expenseReason') ?? ''),
+			trim((string)($this->request->getParam('expenseReason') ?? '')),
 			$sourceRef,
 			$catId,
 			$ccId,
+			$actorUid,
 		);
 		$out = ['routed' => 'expense_claim', 'sourceRef' => $sourceRef];
 		if (is_array($result)) {

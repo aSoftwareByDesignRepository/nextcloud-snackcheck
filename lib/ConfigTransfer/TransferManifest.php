@@ -37,6 +37,8 @@ final class TransferManifest extends AbstractTransferManifest
 			'expense_self_entry_max_cents' => ['class' => 'plain', 'section' => 'benefits'],
 			'expense_clamp_negative_deduct' => ['class' => 'plain', 'section' => 'benefits'],
 			'expense_routing' => ['class' => 'plain', 'section' => 'benefits'],
+			'expense_claim_category_id' => ['class' => 'plain', 'section' => 'benefits'],
+			'expense_claim_cost_center_id' => ['class' => 'plain', 'section' => 'benefits'],
 			'expense_kiosk_entry' => ['class' => 'plain', 'section' => 'benefits'],
 			'multi_site_enabled' => 'plain',
 			'privacy_totals_only' => ['class' => 'plain', 'security' => true, 'section' => 'privacy'],

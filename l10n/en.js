@@ -840,6 +840,12 @@ OC.L10N.register(
 	"the mobile companion app" : "the mobile companion app",
 	"undo via snapshot" : "undo via snapshot",
 	"will be skipped" : "will be skipped",
-	"{used} of {total} tablet seats" : "{used} of {total} tablet seats"
+	"{used} of {total} tablet seats" : "{used} of {total} tablet seats",
+	"ExpenseCheck category ID" : "ExpenseCheck category ID",
+	"ExpenseCheck cost center ID" : "ExpenseCheck cost center ID",
+	"Category and cost center IDs come from ExpenseCheck settings (admin area)." : "Category and cost center IDs come from ExpenseCheck settings (admin area).",
+	"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then." : "Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.",
+	"Open claim" : "Open claim",
+	"This was already submitted with different details — nothing was duplicated." : "This was already submitted with different details — nothing was duplicated."
 	}
 );

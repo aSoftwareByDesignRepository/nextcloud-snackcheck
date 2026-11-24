@@ -862,6 +862,12 @@
 		"the mobile companion app": "移动端配套应用",
 		"undo via snapshot": "通过快照撤销",
 		"will be skipped": "将被跳过",
-		"{used} of {total} tablet seats": "已用 {used} / {total} 个平板席位"
+		"{used} of {total} tablet seats": "已用 {used} / {total} 个平板席位",
+		"ExpenseCheck category ID": "ExpenseCheck 类别 ID",
+		"ExpenseCheck cost center ID": "ExpenseCheck 成本中心 ID",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "类别和成本中心 ID 来自 ExpenseCheck 设置（管理员区域）。",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "在两个 ID 均指向 ExpenseCheck 中已存在的条目之前，索赔路由不会生效——在此之前报销仍直接记入账户。",
+		"Open claim": "打开索赔申请",
+		"This was already submitted with different details — nothing was duplicated.": "已使用不同的详细信息提交过，未重复创建任何条目。"
 	}
 }

@@ -872,7 +872,13 @@
 		"the mobile companion app": "die mobile Begleit-App",
 		"undo via snapshot": "per Snapshot rückgängig machen",
 		"will be skipped": "wird übersprungen",
-		"{used} of {total} tablet seats": "{used} von {total} Tablet-Plätzen"
+		"{used} of {total} tablet seats": "{used} von {total} Tablet-Plätzen",
+		"ExpenseCheck category ID": "ExpenseCheck-Kategorie-ID",
+		"ExpenseCheck cost center ID": "ExpenseCheck-Kostenstellen-ID",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "Kategorie- und Kostenstellen-IDs stammen aus den ExpenseCheck-Einstellungen (Admin-Bereich).",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "Die Antrags-Route ist inaktiv, bis beide IDs auf vorhandene ExpenseCheck-Einträge zeigen – bis dahin werden Auslagen weiterhin direkt gutgeschrieben.",
+		"Open claim": "Antrag öffnen",
+		"This was already submitted with different details — nothing was duplicated.": "Das wurde bereits mit anderen Angaben übermittelt – nichts wurde dupliziert."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

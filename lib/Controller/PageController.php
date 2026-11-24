@@ -108,7 +108,10 @@ class PageController extends Controller
 		$canHosp = $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($user);
 		$open = $this->periods->findOpen();
 		$canProxy = $siteId > 0 && $this->access->canManageSite($user, $siteId);
-		$expenseRouting = $this->settings->getExpenseRouting($this->expenseClaimRoutingReady());
+		// The dialog promise reflects the STORED routing — a degraded claim
+		// mode still shows the claim note so the honest 409 on submit makes
+		// sense to the member (INT-05).
+		$expenseRouting = $this->settings->getExpenseRoutingStored();
 		$expenseMaxCents = $this->settings->getExpenseSelfEntryMaxCents();
 		$expenseAvailable = $this->settings->isExpenseEnabled()
 			&& $open !== null
@@ -612,6 +615,9 @@ class PageController extends Controller
 		// force-degrade to ledger whenever the EXP capability is absent.
 		$all['expenseRouting'] = $this->settings->getExpenseRouting(
 			$this->expenseClaimRoutingReady());
+		// The radio paints the STORED choice — painting the degraded effective
+		// value would hide the admin's claim selection plus its warning.
+		$all['expenseRoutingStored'] = $this->settings->getExpenseRoutingStored();
 		// The cap input edits the STORED value (0 = no explicit limit) — the
 		// effective getter would paint the platform maximum into the field.
 		$all['expenseSelfEntryMaxCents'] = $this->settings->getExpenseSelfEntryMaxCentsStored();

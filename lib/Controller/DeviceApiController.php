@@ -50,7 +50,6 @@ class DeviceApiController extends Controller
 		private readonly RateLimitService $rateLimit,
 		private readonly IUserManager $userManager,
 		private readonly ITimeFactory $timeFactory,
-		private readonly ?\OCA\SnackCheck\Service\ExpenseClaimsBridge $claimsBridge = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -96,7 +95,10 @@ class DeviceApiController extends Controller
 					'expenses' => [
 						'enabled' => $this->settings->isExpenseEnabled()
 							&& $this->settings->isExpenseKioskEntryEnabled()
-							&& $this->settings->getExpenseRouting($this->expenseClaimRoutingReady()) === SettingsService::EXPENSE_ROUTING_LEDGER,
+							// NN-15 + INT-05: claim mode hides kiosk expenses entirely —
+							// a terminal can never mint an EXP claim, and a degraded
+							// route must not quietly reopen the ledger lane.
+							&& $this->settings->getExpenseRoutingStored() !== SettingsService::EXPENSE_ROUTING_CLAIM,
 						'selfEntry' => $this->settings->isExpenseSelfEntryEnabled(),
 						'selfEntryMaxCents' => $this->settings->getExpenseSelfEntryMaxCents(),
 						// Client renders the proxy affordance only when a kitchen
@@ -314,7 +316,7 @@ class DeviceApiController extends Controller
 			if (!$this->settings->isExpenseKioskEntryEnabled()) {
 				throw new DomainException('expense_kiosk_disabled', 'Kiosk expense entry disabled', 403);
 			}
-			if ($this->settings->getExpenseRouting($this->expenseClaimRoutingReady()) !== SettingsService::EXPENSE_ROUTING_LEDGER) {
+			if ($this->settings->getExpenseRoutingStored() === SettingsService::EXPENSE_ROUTING_CLAIM) {
 				throw new DomainException('expense_kiosk_disabled', 'Kiosk expense entry disabled', 403);
 			}
 			$body = $this->jsonBody();
@@ -612,18 +614,6 @@ class DeviceApiController extends Controller
 			return true;
 		}
 		return $this->settings->getAppAdmins() !== [];
-	}
-
-	/**
-	 * Claim routing is effective only while EXP is live AND the org's
-	 * category/cost-center mapping resolves — any degradation means ledger.
-	 */
-	private function expenseClaimRoutingReady(): bool
-	{
-		return ($this->claimsBridge?->routingReady(
-			$this->settings->getExpenseClaimCategoryId(),
-			$this->settings->getExpenseClaimCostCenterId(),
-		)) ?? false;
 	}
 
 	private function isLiveKitchenAdmin(string $userId, int $siteId): bool

@@ -65,6 +65,7 @@
 			expense_reason_required: t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'),
 			managed_externally: t('This credit is managed by ExpenseCheck, void it there.', 'This credit is managed by ExpenseCheck, void it there.'),
 			expense_route_unavailable: t('Expense claims are unavailable right now — try again later.', 'Expense claims are unavailable right now — try again later.'),
+			idempotency_conflict: t('This was already submitted with different details — nothing was duplicated.', 'This was already submitted with different details — nothing was duplicated.'),
 			unlock_required: t('Please verify yourself again.', 'Please verify yourself again.'),
 			rate_limited: t('Too many attempts. Wait a moment and try again.', 'Too many attempts. Wait a moment and try again.'),
 			unlock_busy: t('Please try again in a moment.', 'Please try again in a moment.'),
@@ -159,7 +160,7 @@
 		void region.offsetWidth;
 		region.textContent = String(msg || '');
 	}
-	function toast(msg, undoId, assertive) {
+	function toast(msg, undoId, assertive, linkUrl, linkLabel) {
 		const el = document.getElementById('snk-toast');
 		if (!el) {
 			// Every SnackCheck page must ship #snk-toast — never fall back to alert (blocks Undo).
@@ -186,6 +187,13 @@
 			btn.setAttribute('data-log-id', String(undoId));
 			el.appendChild(btn);
 			window.setTimeout(function () { if (btn.parentNode) btn.remove(); }, 60000);
+		}
+		if (linkUrl) {
+			const link = document.createElement('a');
+			link.className = 'snk-btn';
+			link.href = String(linkUrl);
+			link.textContent = linkLabel || 'Open';
+			el.appendChild(link);
 		}
 		if (assertive) {
 			// Family contract (_shared/app-feedback README): error toasts offer a
@@ -1822,7 +1830,10 @@
 				const created = await post(OC.generateUrl('/apps/snackcheck/api/expenses'), payload);
 				form.closest('dialog')?.close();
 				if (created && created.data && created.data.routed === 'expense_claim') {
-					toast(t('Expense claim submitted', 'Expense claim submitted'));
+					toast(t('Expense claim submitted', 'Expense claim submitted'),
+						null, false,
+						created.data.url || null,
+						t('Open claim', 'Open claim'));
 				} else {
 					// Undo chip for the 60 s self-undo window (US-003 AC-2) —
 					// only for real ledger rows (a routed claim has no row).

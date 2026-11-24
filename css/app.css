@@ -2655,6 +2655,14 @@ body[data-theme-dark-highcontrast] .snk-field select option {
 .snk-expense-routing-note {
 	margin: var(--snk-space-3) 0;
 }
+.snk-expense-claim-mapping {
+	display: grid;
+	gap: var(--snk-space-2);
+	margin: var(--snk-space-3) 0 0 var(--snk-space-5);
+}
+.snk-expense-claim-mapping .snk-input {
+	max-width: 12rem;
+}
 
 /* License settings — status, CTAs, tablet seat meter */
 .snk-license-page {

@@ -67,10 +67,18 @@ class RateLimitService
 		// releaseLock misses the row and exclusive locks stick → permanent 429s.
 		$lockKey = 'snkrl/' . substr(hash('sha256', $bucket), 0, 58);
 		$acquired = false;
-		try {
-			$this->locking->acquireLock($lockKey, ILockingProvider::LOCK_EXCLUSIVE);
-			$acquired = true;
-		} catch (LockedException) {
+		// acquireLock is single-shot (no internal retry): two parallel same-bucket
+		// requests would otherwise spuriously 429 far below the real limit. The
+		// critical section is microseconds, so a bounded retry covers contention.
+		for ($attempt = 0; $attempt < 20 && !$acquired; $attempt++) {
+			try {
+				$this->locking->acquireLock($lockKey, ILockingProvider::LOCK_EXCLUSIVE);
+				$acquired = true;
+			} catch (LockedException) {
+				usleep(10_000);
+			}
+		}
+		if (!$acquired) {
 			throw new DomainException('rate_limited', 'Rate limited', 429);
 		}
 		try {

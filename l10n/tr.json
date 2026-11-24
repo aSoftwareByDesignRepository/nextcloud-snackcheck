@@ -861,7 +861,13 @@
 		"the mobile companion app": "mobil eşlik uygulaması",
 		"undo via snapshot": "anlık görüntüyle geri al",
 		"will be skipped": "atlanacak",
-		"{used} of {total} tablet seats": "{total} tablet lisansından {used} tanesi"
+		"{used} of {total} tablet seats": "{total} tablet lisansından {used} tanesi",
+		"ExpenseCheck category ID": "ExpenseCheck kategori kimliği",
+		"ExpenseCheck cost center ID": "ExpenseCheck maliyet merkezi kimliği",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "Kategori ve maliyet merkezi kimlikleri ExpenseCheck ayarlarından alınır (yönetici alanı).",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "Her iki kimlik mevcut ExpenseCheck girişlerini gösterene kadar talep yönlendirmesi etkin değil — o zamana kadar giderler doğrudan mahsup edilir.",
+		"Open claim": "Talebi aç",
+		"This was already submitted with different details — nothing was duplicated.": "Bu, farklı bilgilerle zaten gönderildi — hiçbir şey kopyalanmadı."
 	},
 	"pluralForm": "nplurals=1; plural=0;"
 }

@@ -872,7 +872,13 @@
 		"the mobile companion app": "l’application compagnon mobile",
 		"undo via snapshot": "annuler via un instantané",
 		"will be skipped": "sera ignoré",
-		"{used} of {total} tablet seats": "{used} sur {total} places tablette"
+		"{used} of {total} tablet seats": "{used} sur {total} places tablette",
+		"ExpenseCheck category ID": "ID de catégorie ExpenseCheck",
+		"ExpenseCheck cost center ID": "ID de centre de coûts ExpenseCheck",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "Les ID de catégorie et de centre de coûts se trouvent dans les paramètres ExpenseCheck (zone admin).",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "L'envoi en note de frais reste inactif tant que les deux ID ne pointent pas vers des entrées ExpenseCheck existantes — les dépenses sont toujours créditées directement entre-temps.",
+		"Open claim": "Ouvrir la note",
+		"This was already submitted with different details — nothing was duplicated.": "Cette demande a déjà été envoyée avec d’autres informations — rien n’a été dupliqué."
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

@@ -872,7 +872,13 @@
 		"the mobile companion app": "de mobiele companion-app",
 		"undo via snapshot": "ongedaan maken via momentopname",
 		"will be skipped": "wordt overgeslagen",
-		"{used} of {total} tablet seats": "{used} van {total} tabletplaatsen"
+		"{used} of {total} tablet seats": "{used} van {total} tabletplaatsen",
+		"ExpenseCheck category ID": "ExpenseCheck-categorie-ID",
+		"ExpenseCheck cost center ID": "ExpenseCheck-kostenplaats-ID",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "Categorie- en kostenplaats-ID's vind je in de ExpenseCheck-instellingen (beheerdersgedeelte).",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "Declaratie-routering is inactief tot beide ID's naar bestaande ExpenseCheck-items wijzen — uitgaven worden tot dan nog rechtstreeks verrekend.",
+		"Open claim": "Declaratie openen",
+		"This was already submitted with different details — nothing was duplicated.": "Dit is al verzonden met andere gegevens — er is niets gedupliceerd."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

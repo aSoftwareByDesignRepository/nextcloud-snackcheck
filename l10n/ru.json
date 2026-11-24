@@ -883,6 +883,12 @@
 		"the mobile companion app": "мобильное приложение-компаньон",
 		"undo via snapshot": "отменить через резервный снимок",
 		"will be skipped": "будет пропущено",
-		"{used} of {total} tablet seats": "{used} из {total} мест для планшетов"
+		"{used} of {total} tablet seats": "{used} из {total} мест для планшетов",
+		"ExpenseCheck category ID": "ID категории ExpenseCheck",
+		"ExpenseCheck cost center ID": "ID центра затрат ExpenseCheck",
+		"Category and cost center IDs come from ExpenseCheck settings (admin area).": "ID категории и центра затрат указаны в настройках ExpenseCheck (область администратора).",
+		"Claim routing is inactive until both IDs point at existing ExpenseCheck entries — expenses still credit directly until then.": "Маршрутизация в заявки неактивна, пока оба ID не укажут на существующие записи ExpenseCheck — до этого расходы по-прежнему зачисляются напрямую.",
+		"Open claim": "Открыть заявку",
+		"This was already submitted with different details — nothing was duplicated.": "Это уже было отправлено с другими данными — ничего не продублировано."
 	}
 }

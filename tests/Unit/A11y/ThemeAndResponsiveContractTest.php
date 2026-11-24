@@ -13,7 +13,8 @@ final class ThemeAndResponsiveContractTest extends TestCase
 {
 	private function css(): string
 	{
-		return (string)file_get_contents(dirname(__DIR__, 3) . '/css/app.css');
+		return (string)file_get_contents(dirname(__DIR__, 3) . '/css/common/tokens.css')
+			. (string)file_get_contents(dirname(__DIR__, 3) . '/css/app.css');
 	}
 
 	public function testMapsTokensToNextcloudColorVariables(): void

@@ -48,7 +48,8 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 
 	public function testCssMatchesDesignSystemChromeBasics(): void
 	{
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('background: var(--snk-primary)', $css);
 		self::assertStringContainsString('.snk-badge::before', $css);
 		self::assertStringContainsString('border-inline-start-width: 5px', $css);
@@ -110,7 +111,8 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 
 	public function testFamilyEmptyAndFilterChrome(): void
 	{
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		// Nested empties inside cards must not double-frame (AZC/CRM principle 14).
 		self::assertStringContainsString('.snk-card__body > .snk-empty', $css);
 		self::assertMatchesRegularExpression(
@@ -164,7 +166,8 @@ final class AppIconAndDesignSystemChromeContractTest extends TestCase
 	public function testUsesInPageNavToggleForNc34(): void
 	{
 		$main = (string)file_get_contents($this->root() . '/templates/main.php');
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		$mobileNav = (string)file_get_contents($this->root() . '/js/mobile-nav.js');
 		self::assertStringContainsString('id="snk-nav-toggle"', $main);
 		self::assertStringContainsString('data-snk-nav-toggle', $main);

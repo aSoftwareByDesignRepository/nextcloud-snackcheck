@@ -108,7 +108,7 @@ include __DIR__ . '/common/navigation.php';
 					?>
 					<?php if ($single && empty($_['isAppAdmin'])): ?>
 						<span class="snk-scope-strip__label" id="snk-site-scope-label"><?php p($l->t('Site')); ?></span>
-						<span id="snk-site-select" class="snk-scope-strip__value snk-site-label" aria-labelledby="snk-site-scope-label" aria-live="polite">
+						<span id="snk-site-select" class="snk-scope-strip__value" aria-labelledby="snk-site-scope-label" aria-live="polite">
 							<?php
 							$only = $_['sites'][0];
 							p(is_object($only) ? $only->getName() : ($only['name'] ?? ''));

@@ -40,14 +40,16 @@ final class WcagContrastFallbacksTest extends TestCase
 		self::assertGreaterThanOrEqual(4.5, self::ratio('#595959', '#ffffff'));
 		self::assertGreaterThanOrEqual(4.5, self::ratio('#ffffff', '#006aa3'));
 		self::assertGreaterThanOrEqual(4.5, self::ratio('#ffffff', '#c0341d'));
-		$css = (string)file_get_contents(__DIR__ . '/../../../css/app.css');
+		$css = (string)file_get_contents(__DIR__ . '/../../../css/common/tokens.css')
+			. (string)file_get_contents(__DIR__ . '/../../../css/app.css');
 		self::assertMatchesRegularExpression('/--snk-muted:[^;]*#595959/', $css);
 		self::assertMatchesRegularExpression('/--snk-primary:[^;]*#006aa3/', $css);
 	}
 
 	public function testCssDeclaresFocusAndReducedMotion(): void
 	{
-		$css = (string)file_get_contents(__DIR__ . '/../../../css/app.css');
+		$css = (string)file_get_contents(__DIR__ . '/../../../css/common/tokens.css')
+			. (string)file_get_contents(__DIR__ . '/../../../css/app.css');
 		self::assertStringContainsString(':focus-visible', $css);
 		self::assertStringContainsString('prefers-reduced-motion', $css);
 		self::assertStringContainsString('--snk-touch: 44px', $css);

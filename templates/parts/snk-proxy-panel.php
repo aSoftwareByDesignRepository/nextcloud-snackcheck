@@ -37,7 +37,7 @@ $hiddenAttr = !empty($proxyPanelHidden) ? ' hidden' : '';
 <?php endif; ?>
 		<div class="snk-proxy-pick" data-snk-proxy-fields>
 			<input type="hidden" name="siteId" value="<?php p($siteId); ?>" />
-			<div class="snk-proxy-pick__step snk-proxy-pick__who" role="group" aria-labelledby="<?php p($fieldId); ?>-label">
+			<div class="snk-proxy-pick__step" role="group" aria-labelledby="<?php p($fieldId); ?>-label">
 				<p class="snk-proxy-pick__step-label" id="<?php p($fieldId); ?>-label">
 					<span class="snk-proxy-pick__step-n" aria-hidden="true">1</span>
 					<?php p($l->t('Colleague')); ?>

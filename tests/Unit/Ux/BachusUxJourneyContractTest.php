@@ -53,7 +53,8 @@ final class BachusUxJourneyContractTest extends TestCase
 
 	public function testNavBucketsAndActiveStateCss(): void
 	{
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-nav__group-label', $css);
 		self::assertStringContainsString('.snk-nav__link.is-active', $css);
 		self::assertStringContainsString('#app-navigation.snk-nav', $css);
@@ -128,7 +129,8 @@ final class BachusUxJourneyContractTest extends TestCase
 
 	public function testMobileCardStackIncludesPeriodsAndBrReport(): void
 	{
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-app--periods .snk-table-wrap', $css);
 		self::assertStringContainsString('.snk-app--brreport .snk-table-wrap', $css);
 		self::assertStringContainsString('.snk-app--periods .snk-table thead', $css);
@@ -182,7 +184,8 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('$embedded = true', $users);
 		$pulse = (string)file_get_contents($this->root() . '/templates/pages/pulse.php');
 		self::assertStringContainsString('snk-quick-filters', $pulse);
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-filter-panel', $css);
 		self::assertStringContainsString('border-inline-start: 4px solid var(--snk-primary)', $css);
 		self::assertStringContainsString('.snk-quick-filters', $css);
@@ -243,7 +246,8 @@ final class BachusUxJourneyContractTest extends TestCase
 			$src
 		);
 		self::assertStringContainsString('snk-btn--danger', $src);
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('dialog.snk-dialog:not([open])', $css);
 		// NC reset kills dialog margin — open dialogs must re-center explicitly.
 		self::assertStringContainsString('margin: auto !important', $css);
@@ -321,7 +325,8 @@ final class BachusUxJourneyContractTest extends TestCase
 			'/Nothing logged this month yet[\s\S]*Download PDF/',
 			$src
 		);
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-statement', $css);
 		self::assertStringContainsString('.snk-money-list', $css);
 	}
@@ -344,7 +349,8 @@ final class BachusUxJourneyContractTest extends TestCase
 		self::assertStringContainsString('role="radiogroup"', $log);
 		self::assertStringContainsString('aria-pressed', $log);
 		self::assertStringContainsString('snk-log-advanced', $log);
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-qty-chip', $css);
 		self::assertStringContainsString('.snk-mode-chip', $css);
 		self::assertStringContainsString('.snk-tile.is-ok', $css);

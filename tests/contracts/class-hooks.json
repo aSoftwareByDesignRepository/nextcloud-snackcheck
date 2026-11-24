@@ -1,0 +1,7 @@
+{
+	"snk-badge--privacy": "variant marker on styled .snk-badge — 'totals only (privacy)' pill; e2e selects it (atlas-modes-craft.spec.js)",
+	"snk-callout--site-pick": "e2e selector — site-pick-required callout variant on styled .snk-callout--warn (ux-journeys.spec.js, atlas-modes-craft.spec.js)",
+	"snk-edit-tag": "JS hook — tag-edit dialog checkbox query in js/app.js; input chrome carried by .snk-check label",
+	"snk-transfer-report": "dialog id-mirror marker on styled .snk-dialog; selected via #snk-transfer-report, verdict styled via .snk-transfer-report__verdict (css/common/transfer.css)",
+	"snk-table-actions": "shared license-page pack recipe marker co-emitted with styled snk-license-table-actions (synced file — do not fork; _shared/license-page)"
+}

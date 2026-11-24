@@ -17,7 +17,7 @@
 			'contains_alcohol' => $l->t('Alcohol'),
 		];
 		?>
-		<section class="snk-card snk-card--proxy" aria-labelledby="snk-users-proxy-title">
+		<section class="snk-card" aria-labelledby="snk-users-proxy-title">
 			<header class="snk-card__header">
 				<div class="snk-card__header-text">
 					<h2 id="snk-users-proxy-title" class="snk-card__title"><?php p($l->t('Log for a colleague')); ?></h2>
@@ -140,7 +140,7 @@
 		<?php endforeach; ?>
 	<?php endif; ?>
 	<dialog id="snk-void-dialog" class="snk-dialog" aria-labelledby="snk-void-title">
-		<form method="dialog" data-snk-form="void-log">
+		<form method="dialog" data-snk-form="void-log" class="snk-dialog__form">
 			<h2 id="snk-void-title" class="snk-h2"><?php p($l->t('Void log')); ?></h2>
 			<input type="hidden" name="logId" id="snk-void-log-id" />
 			<label class="snk-field">

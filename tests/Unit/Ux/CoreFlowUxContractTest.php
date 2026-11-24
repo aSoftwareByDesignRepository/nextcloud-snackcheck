@@ -60,7 +60,8 @@ final class CoreFlowUxContractTest extends TestCase
 		self::assertStringContainsString('catalog-restock', $js);
 		self::assertStringContainsString('ensureRestockDialog', $js);
 		self::assertStringContainsString('wireRowActionMenus', $js);
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-row-actions__panel', $css);
 		self::assertStringContainsString('.snk-row-actions__item--danger', $css);
 	}
@@ -121,7 +122,8 @@ final class CoreFlowUxContractTest extends TestCase
 
 	public function testCssHasGiantTouchAndTableScroll(): void
 	{
-		$css = (string)file_get_contents($this->root() . '/css/app.css');
+		$css = (string)file_get_contents($this->root() . '/css/common/tokens.css')
+			. (string)file_get_contents($this->root() . '/css/app.css');
 		self::assertStringContainsString('.snk-table-wrap', $css);
 		self::assertStringContainsString('overflow-x: auto', $css);
 		self::assertStringContainsString('--snk-touch: 44px', $css);

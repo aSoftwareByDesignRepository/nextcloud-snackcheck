@@ -167,7 +167,7 @@ $multiSiteFilter = !empty($_['siteNote']) && is_countable($sites) && count($site
 		</div>
 	</article>
 	<dialog id="snk-reopen-dialog" class="snk-dialog" aria-labelledby="snk-reopen-title">
-		<form method="dialog" data-snk-form="reopen-period">
+		<form method="dialog" data-snk-form="reopen-period" class="snk-dialog__form">
 			<h2 id="snk-reopen-title" class="snk-h2"><?php p($l->t('Reopen period')); ?></h2>
 			<input type="hidden" name="periodId" id="snk-reopen-period-id" />
 			<label class="snk-field" for="snk-reopen-reason">

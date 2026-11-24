@@ -284,7 +284,7 @@ $tagLabels = [
 
 	<?php if ($multiSite && $otherSites !== []): ?>
 	<dialog id="snk-copy-item-dialog" class="snk-dialog" aria-labelledby="snk-copy-item-title">
-		<form method="dialog" data-snk-form="catalog-copy">
+		<form method="dialog" data-snk-form="catalog-copy" class="snk-dialog__form">
 			<h2 id="snk-copy-item-title" class="snk-h2"><?php p($l->t('Copy to site')); ?></h2>
 			<p id="snk-copy-item-name" class="snk-muted"></p>
 			<input type="hidden" name="itemId" id="snk-copy-item-id" />
@@ -306,7 +306,7 @@ $tagLabels = [
 	<?php endif; ?>
 
 	<dialog id="snk-restock-dialog" class="snk-dialog" aria-labelledby="snk-restock-title">
-		<form method="dialog" data-snk-form="catalog-restock">
+		<form method="dialog" data-snk-form="catalog-restock" class="snk-dialog__form">
 			<h2 id="snk-restock-title" class="snk-h2"><?php p($l->t('Restock')); ?></h2>
 			<input type="hidden" name="itemId" id="snk-restock-item-id" />
 			<label class="snk-field"><span><?php p($l->t('Add quantity')); ?></span>

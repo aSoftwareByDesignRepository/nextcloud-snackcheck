@@ -55,7 +55,7 @@ $exportList = !empty($pulse['topUp']) ? $pulse['topUp'] : ($pulse['shoppingList'
 		include __DIR__ . '/../parts/snk-empty-state.php';
 		?>
 	<?php else: ?>
-		<ul class="snk-list snk-list--actions">
+		<ul class="snk-list">
 			<?php foreach ($pulse['topUp'] as $t): ?>
 				<li class="snk-list__row">
 					<div class="snk-list__main">

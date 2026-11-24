@@ -289,7 +289,8 @@ assertTrue(
 		&& !str_contains($uxPulse, 'Nothing needs restocking.'),
 	'pulse UX: restock + plain fridge language; ranks collapsed; family empty icons'
 );
-$uxCss = file_get_contents($root . '/css/app.css');
+$uxCss = (string)file_get_contents($root . '/css/common/tokens.css')
+	. (string)file_get_contents($root . '/css/app.css');
 assertTrue(
 	is_string($uxCss)
 		&& str_contains($uxCss, '--snk-radius-sm: var(--border-radius-small, 6px)')
@@ -566,7 +567,8 @@ assertTrue(
 		&& str_contains($quickSrc, 'REASON_MAX_LEN'),
 	'quick-total org-wide + reason max length'
 );
-$themeCss = file_get_contents($root . '/css/app.css');
+$themeCss = (string)file_get_contents($root . '/css/common/tokens.css')
+	. (string)file_get_contents($root . '/css/app.css');
 assertTrue(
 	is_string($themeCss)
 		&& str_contains($themeCss, '--color-main-background')
@@ -877,7 +879,8 @@ assertTrue(
 		&& !str_contains((string)file_get_contents($root . '/templates/main.php'), 'getURLGenerator()'),
 	'page GETs CSRF-exempt; templates never call removed getURLGenerator'
 );
-$cssDisabled = file_get_contents($root . '/css/app.css');
+$cssDisabled = (string)file_get_contents($root . '/css/common/tokens.css')
+	. (string)file_get_contents($root . '/css/app.css');
 assertTrue(
 	is_string($cssDisabled)
 		&& !preg_match('/\.snk-tile:disabled[\s\S]{0,80}opacity:\s*0\.55/', $cssDisabled)

@@ -1,0 +1,126 @@
+/*
+ * SnackCheck design tokens (prefix snk-).
+ * DS §1.1: spacing / type / radius on :root; theme colours on body (NC --color-*).
+ * Hex only as var() fallbacks — never in feature rules.
+ * Contract: planning/design-system/DESIGN-SYSTEM.md (ArbeitszeitCheck SoT).
+ * Canonical home: css/common/tokens.css — loaded via @import from css/app.css.
+ */
+
+:root {
+	/* Spacing — 4 px grid (space-1…8) */
+	--snk-space-1: 4px;
+	--snk-space-2: 8px;
+	--snk-space-3: 12px;
+	--snk-space-4: 16px;
+	--snk-space-5: 24px;
+	--snk-space-6: 32px;
+	--snk-space-7: 48px;
+	--snk-space-8: 64px;
+
+	/*
+	 * Radii — Check scale 6 / 12 / 16 with NC vars where they exist.
+	 * NC has no medium token; keep md fixed so md ≠ lg when NC collapses large=small.
+	 */
+	--snk-radius-sm: var(--border-radius-small, 6px);
+	--snk-radius-md: 12px;
+	--snk-radius-lg: var(--border-radius-large, 16px);
+	--snk-radius: var(--snk-radius-md);
+	--snk-radius-pill: 999px;
+
+	/* Type */
+	--snk-fs-xs: 0.75rem;
+	--snk-fs-sm: 0.875rem;
+	--snk-fs-md: 1rem;
+	--snk-fs-lg: 1.125rem;
+	--snk-fs-xl: 1.5rem;
+	--snk-fs-2xl: 1.875rem;
+	--snk-line-tight: 1.2;
+	--snk-line-base: 1.45;
+	--snk-tab-num: tabular-nums;
+	--snk-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Consolas, monospace;
+
+	/* Touch — WCAG 2.5.5 / DS §0.4 */
+	--snk-touch: 44px;
+	--snk-touch-lg: 48px;
+
+	/* Breakpoints (documentation; media queries use the same values) */
+	--snk-breakpoint-sm: 480px;
+	--snk-breakpoint-md: 768px;
+	--snk-breakpoint-lg: 1024px;
+
+	--snk-icon-sm: 1rem;
+	--snk-icon-md: 1.125rem;
+	--snk-icon-lg: 1.375rem;
+	--snk-icon-well: 2.25rem;
+	--snk-icon-stroke: 1.75;
+	--snk-nav-width-compact: 240px;
+	--snk-prose-max: 65ch;
+	--snk-focus-offset: 2px;
+}
+
+/* Theme-bound — follow body [data-theme-*] where NC defines --color-* */
+body {
+	--snk-overlay-top: var(--header-height, 50px);
+	--snk-overlay-height: calc(100dvh - var(--header-height, 50px));
+
+	--snk-bg: var(--color-main-background, #ffffff);
+	--snk-bg-soft: color-mix(in srgb, var(--color-main-background, #ffffff) 96%, var(--color-main-text, #1d1d1d) 4%);
+	--snk-bg-card: var(--color-main-background, #ffffff);
+	--snk-text: var(--color-main-text, #1d1d1d);
+	--snk-muted: var(--color-text-maxcontrast, #595959);
+	--snk-surface: var(--snk-bg-soft);
+	--snk-surface-muted: var(--color-background-dark, var(--snk-bg-soft));
+	/* Catalog / log product photo well — NC-native, adapts to light/dark/accent/HC */
+	--snk-product-stage: var(
+		--color-background-hover,
+		color-mix(in srgb, var(--color-main-background) 92%, var(--color-main-text) 8%)
+	);
+	--snk-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
+	--snk-border-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 24%, transparent);
+	/* Interactive controls need >=3:1 (WCAG 1.4.11): maxcontrast is NC's own
+	   input border; --color-border / --snk-border stay surface-only. */
+	--snk-form-border: var(--color-border-maxcontrast, var(--snk-border-strong));
+	--snk-primary: var(--color-primary-element, #006aa3);
+	--snk-primary-text: var(--color-primary-element-text, #ffffff);
+	--snk-primary-hover: var(--color-primary-element-hover, var(--color-primary-element, #006aa3));
+	/* DS §1 / AZC: 3px focus ring */
+	--snk-focus: 3px solid var(--color-primary-element, #006aa3);
+	--snk-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #006aa3) 28%, transparent);
+
+	/* Mix INTO main-background (not transparent) so tints survive every theme */
+	--snk-tint-success: color-mix(in srgb, var(--color-success-text, var(--color-success, #2d7a46)) 18%, var(--color-main-background, #ffffff));
+	--snk-tint-warning: color-mix(in srgb, var(--color-warning-text, var(--color-warning, #b54708)) 22%, var(--color-main-background, #ffffff));
+	--snk-tint-danger: color-mix(in srgb, var(--color-error-text, var(--color-error, #c0341d)) 18%, var(--color-main-background, #ffffff));
+	--snk-tint-info: color-mix(in srgb, var(--color-primary-element, #006aa3) 16%, var(--color-main-background, #ffffff));
+
+	--snk-warning-ink: var(--color-warning-text, var(--color-warning, #b54708));
+	--snk-danger-ink: var(--color-error-text, var(--color-error, #c0341d));
+	--snk-success-ink: var(--color-success-text, var(--color-success, #2d7a46));
+	/* NC 30+ --color-error is a pale tint — solid CTAs use element-error */
+	--snk-danger-fill: var(--color-element-error, var(--color-error, #c0341d));
+	--snk-danger-on-fill: var(--color-primary-element-text, #ffffff);
+	--snk-danger: var(--snk-danger-fill);
+
+	--snk-scrim: color-mix(in srgb, var(--color-main-text, #1d1d1d) 45%, transparent);
+	--snk-shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-main-text, #1d1d1d) 8%, transparent);
+	--snk-shadow-md: 0 8px 24px color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
+}
+
+/* Bright accent fills on dark themes fail AA with white/black ink — darken fill.
+ * Danger CTAs stay solid error red so deactivate/close confirms stay visually distinct
+ * from secondary Cancel (Atlas visual: snk-vis-web-destructive-confirm-no-danger-clarity). */
+body[data-theme-dark],
+body[data-theme-dark-highcontrast] {
+	--snk-danger-fill: #b42318;
+	--snk-danger-on-fill: #ffffff;
+	--snk-danger: var(--snk-danger-fill);
+}
+
+/* High-contrast themes: stronger borders + focus */
+body[data-theme-light-highcontrast],
+body[data-theme-dark-highcontrast] {
+	--snk-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 32%, transparent);
+	--snk-border-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 48%, transparent);
+	--snk-focus: 3px solid var(--color-primary-element, #006aa3);
+	--snk-muted: var(--color-text-maxcontrast, var(--color-main-text, #1d1d1d));
+}

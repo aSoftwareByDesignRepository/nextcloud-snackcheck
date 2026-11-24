@@ -54,6 +54,13 @@ final class ExpenseClaimsRouteContractTest extends TestCase
 		self::assertStringContainsString("'snkexp:'", $this->api);
 		self::assertStringContainsString('Idempotency-Key', $this->api);
 		self::assertStringContainsString('submitDraft(', $this->api);
+		// No key, no write — identical contract to the ledger path. A generated
+		// fallback ref would mint a fresh claim per key-less retry.
+		$pos = strpos($this->api, 'function routeExpenseClaim');
+		self::assertNotFalse($pos);
+		$body = substr($this->api, $pos, 3000);
+		self::assertStringContainsString("'Idempotency key required'", $body);
+		self::assertStringNotContainsString('random_bytes', $body);
 	}
 
 	public function testSettingsSaveAcceptsMappingIds(): void

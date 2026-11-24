@@ -90,12 +90,37 @@ $mutations = [
 		'replace' => 'if ($this->settings->isExpenseEnabled()) {
 			throw new DomainException(\'expense_disabled\', \'Expenses disabled\', 403);
 		}'],
+
+	// ── ATLAS round fixes: period labels, rate-limit retry, claim dedupe ──
+	['file' => 'lib/Service/PeriodService.php', 'name' => 'successor_suffix_no_increment',
+		'search' => '$label = $maxSuffix === 0 ? $baseLabel : $baseLabel . \'-\' . ($maxSuffix + 1);',
+		'replace' => '$label = $maxSuffix === 0 ? $baseLabel : $baseLabel . \'-\' . $maxSuffix;'],
+	['file' => 'lib/Service/RateLimitService.php', 'name' => 'lock_fail_falls_through',
+		'search' => 'if (!$acquired) {
+			throw new DomainException(\'rate_limited\', \'Rate limited\', 429);
+		}',
+		'replace' => 'if (false) {
+			throw new DomainException(\'rate_limited\', \'Rate limited\', 429);
+		}'],
+	['file' => 'lib/Service/RateLimitService.php', 'name' => 'retry_loop_unconditional',
+		'search' => 'for ($attempt = 0; $attempt < 20 && !$acquired; $attempt++) {',
+		'replace' => 'for ($attempt = 0; $attempt < 20; $attempt++) {'],
+	['file' => 'lib/Service/ExpenseClaimsBridge.php', 'name' => 'fingerprint_or_to_and',
+		'search' => 'if ((int)$claim->getTotalMinor() !== $amountCents || (string)$claim->getTitle() !== $title) {',
+		'replace' => 'if ((int)$claim->getTotalMinor() !== $amountCents && (string)$claim->getTitle() !== $title) {'],
+	['file' => 'lib/Controller/ApiController.php', 'name' => 'keyless_claim_accepted',
+		'search' => 'if ($idem === \'\') {
+			// Same contract as the ledger path: no key, no write. A generated
+			// ref would mint a fresh claim per retry — silent duplicates.
+			throw new DomainException(\'validation_failed\', \'Idempotency key required\', 422);
+		}',
+		'replace' => ''],
 ];
 
 function runPhpunit(): bool
 {
 	$cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__, 2) . '/vendor/bin/phpunit')
-		. ' --filter "ExpenseCreditMathTest|ConsumptionLogExpenseTest" --no-output';
+		. ' --filter "ExpenseCreditMathTest|ConsumptionLogExpenseTest|PeriodEnsureOpenTest|RateLimitServiceTest|ExpenseClaimsBridgeIntegrationTest|ExpenseClaimsRouteContractTest" --no-output';
 	exec($cmd . ' 2>&1', $out, $code);
 	return $code === 0;
 }

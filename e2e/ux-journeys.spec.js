@@ -440,11 +440,13 @@ test.describe('SnackCheck UX journeys', () => {
 		expect(text.startsWith('%PDF-1.4')).toBeTruthy();
 		expect(text).toContain('SnackCheck');
 		// PDF strings follow the signed-in user's locale (admin may be de, en, …).
+		// Net position decides the label: deduction → TOTAL TO DEDUCT, credit →
+		// CREDIT BALANCE (expense credits can legitimately flip the member net).
 		expect(text).toMatch(
-			/TOTAL TO DEDUCT|ABZUG GESAMT|TOTALE DA DETRARRE|TOTAL À DÉDUIRE|TOTAL A DESCONTAR|TOTALT ATT DRA AV|TOTAAL AF TE TREKKEN|ŁĄCZNIE DO POTRĄCENIA|TOTALT TIL TREKK|I ALT AT TRÆKKE/
+			/TOTAL TO DEDUCT|ABZUG GESAMT|TOTALE DA DETRARRE|TOTAL À DÉDUIRE|TOTAL A DESCONTAR|TOTALT ATT DRA AV|TOTAAL AF TE TREKKEN|ŁĄCZNIE DO POTRĄCENIA|TOTALT TIL TREKK|I ALT AT TRÆKKE|KESİLECEK|К УДЕРЖАНИЮ|应扣金额|應扣金額|CREDIT BALANCE|GUTHABEN|SOLDE CRÉDITEUR|SALDO A CREDITO|SALDO A FAVOR|SALDO A CRÉDITO|TILGODOHAVANDE|TEGOED|SALDO KREDYTOWE|TILGODEHAVENDE|ALACAK BAKİYESİ|КРЕДИТОВЫЙ ОСТАТОК|贷方余额|貸方餘額/
 		);
 		expect(text).toMatch(
-			/To deduct|Abzuziehen|Da detrarre|À déduire|A descontar|Att dra av|Af te trekken|Do potrącenia|Til trekk|At trække/
+			/To deduct|Abzuziehen|Da detrarre|À déduire|A descontar|Att dra av|Af te trekken|Do potrącenia|Til trekk|At trække|Kesilecek|К удержанию|Credit balance|Guthaben|Solde créditeur|Saldo a credito|Saldo a favor|Saldo a crédito|Tillgodohavande|Tegoed|Saldo kredytowe|Tilgodehavende|Alacak bakiyesi|Кредитовый остаток/
 		);
 		expect(text).toMatch(/\d+\.\d{2} EUR/);
 	});

@@ -196,7 +196,7 @@ class ApiController extends Controller
 			// capability is present, the request becomes a claim draft — the credit
 			// endpoint is never invoked (no personal_credit row is written here).
 			if ($this->settings->isExpenseEnabled()
-				&& $this->settings->getExpenseRouting($this->claimsBridge?->capabilityPresent() ?? false) === SettingsService::EXPENSE_ROUTING_CLAIM) {
+				&& $this->settings->getExpenseRouting($this->expenseClaimRoutingReady()) === SettingsService::EXPENSE_ROUTING_CLAIM) {
 				return $this->routeExpenseClaim($user, $isAdminEntry ? $target : $user, $amountCents, $siteId);
 			}
 
@@ -282,35 +282,60 @@ class ApiController extends Controller
 		}
 	}
 
+	/** Non-negative integer id from a raw param; null on any non-digits. */
+	private function parseNonNegativeId(mixed $raw): ?int
+	{
+		if (is_int($raw)) {
+			return $raw >= 0 ? $raw : null;
+		}
+		if (!is_string($raw) || preg_match('/^\d+$/', trim($raw)) !== 1) {
+			return null;
+		}
+		return (int)trim($raw);
+	}
+
 	/**
-	 * F24: forward the entry as an ExpenseCheck claim draft. Capability can only
-	 * reach here when present (getExpenseRouting degrades otherwise); a mid-flight
-	 * disable is answered with 409 expense_route_unavailable.
+	 * Claim routing is effective only while EXP is live AND the org's
+	 * category/cost-center mapping resolves — any degradation means ledger.
+	 */
+	private function expenseClaimRoutingReady(): bool
+	{
+		return ($this->claimsBridge?->routingReady(
+			$this->settings->getExpenseClaimCategoryId(),
+			$this->settings->getExpenseClaimCostCenterId(),
+		)) ?? false;
+	}
+
+	/**
+	 * F24: forward the entry as an ExpenseCheck claim draft. The route can only
+	 * be reached while ready (getExpenseRouting degrades otherwise); a
+	 * mid-flight disable or stale mapping is answered with 409
+	 * expense_route_unavailable.
 	 */
 	private function routeExpenseClaim(string $actorUid, string $memberUid, int $amountCents, int $siteId): JSONResponse
 	{
-		$ingress = $this->claimsBridge?->ingress();
-		if ($ingress === null) {
+		$catId = $this->settings->getExpenseClaimCategoryId();
+		$ccId = $this->settings->getExpenseClaimCostCenterId();
+		$bridge = $this->claimsBridge;
+		if ($bridge === null || !$bridge->routingReady($catId, $ccId)) {
 			throw new DomainException('expense_route_unavailable', 'ExpenseCheck unavailable', 409);
 		}
 		// Deterministic per dialog-open: the client reuses the idempotency key it
-		// already sends, so a resubmit/double-click yields the same source_ref and
-		// EXP-side (source_app, source_ref) dedupe collapses it into one draft.
+		// already sends, so a resubmit/double-click yields the same source_ref —
+		// EXP-side request_key dedupe plus the (source_app, source_ref) line
+		// uniqueness collapse it into exactly one draft + one line.
 		$idem = trim((string)($this->request->getHeader('Idempotency-Key')
 			?: $this->request->getParam('idempotencyKey') ?? ''));
 		$idem = preg_replace('/[^A-Za-z0-9_-]/', '', $idem) ?? '';
 		$sourceRef = 'snkexp:' . ($idem !== '' ? mb_substr($idem, 0, 64) : bin2hex(random_bytes(16)));
-		$result = $ingress->submitDraft([
-			'member' => $memberUid,
-			'lines' => [[
-				'amount_cents' => $amountCents,
-				'reason' => (string)($this->request->getParam('expenseReason') ?? ''),
-			]],
-			'source_app' => 'snackcheck',
-			'source_ref' => $sourceRef,
-			'actor' => $actorUid,
-			'site_id' => $siteId,
-		]);
+		$result = $bridge->submitDraft(
+			$memberUid,
+			$amountCents,
+			(string)($this->request->getParam('expenseReason') ?? ''),
+			$sourceRef,
+			$catId,
+			$ccId,
+		);
 		$out = ['routed' => 'expense_claim', 'sourceRef' => $sourceRef];
 		if (is_array($result)) {
 			if (isset($result['ref'])) {
@@ -700,6 +725,20 @@ class ApiController extends Controller
 				}
 				$expenseRouting = $r;
 			}
+			$expenseClaimCategoryId = null;
+			if ($this->request->getParam('expenseClaimCategoryId') !== null) {
+				$expenseClaimCategoryId = $this->parseNonNegativeId($this->request->getParam('expenseClaimCategoryId'));
+				if ($expenseClaimCategoryId === null) {
+					return $this->fail('validation_failed', 422, 'Invalid ExpenseCheck category');
+				}
+			}
+			$expenseClaimCostCenterId = null;
+			if ($this->request->getParam('expenseClaimCostCenterId') !== null) {
+				$expenseClaimCostCenterId = $this->parseNonNegativeId($this->request->getParam('expenseClaimCostCenterId'));
+				if ($expenseClaimCostCenterId === null) {
+					return $this->fail('validation_failed', 422, 'Invalid ExpenseCheck cost center');
+				}
+			}
 
 			// Projected hospitality state after this request (before writes).
 			$projectedOn = $hospOn ?? $this->settings->isHospitalityEnabled();
@@ -795,6 +834,12 @@ class ApiController extends Controller
 			if ($expenseRouting !== null) {
 				$this->settings->setExpenseRouting($expenseRouting);
 			}
+			if ($expenseClaimCategoryId !== null) {
+				$this->settings->setExpenseClaimCategoryId($expenseClaimCategoryId);
+			}
+			if ($expenseClaimCostCenterId !== null) {
+				$this->settings->setExpenseClaimCostCenterId($expenseClaimCostCenterId);
+			}
 			$hospEnabledNow = $hospOn ?? $this->settings->isHospitalityEnabled();
 			if ($companyUpdate !== null && $hospEnabledNow) {
 				$this->settings->setHospitalityCompanyUserId($this->requireExistingUser($companyUpdate));
@@ -806,7 +851,7 @@ class ApiController extends Controller
 			// Invariant already enforced pre-apply — never 422 after writes (would leave partial state).
 			$all = $this->settings->getAll();
 			$all['expenseRouting'] = $this->settings->getExpenseRouting(
-				$this->claimsBridge?->capabilityPresent() ?? false);
+				$this->expenseClaimRoutingReady());
 			return $this->ok($all);
 		} catch (\Throwable $e) {
 			return $this->fromDomain($e);

@@ -108,7 +108,7 @@ class PageController extends Controller
 		$canHosp = $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($user);
 		$open = $this->periods->findOpen();
 		$canProxy = $siteId > 0 && $this->access->canManageSite($user, $siteId);
-		$expenseRouting = $this->settings->getExpenseRouting($this->claimsBridge?->capabilityPresent() ?? false);
+		$expenseRouting = $this->settings->getExpenseRouting($this->expenseClaimRoutingReady());
 		$expenseMaxCents = $this->settings->getExpenseSelfEntryMaxCents();
 		$expenseAvailable = $this->settings->isExpenseEnabled()
 			&& $open !== null
@@ -132,6 +132,18 @@ class PageController extends Controller
 			'expenseCanProxy' => $canProxy,
 			'expenseClaimRouting' => $expenseRouting === \OCA\SnackCheck\Service\SettingsService::EXPENSE_ROUTING_CLAIM,
 		]);
+	}
+
+	/**
+	 * Claim routing is effective only while EXP is live AND the org's
+	 * category/cost-center mapping resolves — any degradation means ledger.
+	 */
+	private function expenseClaimRoutingReady(): bool
+	{
+		return ($this->claimsBridge?->routingReady(
+			$this->settings->getExpenseClaimCategoryId(),
+			$this->settings->getExpenseClaimCostCenterId(),
+		)) ?? false;
 	}
 
 	#[NoAdminRequired]
@@ -599,7 +611,7 @@ class PageController extends Controller
 		// Effective value, not raw storage — a stale 'expense_claim' must
 		// force-degrade to ledger whenever the EXP capability is absent.
 		$all['expenseRouting'] = $this->settings->getExpenseRouting(
-			$this->claimsBridge?->capabilityPresent() ?? false);
+			$this->expenseClaimRoutingReady());
 		// The cap input edits the STORED value (0 = no explicit limit) — the
 		// effective getter would paint the platform maximum into the field.
 		$all['expenseSelfEntryMaxCents'] = $this->settings->getExpenseSelfEntryMaxCentsStored();
@@ -629,6 +641,7 @@ class PageController extends Controller
 			'hospAllowChips' => $this->userChips($hospIds),
 			'hospCompanyChips' => $companyUid !== '' ? $this->userChips([$companyUid]) : [],
 			'expenseClaimsCapability' => $this->claimsBridge?->capabilityPresent() ?? false,
+			'expenseClaimMappingReady' => $this->expenseClaimRoutingReady(),
 			'license' => $this->license->getLicenseSummary(),
 			'terminals' => $this->terminals->listActive(),
 			'terminalLimit' => $this->terminals->getDeviceLimit(),

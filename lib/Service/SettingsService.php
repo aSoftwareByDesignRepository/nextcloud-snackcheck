@@ -34,6 +34,8 @@ class SettingsService
 	public const KEY_EXPENSE_SELF_MAX = 'expense_self_entry_max_cents';
 	public const KEY_EXPENSE_CLAMP = 'expense_clamp_negative_deduct';
 	public const KEY_EXPENSE_ROUTING = 'expense_routing'; // ledger_credit|expense_claim
+	public const KEY_EXPENSE_CLAIM_CATEGORY = 'expense_claim_category_id';
+	public const KEY_EXPENSE_CLAIM_COST_CENTER = 'expense_claim_cost_center_id';
 	public const KEY_EXPENSE_KIOSK = 'expense_kiosk_entry';
 	public const EXPENSE_ROUTING_LEDGER = 'ledger_credit';
 	public const EXPENSE_ROUTING_CLAIM = 'expense_claim';
@@ -277,6 +279,31 @@ class SettingsService
 		);
 	}
 
+	/**
+	 * EXP entity ids the org maps SnackCheck expenses onto (F-SN2 claim
+	 * routing). EXP categories/cost-centers are org-defined and members can
+	 * not enumerate them — the admin configures both ids; 0 = unmapped.
+	 */
+	public function getExpenseClaimCategoryId(): int
+	{
+		return max(0, (int)$this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_CLAIM_CATEGORY, '0'));
+	}
+
+	public function setExpenseClaimCategoryId(int $id): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_CLAIM_CATEGORY, (string)max(0, $id));
+	}
+
+	public function getExpenseClaimCostCenterId(): int
+	{
+		return max(0, (int)$this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_CLAIM_COST_CENTER, '0'));
+	}
+
+	public function setExpenseClaimCostCenterId(int $id): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_CLAIM_COST_CENTER, (string)max(0, $id));
+	}
+
 	/** Kitchen-tablet expense entry (default OFF). */
 	public function isExpenseKioskEntryEnabled(): bool
 	{
@@ -445,6 +472,8 @@ class SettingsService
 			'expenseSelfEntryMaxCents' => $this->getExpenseSelfEntryMaxCents(),
 			'expenseClampNegativeDeduct' => $this->isExpenseClampNegativeDeduct(),
 			'expenseRouting' => $this->getExpenseRoutingStored(),
+			'expenseClaimCategoryId' => $this->getExpenseClaimCategoryId(),
+			'expenseClaimCostCenterId' => $this->getExpenseClaimCostCenterId(),
 			'expenseKioskEntry' => $this->isExpenseKioskEntryEnabled(),
 			'accessMode' => $this->getAccessMode(),
 			'accessGroups' => $this->getAccessGroups(),

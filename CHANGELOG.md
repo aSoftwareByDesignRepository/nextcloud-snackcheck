@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.2.0 - 2026-11-24
 
 ### Added
 
@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `expense.facade_void` audit action is only emitted for actual facade voids.
 - Expense claim `source_ref` is deterministic so ExpenseCheck-side dedupe survives resubmits.
 - User and colleague searches now also match display names (uid-only backends).
+- Concurrency hardening: concurrent claim submits collapse into exactly one ExpenseCheck draft (request-key race + unique-index re-read + settle-wait on the two-step claim write); a failed claim line can no longer orphan an empty draft (atomic compensation); a replayed key with changed payload now hard-fails `idempotency_conflict` instead of silently returning the wrong draft.
+- Claim routing now requires an idempotency key like the ledger path — a key-less submit can no longer mint duplicate claims; write paths key on the stored routing so a degraded claim route hard-fails `expense_route_unavailable` rather than silently writing a ledger credit.
+- Period open no longer wedges after many close/open cycles within one month (successor labels derive from the max existing suffix instead of a capped probe).
+- The user rate limiter no longer answers spurious 429s when two legitimate requests from the same user arrive at the same instant (bounded lock retry).
+- Translations: credit-balance statement labels translated for all 14 remaining locales (previously English fallback).
 
 ## 1.1.6 - 2026-11-13
 

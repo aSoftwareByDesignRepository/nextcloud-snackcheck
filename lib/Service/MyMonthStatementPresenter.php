@@ -29,8 +29,14 @@ final class MyMonthStatementPresenter
 	/**
 	 * @return list<array{label:string,value:string}>
 	 */
-	public function breakdownRows(IL10N $l, int $grossCents, int $subsidyCents, int $subsidyAllowanceCents): array
-	{
+	public function breakdownRows(
+		IL10N $l,
+		int $grossCents,
+		int $subsidyCents,
+		int $subsidyAllowanceCents,
+		int $creditsCents = 0,
+		int $unusedCreditCents = 0,
+	): array {
 		$rows = [
 			[
 				'label' => $l->t('What you logged'),
@@ -41,6 +47,18 @@ final class MyMonthStatementPresenter
 			$rows[] = [
 				'label' => $l->t('Company covers'),
 				'value' => $this->formatEuroWeb($subsidyCents),
+			];
+		}
+		if ($creditsCents > 0) {
+			$rows[] = [
+				'label' => $l->t('Expenses'),
+				'value' => '−' . $this->formatEuroWeb($creditsCents),
+			];
+		}
+		if ($unusedCreditCents > 0) {
+			$rows[] = [
+				'label' => $l->t('Unapplied credit'),
+				'value' => $this->formatEuroWeb($unusedCreditCents),
 			];
 		}
 		return $rows;
@@ -62,6 +80,8 @@ final class MyMonthStatementPresenter
 		int $subsidyAllowanceCents,
 		int $freeQty,
 		bool $multiSite,
+		int $creditsCents = 0,
+		int $unusedCreditCents = 0,
 	): array {
 		$breakdown = [
 			[
@@ -73,6 +93,18 @@ final class MyMonthStatementPresenter
 			$breakdown[] = [
 				'label' => $l->t('Company covers'),
 				'value' => $this->formatEuroPdf($subsidyCents),
+			];
+		}
+		if ($creditsCents > 0) {
+			$breakdown[] = [
+				'label' => $l->t('Expenses'),
+				'value' => '-' . $this->formatEuroPdf($creditsCents),
+			];
+		}
+		if ($unusedCreditCents > 0) {
+			$breakdown[] = [
+				'label' => $l->t('Unapplied credit'),
+				'value' => $this->formatEuroPdf($unusedCreditCents),
 			];
 		}
 
@@ -110,13 +142,13 @@ final class MyMonthStatementPresenter
 				[$l->t('Generated'), $generatedAt],
 			],
 			'keyFigure' => [
-				'label' => $l->t('To deduct'),
-				'value' => $this->formatEuroPdf($deductCents),
+				'label' => $deductCents < 0 ? $l->t('Credit balance') : $l->t('To deduct'),
+				'value' => $this->formatEuroPdf(abs($deductCents)),
 			],
 			'breakdown' => $breakdown,
 			'totalLine' => [
-				'label' => $l->t('TOTAL TO DEDUCT'),
-				'value' => $this->formatEuroPdf($deductCents),
+				'label' => $deductCents < 0 ? $l->t('CREDIT BALANCE') : $l->t('TOTAL TO DEDUCT'),
+				'value' => $this->formatEuroPdf(abs($deductCents)),
 			],
 			'tableTitle' => $l->t('Logged items'),
 			'columns' => $columns,

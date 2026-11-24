@@ -68,6 +68,7 @@ class PageController extends Controller
 		private readonly MyMonthStatementPresenter $myMonthStatement,
 		private readonly InstanceId $instanceId,
 		private readonly \OCA\SnackCheck\ConfigTransfer\TransferReceiptStore $transferReceipts,
+		private readonly ?\OCA\SnackCheck\Service\ExpenseClaimsBridge $claimsBridge = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -106,15 +107,30 @@ class PageController extends Controller
 		$items = $sitePickRequired ? [] : $this->catalog->listActive($siteId);
 		$canHosp = $this->settings->isHospitalityEnabled() && $this->hospAllow->isAllowed($user);
 		$open = $this->periods->findOpen();
+		$canProxy = $siteId > 0 && $this->access->canManageSite($user, $siteId);
+		$expenseRouting = $this->settings->getExpenseRouting($this->claimsBridge?->capabilityPresent() ?? false);
+		$expenseMaxCents = $this->settings->getExpenseSelfEntryMaxCents();
+		$expenseAvailable = $this->settings->isExpenseEnabled()
+			&& $open !== null
+			&& !$sitePickRequired
+			&& ($this->settings->isExpenseSelfEntryEnabled() || $canProxy);
 		$mapped = $this->mapLogItems($items);
 		return $this->page('log', [
 			'items' => $mapped,
 			'itemGroups' => $this->groupLogItems($mapped),
 			'siteId' => $siteId,
 			'sitePickRequired' => $sitePickRequired,
-			'canProxy' => $siteId > 0 && $this->access->canManageSite($user, $siteId),
+			'canProxy' => $canProxy,
 			'hospitalityAllowed' => $canHosp,
 			'periodClosed' => $open === null,
+			'expenseAvailable' => $expenseAvailable,
+			'expenseSelfEntry' => $this->settings->isExpenseSelfEntryEnabled(),
+			'expenseSelfEntryMaxCents' => $expenseMaxCents,
+			// Hint shows only when the cap actually restricts someone —
+			// the platform maximum is not a meaningful "limit" to announce.
+			'expenseSelfEntryCapped' => $expenseMaxCents < \OCA\SnackCheck\Service\ConsumptionLogService::EXPENSE_MAX_CENTS,
+			'expenseCanProxy' => $canProxy,
+			'expenseClaimRouting' => $expenseRouting === \OCA\SnackCheck\Service\SettingsService::EXPENSE_ROUTING_CLAIM,
 		]);
 	}
 
@@ -137,6 +153,7 @@ class PageController extends Controller
 				'showSubsidyStat' => false,
 				'breakdownRows' => [],
 				'multiSite' => $this->settings->isMultiSiteEnabled(),
+				'expenseQuickLink' => false,
 			]);
 		}
 		$lines = $this->logs->findForUserPeriod((int)$period->getId(), $user);
@@ -150,29 +167,37 @@ class PageController extends Controller
 		$lineArr = [];
 		$freeQty = 0;
 		foreach ($lines as $l) {
-			if ($l->getBillingBucket() === 'company_hospitality') {
+			$bucket = (string)$l->getBillingBucket();
+			if ($bucket === 'company_hospitality') {
 				continue;
 			}
-			$free = ((int)$l->getLineTotalCents()) === 0;
+			$free = $bucket === 'personal' && ((int)$l->getLineTotalCents()) === 0;
 			if ($free) {
 				$freeQty += (int)$l->getQty();
 			}
 			$lineArr[] = [
 				'line_total_cents' => (int)$l->getLineTotalCents(),
-				'billing_bucket' => 'personal',
+				'billing_bucket' => $bucket,
 				'voided' => false,
 				'name' => $l->getItemNameSnap(),
 				'qty' => $l->getQty(),
 				'createdAt' => $l->getCreatedAt()?->format('Y-m-d H:i'),
 				'id' => $l->getId(),
 				'free' => $free,
+				'expenseReason' => $bucket === 'personal_credit' ? (string)($l->getExpenseReason() ?? '') : '',
 				'siteName' => $multiSite ? ($siteMap[(int)$l->getSiteId()] ?? '') : '',
 			];
 		}
 		$subsidyAllowanceCents = $this->settings->getSubsidyAllowanceCents();
-		$calc = $this->subsidy->computeForUser($subsidyAllowanceCents, $lineArr);
+		$calc = $this->subsidy->computeForUser(
+			$subsidyAllowanceCents,
+			$lineArr,
+			$this->settings->isExpenseClampNegativeDeduct(),
+		);
 		$grossCents = (int)$calc['gross_cents'];
 		$subsidyCents = (int)$calc['subsidy_cents'];
+		$creditsCents = (int)($calc['credits_cents'] ?? 0);
+		$unusedCreditCents = (int)($calc['unused_credit_cents'] ?? 0);
 		$deductCents = (int)$calc['deduct_cents'];
 		return $this->page('mymonth', [
 			'periodLabel' => PeriodDisplay::format((string)$period->getLabel()),
@@ -182,9 +207,15 @@ class PageController extends Controller
 			'grossCents' => $grossCents,
 			'subsidyCents' => $subsidyCents,
 			'subsidyAllowanceCents' => $subsidyAllowanceCents,
+			'creditsCents' => $creditsCents,
+			'unusedCreditCents' => $unusedCreditCents,
 			'deductCents' => $deductCents,
 			'showSubsidyStat' => $this->myMonthStatement->showSubsidy($subsidyAllowanceCents, $subsidyCents),
-			'breakdownRows' => $this->myMonthStatement->breakdownRows($this->l10n, $grossCents, $subsidyCents, $subsidyAllowanceCents),
+			'expenseQuickLink' => $this->settings->isExpenseEnabled()
+				&& $period->getState() === 'open',
+			'breakdownRows' => $this->myMonthStatement->breakdownRows(
+				$this->l10n, $grossCents, $subsidyCents, $subsidyAllowanceCents, $creditsCents, $unusedCreditCents,
+			),
 			'multiSite' => $multiSite,
 		]);
 	}
@@ -478,6 +509,9 @@ class PageController extends Controller
 				'sitePickRequired' => $sitePickRequired,
 				'periodClosed' => $periodClosed,
 				'proxyItems' => $proxyItems,
+				// Single-writer rule (US-003 AC-3b): while EXP owns its claim
+				// credits the web offers no void affordance — only the chip.
+				'expenseClaimsManaged' => $this->claimsBridge?->capabilityPresent() ?? false,
 			]
 		));
 	}
@@ -562,6 +596,13 @@ class PageController extends Controller
 			return new NotFoundResponse();
 		}
 		$all = $this->settings->getAll();
+		// Effective value, not raw storage — a stale 'expense_claim' must
+		// force-degrade to ledger whenever the EXP capability is absent.
+		$all['expenseRouting'] = $this->settings->getExpenseRouting(
+			$this->claimsBridge?->capabilityPresent() ?? false);
+		// The cap input edits the STORED value (0 = no explicit limit) — the
+		// effective getter would paint the platform maximum into the field.
+		$all['expenseSelfEntryMaxCents'] = $this->settings->getExpenseSelfEntryMaxCentsStored();
 		$hospIds = $this->hospAllow->listUserIds();
 		$companyUid = trim((string)($all['hospitalityCompanyUserId'] ?? ''));
 
@@ -587,6 +628,7 @@ class PageController extends Controller
 			'appAdminChips' => $this->userChips(is_array($all['appAdmins'] ?? null) ? $all['appAdmins'] : []),
 			'hospAllowChips' => $this->userChips($hospIds),
 			'hospCompanyChips' => $companyUid !== '' ? $this->userChips([$companyUid]) : [],
+			'expenseClaimsCapability' => $this->claimsBridge?->capabilityPresent() ?? false,
 			'license' => $this->license->getLicenseSummary(),
 			'terminals' => $this->terminals->listActive(),
 			'terminalLimit' => $this->terminals->getDeviceLimit(),

@@ -697,6 +697,212 @@ final class DeviceApiContractTest extends TestCase
 		self::assertStringNotContainsString("getParam('userId')", $chunk);
 	}
 
+	public function testExpenseSelfNeedsSessionAndWrites(): void
+	{
+		$device = $this->device(1, 9);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->with('tok', '1')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => false,
+			'hospitalityAllowed' => false,
+		]);
+		$settings = $this->expenseSettings();
+		$logs = $this->createMock(ConsumptionLogService::class);
+		$logs->expects($this->once())->method('createExpense')->with($this->callback(
+			static function (array $input): bool {
+				return $input['actorUserId'] === 'alice'
+					&& $input['source'] === 'expense_terminal'
+					&& $input['isKitchenAdmin'] === false
+					&& $input['amountCents'] === 250;
+			}
+		))->willReturn([
+			'log' => $this->sampleLog(),
+			'replay' => false,
+			'httpStatus' => 201,
+		]);
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			unlock: $unlock,
+			settings: $settings,
+			logs: $logs,
+			jsonBody: [
+				'unlockToken' => 'tok',
+				'mode' => 'self',
+				'amountCents' => 250,
+				'expenseReason' => 'Milk',
+				'idempotencyKey' => 'idem-1',
+			],
+		);
+		$res = $ctrl->createExpense();
+		self::assertSame(201, $res->getStatus());
+		self::assertSame('expense', $res->getData()['mode']);
+		self::assertFalse($res->getData()['replay']);
+		self::assertArrayHasKey('undoUntil', $res->getData());
+	}
+
+	public function testExpenseProxyWithoutStepUpSecretIsUnlockRequired(): void
+	{
+		$device = $this->device(1, 9);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'mgr',
+			'isKitchenAdmin' => true,
+			'hospitalityAllowed' => false,
+		]);
+		// NN-14: no pin/qr/nfc → uniform unlock_required, verify() never runs.
+		$unlock->expects($this->never())->method('verify');
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+		$access->method('isAppAdmin')->with('mgr')->willReturn(true);
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			unlock: $unlock,
+			access: $access,
+			settings: $this->expenseSettings(),
+			jsonBody: [
+				'unlockToken' => 'tok',
+				'mode' => 'proxy',
+				'targetUserId' => 'bob',
+				'amountCents' => 250,
+				'expenseReason' => 'Milk',
+			],
+		);
+		$res = $ctrl->createExpense();
+		self::assertSame(403, $res->getStatus());
+		self::assertSame('unlock_required', $res->getData()['code']);
+	}
+
+	public function testExpenseProxyNonAdminSessionDeniedBeforeVerify(): void
+	{
+		$device = $this->device(1, 9);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->willReturn([
+			'userId' => 'alice',
+			'isKitchenAdmin' => true, // stale session cache — live ACL says no
+			'hospitalityAllowed' => false,
+		]);
+		// A non-manager session must never proxy — even with a correct manager PIN.
+		$unlock->expects($this->never())->method('verify');
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+		$access->method('isAppAdmin')->willReturn(false);
+		$access->method('canManageSite')->willReturn(false);
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			unlock: $unlock,
+			access: $access,
+			settings: $this->expenseSettings(),
+			jsonBody: [
+				'unlockToken' => 'tok',
+				'mode' => 'proxy',
+				'targetUserId' => 'bob',
+				'pin' => '9876',
+				'amountCents' => 250,
+				'expenseReason' => 'Milk',
+			],
+		);
+		$res = $ctrl->createExpense();
+		self::assertSame(403, $res->getStatus());
+		self::assertSame('permission_denied', $res->getData()['code']);
+	}
+
+	public function testExpenseProxySessionPlusStepUpWrites(): void
+	{
+		$device = $this->device(1, 9);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->method('peekUnlockToken')->with('tok', '1')->willReturn([
+			'userId' => 'mgr',
+			'isKitchenAdmin' => true,
+			'hospitalityAllowed' => false,
+		]);
+		$unlock->expects($this->once())->method('verify')
+			->with('9876', null, 'dev:1', null, 9, '1')
+			->willReturn(['userId' => 'mgr']);
+		$access = $this->createMock(AccessControlService::class);
+		$access->method('canAccessApp')->willReturn(true);
+		$access->method('isAppAdmin')->with('mgr')->willReturn(true);
+		$access->method('canManageSite')->willReturn(true);
+		$settings = $this->expenseSettings();
+		$settings->method('isMultiSiteEnabled')->willReturn(false);
+		$logs = $this->createMock(ConsumptionLogService::class);
+		$logs->expects($this->once())->method('createExpense')->with($this->callback(
+			static function (array $input): bool {
+				return $input['actorUserId'] === 'mgr'
+					&& $input['source'] === 'expense_terminal_proxy'
+					&& $input['isKitchenAdmin'] === true
+					&& $input['targetUserId'] === 'bob';
+			}
+		))->willReturn([
+			'log' => $this->sampleLog(),
+			'replay' => false,
+			'httpStatus' => 201,
+		]);
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			unlock: $unlock,
+			access: $access,
+			settings: $settings,
+			logs: $logs,
+			jsonBody: [
+				'unlockToken' => 'tok',
+				'mode' => 'proxy',
+				'targetUserId' => 'bob',
+				'pin' => '9876',
+				'amountCents' => 250,
+				'expenseReason' => 'Milk',
+			],
+		);
+		$res = $ctrl->createExpense();
+		self::assertSame(201, $res->getStatus());
+		self::assertSame('expense_proxy', $res->getData()['mode']);
+	}
+
+	public function testExpenseKioskToggleOffRejectsBeforeSession(): void
+	{
+		$device = $this->device(1, 9);
+		$terminals = $this->createMock(TerminalDeviceService::class);
+		$terminals->method('resolveToken')->willReturn($device);
+		$terminals->method('getDeviceLimit')->willReturn(10);
+		$terminals->method('getActiveCount')->willReturn(1);
+		$settings = $this->expenseSettings(kiosk: false);
+		$unlock = $this->createMock(UnlockService::class);
+		$unlock->expects($this->never())->method('peekUnlockToken');
+		$ctrl = $this->controller(
+			terminals: $terminals,
+			unlock: $unlock,
+			settings: $settings,
+			jsonBody: ['unlockToken' => 'tok', 'mode' => 'self', 'amountCents' => 100, 'expenseReason' => 'Milk'],
+		);
+		$res = $ctrl->createExpense();
+		self::assertSame(403, $res->getStatus());
+		self::assertSame('expense_kiosk_disabled', $res->getData()['code']);
+	}
+
+	private function expenseSettings(bool $kiosk = true): SettingsService
+	{
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isExpenseEnabled')->willReturn(true);
+		$settings->method('isExpenseKioskEntryEnabled')->willReturn($kiosk);
+		$settings->method('getExpenseRouting')->willReturn(SettingsService::EXPENSE_ROUTING_LEDGER);
+		return $settings;
+	}
+
 	private function sampleLog(): \OCA\SnackCheck\Db\ConsumptionLog
 	{
 		$log = new \OCA\SnackCheck\Db\ConsumptionLog();

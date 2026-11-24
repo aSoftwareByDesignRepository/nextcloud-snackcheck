@@ -57,6 +57,15 @@
 			hospitality_reason_required: t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'),
 			site_required: t('Pick a site above before logging. Each kitchen has its own catalog.', 'Pick a site above before logging. Each kitchen has its own catalog.'),
 			validation_failed: t('Please check your entries and try again.', 'Please check your entries and try again.'),
+			expense_disabled: t('Expenses are not enabled.', 'Expenses are not enabled.'),
+			expense_self_entry_disabled: t('You cannot record expenses yourself — ask a kitchen admin.', 'You cannot record expenses yourself — ask a kitchen admin.'),
+			expense_kiosk_disabled: t('Expenses are not enabled on this device.', 'Expenses are not enabled on this device.'),
+			amount_invalid: t('Enter a valid amount.', 'Enter a valid amount.'),
+			amount_over_self_limit: t('That amount is over your limit — ask a kitchen admin.', 'That amount is over your limit — ask a kitchen admin.'),
+			expense_reason_required: t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'),
+			managed_externally: t('This credit is managed by ExpenseCheck, void it there.', 'This credit is managed by ExpenseCheck, void it there.'),
+			expense_route_unavailable: t('Expense claims are unavailable right now — try again later.', 'Expense claims are unavailable right now — try again later.'),
+			unlock_required: t('Please verify yourself again.', 'Please verify yourself again.'),
 			rate_limited: t('Too many attempts. Wait a moment and try again.', 'Too many attempts. Wait a moment and try again.'),
 			unlock_busy: t('Please try again in a moment.', 'Please try again in a moment.'),
 			terminal_busy: t('Please try again in a moment.', 'Please try again in a moment.'),
@@ -1369,6 +1378,24 @@
 					idEl.value = btn.getAttribute('data-log-id') || '';
 					openSnkDialog(dlg, btn);
 				}
+			} else if (action === 'open-expense-dialog') {
+				const dlg = document.getElementById('snk-expense-dialog');
+				if (dlg && typeof dlg.showModal === 'function') {
+					const amount = document.getElementById('snk-expense-amount');
+					const reason = document.getElementById('snk-expense-reason');
+					const keyEl = dlg.querySelector('[data-snk-expense-key]');
+					if (amount) amount.value = '';
+					if (reason) reason.value = '';
+					// One key per dialog-open: a resubmit of the same dialog is an
+					// idempotent replay, never a second credit (and EXP claim
+					// routing derives its dedupe source_ref from this same key).
+					if (keyEl) {
+						keyEl.value = crypto.randomUUID
+							? crypto.randomUUID()
+							: (Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+					}
+					openSnkDialog(dlg, btn);
+				}
 			} else if (action === 'focus-site') {
 				const sel = document.getElementById('snk-site-select');
 				if (sel) {
@@ -1586,6 +1613,16 @@
 					body.subsidyAllowanceCents = String(cents);
 					delete body.subsidyAllowanceEuro;
 				}
+				if (Object.prototype.hasOwnProperty.call(body, 'expenseSelfEntryMaxEuro')) {
+					const rawMax = String(body.expenseSelfEntryMaxEuro || '').trim();
+					const cents = rawMax === '' ? 0 : parseEuroToCentsClient(rawMax);
+					if (cents === null) {
+						toast(t('Please check your entries and try again.', 'Please check your entries and try again.'), null, true);
+						return;
+					}
+					body.expenseSelfEntryMaxCents = String(cents);
+					delete body.expenseSelfEntryMaxEuro;
+				}
 				if (String(body.hospitalityEnabled || '') === '1') {
 					const company = String(body.hospitalityCompanyUserId || '').trim();
 					const allow = String(body.hospitalityAllowedUserIds || '').trim();
@@ -1748,6 +1785,50 @@
 				await post(OC.generateUrl('/apps/snackcheck/api/periods/' + body.periodId + '/reopen'), { reason: reason });
 				form.closest('dialog')?.close();
 				window.location.reload();
+			} else if (kind === 'expense') {
+				const submitter = ev.submitter;
+				if (submitter && submitter.value === 'cancel') {
+					form.closest('dialog')?.close();
+					return;
+				}
+				const rawAmount = String(body.amountEuro || '').trim().replace(/\s/g, '').replace(',', '.');
+				if (/\.\d{3,}$/.test(rawAmount)) {
+					markFieldInvalid(form.querySelector('[name="amountEuro"]'));
+					toast(t('Please check your entries and try again.', 'Please check your entries and try again.'), null, true);
+					return;
+				}
+				const cents = parseEuroToCentsClient(body.amountEuro);
+				if (cents === null || cents <= 0) {
+					markFieldInvalid(form.querySelector('[name="amountEuro"]'));
+					toast(t('Please check your entries and try again.', 'Please check your entries and try again.'), null, true);
+					return;
+				}
+				const reason = String(body.expenseReason || '').trim();
+				if (reason.length < 3) {
+					markFieldInvalid(form.querySelector('[name="expenseReason"]'));
+					toast(t('Reason needs at least 3 characters', 'Reason needs at least 3 characters'), null, true);
+					return;
+				}
+				const payload = {
+					siteId: Number(body.siteId),
+					amountCents: String(cents),
+					expenseReason: reason,
+					idempotencyKey: String(body.idempotencyKey || '').trim()
+				};
+				const target = String(body.targetUserId || '').trim();
+				if (target) {
+					payload.targetUserId = target;
+				}
+				const created = await post(OC.generateUrl('/apps/snackcheck/api/expenses'), payload);
+				form.closest('dialog')?.close();
+				if (created && created.data && created.data.routed === 'expense_claim') {
+					toast(t('Expense claim submitted', 'Expense claim submitted'));
+				} else {
+					// Undo chip for the 60 s self-undo window (US-003 AC-2) —
+					// only for real ledger rows (a routed claim has no row).
+					toast(t('Expense recorded', 'Expense recorded'),
+						created && created.data ? created.data.id : null);
+				}
 			} else if (kind === 'close-period-confirm') {
 				const submitter = ev.submitter;
 				if (submitter && submitter.value === 'cancel') {
@@ -1842,6 +1923,19 @@
 			mo.observe(fields, { attributes: true, subtree: true, attributeFilter: ['value'] });
 			document.addEventListener('snk-chips-changed', syncHosp);
 			syncHosp();
+		}
+	})();
+
+	(function () {
+		const en = document.getElementById('snk-expense-enabled');
+		const fields = document.getElementById('snk-expense-fields');
+		function syncExpense() {
+			if (!en || !fields) return;
+			fields.hidden = !en.checked;
+		}
+		if (en && fields) {
+			en.addEventListener('change', syncExpense);
+			syncExpense();
 		}
 	})();
 

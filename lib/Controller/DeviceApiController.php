@@ -50,6 +50,7 @@ class DeviceApiController extends Controller
 		private readonly RateLimitService $rateLimit,
 		private readonly IUserManager $userManager,
 		private readonly ITimeFactory $timeFactory,
+		private readonly ?\OCA\SnackCheck\Service\ExpenseClaimsBridge $claimsBridge = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -90,6 +91,18 @@ class DeviceApiController extends Controller
 					// NFC uses same server map as QR when hardware present (client optional).
 					'unlock' => ['pin', 'qr', 'nfc'],
 					'selfUndo' => true,
+					// NN-15 surface: kiosk only offers expenses when the ledger path
+					// is live (master + kiosk toggle + ledger routing).
+					'expenses' => [
+						'enabled' => $this->settings->isExpenseEnabled()
+							&& $this->settings->isExpenseKioskEntryEnabled()
+							&& $this->settings->getExpenseRouting($this->claimsBridge?->capabilityPresent() ?? false) === SettingsService::EXPENSE_ROUTING_LEDGER,
+						'selfEntry' => $this->settings->isExpenseSelfEntryEnabled(),
+						'selfEntryMaxCents' => $this->settings->getExpenseSelfEntryMaxCents(),
+						// Client renders the proxy affordance only when a kitchen
+						// admin could actually authorize it on this site.
+						'proxyAllowed' => $this->deviceSiteHasManager($site),
+					],
 				],
 				// Client expects envelope at licensing (not licensing.envelope)
 				'licensing' => $envelope,
@@ -276,6 +289,114 @@ class DeviceApiController extends Controller
 				'lineTotalCents' => $log->getLineTotalCents(),
 				'undoUntil' => $undoUntil->format('c'),
 				'mode' => $mode,
+				'replay' => $result['replay'],
+			], $result['httpStatus']);
+		} catch (\Throwable $e) {
+			return $this->deviceFail($e);
+		}
+	}
+
+	/**
+	 * POST /api/device/expenses — live-only expense credits (NN-15: never queued
+	 * offline). mode=self uses the unlock session; mode=proxy demands a FRESH
+	 * step-up secret (pin/qr/nfc) re-verified now + live kitchen-admin ACL —
+	 * a cached session alone never authorizes proxy (NN-14).
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	public function createExpense(): JSONResponse
+	{
+		try {
+			$device = $this->authenticateDevice();
+			if (!$this->settings->isExpenseEnabled()) {
+				throw new DomainException('expense_disabled', 'Expenses disabled', 403);
+			}
+			if (!$this->settings->isExpenseKioskEntryEnabled()) {
+				throw new DomainException('expense_kiosk_disabled', 'Kiosk expense entry disabled', 403);
+			}
+			if ($this->settings->getExpenseRouting($this->claimsBridge?->capabilityPresent() ?? false) !== SettingsService::EXPENSE_ROUTING_LEDGER) {
+				throw new DomainException('expense_kiosk_disabled', 'Kiosk expense entry disabled', 403);
+			}
+			$body = $this->jsonBody();
+			$siteId = (int)$device->getSiteId();
+			$mode = (string)($body['mode'] ?? 'self');
+			// Every mode requires a live unlock session first — the token, never a
+			// client-stated uid, resolves the session user (same rule as createLog).
+			$token = trim((string)($body['unlockToken'] ?? ''));
+			$session = $this->unlock->peekUnlockToken($token, (string)$device->getId());
+			$this->assertLiveAppAccess($session['userId']);
+			$isKitchenAdmin = false;
+			$source = 'expense_terminal';
+			if ($mode === 'proxy') {
+				$pin = isset($body['pin']) ? (string)$body['pin'] : null;
+				$qr = isset($body['qrPayload']) ? (string)$body['qrPayload'] : null;
+				$nfc = isset($body['nfcPayload']) ? (string)$body['nfcPayload'] : null;
+				if (($pin === null || $pin === '') && ($qr === null || $qr === '') && ($nfc === null || $nfc === '')) {
+					throw new DomainException('unlock_required', 'Step-up required', 403);
+				}
+				// US-009 AC-3: the session itself must be a live kitchen admin —
+				// a non-manager's session can never proxy, whatever the secret.
+				if (!$this->isLiveKitchenAdmin((string)$session['userId'], $siteId)) {
+					throw new DomainException('permission_denied', 'Kitchen admin required', 403);
+				}
+				// Brute-force budget identical to /unlock/verify.
+				$this->rateLimit->assertDeviceUnlock((string)$device->getId());
+				try {
+					$result = $this->unlock->verify(
+						$pin,
+						$qr,
+						'dev:' . $device->getId(),
+						$nfc,
+						$siteId,
+						(string)$device->getId(),
+					);
+				} catch (DomainException $e) {
+					// Same shape as an unlockVerify failure — no distinct oracle.
+					if ($e->errorCode === 'unlock_invalid') {
+						throw new DomainException('unlock_required', 'Step-up required', 403);
+					}
+					throw $e;
+				}
+				$actorUid = (string)$result['userId'];
+				$this->assertLiveAppAccess($actorUid);
+				if (!$this->isLiveKitchenAdmin($actorUid, $siteId)) {
+					throw new DomainException('permission_denied', 'Kitchen admin required', 403);
+				}
+				$isKitchenAdmin = true;
+				$source = 'expense_terminal_proxy';
+				$this->assertProxyTargetOnSiteRoster(trim((string)($body['targetUserId'] ?? '')), $siteId);
+				$this->rateLimit->assertUserLog($actorUid);
+			} else {
+				$actorUid = (string)$session['userId'];
+				$this->rateLimit->assertUserLog($actorUid);
+			}
+			$amount = $body['amountCents'] ?? null;
+			if (!is_int($amount) || $amount <= 0 || $amount > ConsumptionLogService::EXPENSE_MAX_CENTS) {
+				throw new DomainException('amount_invalid', 'Invalid amount', 422);
+			}
+			$idem = (string)($this->request->getHeader('Idempotency-Key')
+				?: ($body['idempotencyKey'] ?? ''));
+			$result = $this->logs->createExpense([
+				'amountCents' => $amount,
+				'expenseReason' => (string)($body['expenseReason'] ?? ''),
+				'idempotencyKey' => $idem,
+				'siteId' => $siteId,
+				'actorUserId' => $actorUid,
+				'targetUserId' => $body['targetUserId'] ?? null,
+				'source' => $source,
+				'deviceId' => (string)$device->getId(),
+				'isKitchenAdmin' => $isKitchenAdmin,
+			]);
+			$log = $result['log'];
+			$created = $log->getCreatedAt() ?? $this->timeFactory->getDateTime();
+			$undoUntil = (clone $created)->modify('+' . ConsumptionLogService::UNDO_SECONDS . ' seconds');
+			return new JSONResponse([
+				'id' => $log->getId(),
+				'itemName' => $log->getItemNameSnap(),
+				'qty' => 1,
+				'lineTotalCents' => $log->getLineTotalCents(),
+				'undoUntil' => $undoUntil->format('c'),
+				'mode' => $mode === 'proxy' ? 'expense_proxy' : 'expense',
 				'replay' => $result['replay'],
 			], $result['httpStatus']);
 		} catch (\Throwable $e) {
@@ -481,6 +602,18 @@ class DeviceApiController extends Controller
 	}
 
 	/** Live kitchen-admin check — never rely solely on unlock-session cache for privileged modes. */
+	/**
+	 * Whether the device's site has at least one potential proxy authorizer:
+	 * a site manager or an app admin (the bootstrap proxy affordance flag).
+	 */
+	private function deviceSiteHasManager(\OCA\SnackCheck\Db\Site $site): bool
+	{
+		if ($this->sites->managerUids($site) !== []) {
+			return true;
+		}
+		return $this->settings->getAppAdmins() !== [];
+	}
+
 	private function isLiveKitchenAdmin(string $userId, int $siteId): bool
 	{
 		if ($this->access->isAppAdmin($userId)) {

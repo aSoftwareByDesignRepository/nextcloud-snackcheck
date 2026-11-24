@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Expense credits ("Auslagen"): members record out-of-pocket expenses that net against the payroll deduction — web `/log` dialog, kitchen-tablet entry (live-only, manager step-up proxy), per-entry self cap, optional clamp-at-zero mode, ExpenseCheck claim routing + settlement facade contract.
+- New org settings under Benefits: master toggle, member self-entry, self-entry limit, clamp mode, kiosk entry, expense routing — all classified for config transfer.
+- Payroll CSV/XLSX gains `credits_cents`/`unused_credit_cents` per user and `entry_type`/`reason` columns (appended — positional parsers unaffected); My Month shows the credits row and a credit-balance label when the net is negative.
+- Members get a Nextcloud notification when a manager or terminal proxy records a credit for them; Users shows a payout anomaly badge when credits exceed gross.
+- XLSX payroll export gains an informational `credits_by_site` sheet; My Month shows a secondary "Record expense" quick link while the feature is enabled.
+
 ### Fixed
 
+- Device expense proxy now requires a live unlock session AND a fresh manager step-up secret (a stolen PIN alone can no longer proxy).
+- Facade `voidCredit` returns `false` when a concurrent void won the row instead of claiming a void it did not perform.
+- `expense.facade_void` audit action is only emitted for actual facade voids.
+- Expense claim `source_ref` is deterministic so ExpenseCheck-side dedupe survives resubmits.
 - User and colleague searches now also match display names (uid-only backends).
 
 ## 1.1.6 - 2026-11-13

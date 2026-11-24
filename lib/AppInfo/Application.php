@@ -77,6 +77,18 @@ class Application extends App implements IBootstrap
 		$context->registerService(BackupBeforeUpdate::class, function ($c): BackupBeforeUpdate {
 			return new BackupBeforeUpdate($c->get(UpgradeBackupService::class));
 		});
+
+		// ── Expense credits: capability + first-party write facade ────
+		$context->registerCapability(Capabilities::class);
+		$context->registerNotifierService(\OCA\SnackCheck\Notification\Notifier::class);
+		$context->registerService(\OCA\SnackCheck\Public\SnkExpenseCreditWriteFacade::class, function ($c): \OCA\SnackCheck\Public\SnkExpenseCreditWriteFacade {
+			return new \OCA\SnackCheck\Service\ExpenseCreditWriteFacade(
+				$c->get(\OCA\SnackCheck\Service\ConsumptionLogService::class),
+				$c->get(\OCA\SnackCheck\Db\ConsumptionLogMapper::class),
+				$c->get(\OCA\SnackCheck\Service\AccessControlService::class),
+				$c->get(\OCP\IUserManager::class),
+			);
+		});
 		// ── Config & data transfer (test → production) ──────────────────
 		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferManifest::class, fn () => new \OCA\SnackCheck\ConfigTransfer\TransferManifest());
 		$context->registerService(\OCA\SnackCheck\ConfigTransfer\TransferHooks::class, function ($c): \OCA\SnackCheck\ConfigTransfer\TransferHooks {

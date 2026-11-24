@@ -29,6 +29,14 @@ class SettingsService
 	public const KEY_APP_ADMINS = 'app_admins_json';
 	public const KEY_DIGEST_ENABLED = 'personal_digest_enabled';
 	public const KEY_DIGEST_SKIP_ZERO = 'personal_digest_skip_zero';
+	public const KEY_EXPENSE_ENABLED = 'expense_entries_enabled';
+	public const KEY_EXPENSE_SELF_ENTRY = 'expense_self_entry';
+	public const KEY_EXPENSE_SELF_MAX = 'expense_self_entry_max_cents';
+	public const KEY_EXPENSE_CLAMP = 'expense_clamp_negative_deduct';
+	public const KEY_EXPENSE_ROUTING = 'expense_routing'; // ledger_credit|expense_claim
+	public const KEY_EXPENSE_KIOSK = 'expense_kiosk_entry';
+	public const EXPENSE_ROUTING_LEDGER = 'ledger_credit';
+	public const EXPENSE_ROUTING_CLAIM = 'expense_claim';
 	public const KEY_UNLOCK_PEPPER = 'unlock_pin_pepper';
 	private const PEPPER_LOCK = 'snackcheck/unlock_pepper';
 
@@ -182,6 +190,104 @@ class SettingsService
 		$this->config->setAppValue(self::APP_ID, self::KEY_DIGEST_SKIP_ZERO, $on ? '1' : '0');
 	}
 
+	/** Expense credits master toggle (default OFF). */
+	public function isExpenseEnabled(): bool
+	{
+		return $this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_ENABLED, '0') === '1';
+	}
+
+	public function setExpenseEnabled(bool $on): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_ENABLED, $on ? '1' : '0');
+	}
+
+	/** Members may record their own expenses (default ON under master toggle). */
+	public function isExpenseSelfEntryEnabled(): bool
+	{
+		return $this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_SELF_ENTRY, '1') === '1';
+	}
+
+	public function setExpenseSelfEntryEnabled(bool $on): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_SELF_ENTRY, $on ? '1' : '0');
+	}
+
+	/**
+	 * Effective per-entry self-entry cap in cents. Stored 0 (or an
+	 * out-of-range legacy value) means "no explicit cap" — the platform
+	 * hard maximum still applies, so the effective value is never 0.
+	 */
+	public function getExpenseSelfEntryMaxCents(): int
+	{
+		$stored = (int)$this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_SELF_MAX, '0');
+		if ($stored <= 0 || $stored > ConsumptionLogService::EXPENSE_MAX_CENTS) {
+			return ConsumptionLogService::EXPENSE_MAX_CENTS;
+		}
+		return $stored;
+	}
+
+	public function setExpenseSelfEntryMaxCents(int $cents): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_SELF_MAX, (string)max(0, $cents));
+	}
+
+	/** Raw stored cap (0 = no explicit limit) — for form fields, not consumers. */
+	public function getExpenseSelfEntryMaxCentsStored(): int
+	{
+		return max(0, (int)$this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_SELF_MAX, '0'));
+	}
+
+	/** Clamp negative deduct at 0 and report the remainder (default OFF = payout). */
+	public function isExpenseClampNegativeDeduct(): bool
+	{
+		return $this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_CLAMP, '0') === '1';
+	}
+
+	public function setExpenseClampNegativeDeduct(bool $on): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_CLAMP, $on ? '1' : '0');
+	}
+
+	/**
+	 * Stored routing preference. The effective routing additionally requires the
+	 * check:expense-claims capability — see getExpenseRouting(bool $claimsPresent).
+	 */
+	public function getExpenseRoutingStored(): string
+	{
+		$r = (string)$this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_ROUTING, self::EXPENSE_ROUTING_LEDGER);
+		return $r === self::EXPENSE_ROUTING_CLAIM ? self::EXPENSE_ROUTING_CLAIM : self::EXPENSE_ROUTING_LEDGER;
+	}
+
+	/** Effective routing: claim routing force-degrades to ledger when EXP is absent. */
+	public function getExpenseRouting(bool $claimsCapabilityPresent = false): string
+	{
+		$r = $this->getExpenseRoutingStored();
+		if ($r === self::EXPENSE_ROUTING_CLAIM && !$claimsCapabilityPresent) {
+			return self::EXPENSE_ROUTING_LEDGER;
+		}
+		return $r;
+	}
+
+	public function setExpenseRouting(string $routing): void
+	{
+		$this->config->setAppValue(
+			self::APP_ID,
+			self::KEY_EXPENSE_ROUTING,
+			$routing === self::EXPENSE_ROUTING_CLAIM ? self::EXPENSE_ROUTING_CLAIM : self::EXPENSE_ROUTING_LEDGER,
+		);
+	}
+
+	/** Kitchen-tablet expense entry (default OFF). */
+	public function isExpenseKioskEntryEnabled(): bool
+	{
+		return $this->config->getAppValue(self::APP_ID, self::KEY_EXPENSE_KIOSK, '0') === '1';
+	}
+
+	public function setExpenseKioskEntryEnabled(bool $on): void
+	{
+		$this->config->setAppValue(self::APP_ID, self::KEY_EXPENSE_KIOSK, $on ? '1' : '0');
+	}
+
 	public function getAccessMode(): string
 	{
 		$m = $this->config->getAppValue(self::APP_ID, self::KEY_ACCESS_MODE, 'open');
@@ -248,6 +354,10 @@ class SettingsService
 			case self::KEY_WEEKLY_TOPUP:
 			case self::KEY_DIGEST_ENABLED:
 			case self::KEY_DIGEST_SKIP_ZERO:
+			case self::KEY_EXPENSE_ENABLED:
+			case self::KEY_EXPENSE_SELF_ENTRY:
+			case self::KEY_EXPENSE_CLAMP:
+			case self::KEY_EXPENSE_KIOSK:
 				// '' is a legitimately stored state (unset-but-present key the
 				// getters read as false) — normalise it like the getters do.
 				if ($v === '') {
@@ -270,6 +380,16 @@ class SettingsService
 				return (string)$d;
 			case self::KEY_RESTOCK_HORIZON:
 				return (string)max(1, (int)$v);
+			case self::KEY_EXPENSE_SELF_MAX:
+				return (string)max(0, (int)$v);
+			case self::KEY_EXPENSE_ROUTING:
+				if ($v === '') {
+					return self::EXPENSE_ROUTING_LEDGER;
+				}
+				if (!in_array($v, [self::EXPENSE_ROUTING_LEDGER, self::EXPENSE_ROUTING_CLAIM], true)) {
+					throw new \InvalidArgumentException('INVALID_EXPENSE_ROUTING');
+				}
+				return $v;
 			case 'personal_digest_days_before':
 				if ($v === '') {
 					return '3';
@@ -320,6 +440,12 @@ class SettingsService
 			'personalDigestEnabled' => $this->isPersonalDigestEnabled(),
 			'personalDigestSkipZero' => $this->isPersonalDigestSkipZeroEnabled(),
 			'personalDigestDaysBefore' => max(1, min(14, (int)$this->config->getAppValue(self::APP_ID, 'personal_digest_days_before', '3'))),
+			'expenseEnabled' => $this->isExpenseEnabled(),
+			'expenseSelfEntry' => $this->isExpenseSelfEntryEnabled(),
+			'expenseSelfEntryMaxCents' => $this->getExpenseSelfEntryMaxCents(),
+			'expenseClampNegativeDeduct' => $this->isExpenseClampNegativeDeduct(),
+			'expenseRouting' => $this->getExpenseRoutingStored(),
+			'expenseKioskEntry' => $this->isExpenseKioskEntryEnabled(),
 			'accessMode' => $this->getAccessMode(),
 			'accessGroups' => $this->getAccessGroups(),
 			'accessUsers' => $this->getAccessUsers(),

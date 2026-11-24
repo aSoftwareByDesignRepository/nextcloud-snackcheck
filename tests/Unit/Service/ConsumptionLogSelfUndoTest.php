@@ -217,7 +217,7 @@ final class ConsumptionLogSelfUndoTest extends TestCase
 
 		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Service/ConsumptionLogService.php');
 		self::assertMatchesRegularExpression(
-			'/if \(\$enforceSelfUndoWindow\)[\s\S]{0,800}UNDO_SECONDS/',
+			'/if \(\$enforceSelfUndoWindow\)[\s\S]{0,1600}UNDO_SECONDS/',
 			$src
 		);
 	}

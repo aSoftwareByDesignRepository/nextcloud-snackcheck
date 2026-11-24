@@ -100,16 +100,24 @@ class DigestMailService
 				if ($log->getVoidedAt() !== null) {
 					continue;
 				}
-				if ($log->getBillingBucket() !== 'personal') {
+				$bucket = (string)$log->getBillingBucket();
+				if ($bucket !== 'personal' && $bucket !== 'personal_credit') {
 					continue;
 				}
 				$lines[] = [
 					'line_total_cents' => (int)$log->getLineTotalCents(),
-					'billing_bucket' => 'personal',
+					'billing_bucket' => $bucket,
 				];
 			}
-			$calc = $this->subsidy->computeForUser($allowance, $lines);
-			if ($this->settings->isPersonalDigestSkipZeroEnabled() && (int)$calc['deduct_cents'] === 0) {
+			$calc = $this->subsidy->computeForUser(
+				$allowance,
+				$lines,
+				$this->settings->isExpenseClampNegativeDeduct(),
+			);
+			// skipZero exemption: credits>0 still mails even when deduct nets to 0.
+			if ($this->settings->isPersonalDigestSkipZeroEnabled()
+				&& (int)$calc['deduct_cents'] === 0
+				&& (int)($calc['credits_cents'] ?? 0) === 0) {
 				// AC-OPP-B4: do not claim — if balance appears later in the window, still mail once.
 				$skipped++;
 				continue;
@@ -120,13 +128,25 @@ class DigestMailService
 			}
 			$myMonthUrl = $this->url->linkToRouteAbsolute('snackcheck.page.myMonth');
 			$subject = $this->l10n->t('SnackCheck: your month total');
+			$creditsText = '';
+			if ((int)($calc['credits_cents'] ?? 0) > 0) {
+				$creditsText = $this->l10n->t(
+					' (expenses %1$s EUR%2$s)',
+					[
+						\OCA\SnackCheck\Service\PayrollExportService::centsToEur((int)($calc['credits_cents'] ?? 0)),
+						(int)($calc['unused_credit_cents'] ?? 0) > 0
+							? $this->l10n->t(', %1$s EUR unapplied', [\OCA\SnackCheck\Service\PayrollExportService::centsToEur((int)($calc['unused_credit_cents'] ?? 0))])
+							: '',
+					],
+				);
+			}
 			$body = $this->l10n->t(
 				'Period %1$s — to deduct: %2$s EUR (gross %3$s, subsidy %4$s). Review: %5$s',
 				[
 					PeriodDisplay::format((string)$period->getLabel()),
 					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['deduct_cents']),
 					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['gross_cents']),
-					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['subsidy_cents']),
+					\OCA\SnackCheck\Service\PayrollExportService::centsToEur($calc['subsidy_cents']) . $creditsText,
 					$myMonthUrl,
 				]
 			);

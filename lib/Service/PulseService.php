@@ -92,6 +92,10 @@ class PulseService
 		$daysSeen = [];
 		foreach ($logs as $log) {
 			/** @var ConsumptionLog $log */
+			// NN-05: expense credits are not consumption — exclude from top items.
+			if ($log->getBillingBucket() === 'personal_credit') {
+				continue;
+			}
 			$itemId = $log->getItemId() ?? 0;
 			if ($category !== null) {
 				$cat = $itemId > 0 ? ($itemMeta[$itemId]['category'] ?? '') : '';

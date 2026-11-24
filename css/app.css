@@ -2626,6 +2626,35 @@ body[data-theme-dark-highcontrast] .snk-field select option {
 .snk-badge--warn::before {
 	background: var(--snk-warning-ink);
 }
+.snk-badge--credit {
+	background: var(--snk-tint-info);
+	color: var(--snk-text);
+	border: 1px solid var(--snk-border);
+}
+.snk-badge--credit::before {
+	background: var(--snk-primary);
+}
+
+/* Expense entry (log page "More options") + dialog */
+.snk-expense-entry {
+	display: flex;
+	flex-direction: column;
+	gap: var(--snk-space-2);
+	padding-top: var(--snk-space-3);
+	border-top: 1px solid var(--snk-border);
+}
+.snk-expense-entry .snk-btn {
+	align-self: flex-start;
+}
+.snk-expense-entry .snk-muted {
+	margin: 0;
+}
+.snk-expense-target {
+	margin: var(--snk-space-2) 0;
+}
+.snk-expense-routing-note {
+	margin: var(--snk-space-3) 0;
+}
 
 /* License settings — status, CTAs, tablet seat meter */
 .snk-license-page {

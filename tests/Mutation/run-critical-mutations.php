@@ -529,7 +529,7 @@ $voidSrc = file_get_contents($root . '/lib/Service/ConsumptionLogService.php');
 assertTrue(
 	is_string($voidSrc)
 		&& preg_match('/function void[\s\S]{0,900}mapper->lockRow\(\$logId\)/', $voidSrc) === 1
-		&& preg_match('/if \(\$enforceSelfUndoWindow\)[\s\S]{0,800}UNDO_SECONDS/', $voidSrc) === 1,
+		&& preg_match('/if \(\$enforceSelfUndoWindow\)[\s\S]{0,1600}UNDO_SECONDS/', $voidSrc) === 1,
 	'void locks consumption log row; self-undo TTL under lock'
 );
 assertTrue(

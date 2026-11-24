@@ -5,9 +5,12 @@ use OCA\SnackCheck\Service\MyMonthStatementPresenter;
 
 $presenter = new MyMonthStatementPresenter();
 $deductCents = (int)($_['deductCents'] ?? 0);
+$unusedCreditCents = (int)($_['unusedCreditCents'] ?? 0);
 $fmtEuro = static fn (int $cents): string => $presenter->formatEuroWeb($cents);
 $breakdownRows = array_values($_['breakdownRows'] ?? []);
 $hasLines = !empty($_['lines']);
+$isCreditBalance = $deductCents < 0;
+$heroLabel = $isCreditBalance ? $l->t('Credit balance') : $l->t('To deduct');
 ?>
 <section class="snk-section snk-section--mymonth" aria-label="<?php p($l->t('My month')); ?>">
 	<?php if (!empty($_['periodClosed'])): ?>
@@ -23,9 +26,16 @@ $hasLines = !empty($_['lines']);
 
 	<article class="snk-statement" aria-labelledby="snk-statement-title">
 		<header class="snk-statement__hero">
-			<h2 id="snk-statement-title" class="snk-statement__label"><?php p($l->t('To deduct')); ?></h2>
-			<p class="snk-statement__amount" data-snk-hero-value><?php p($fmtEuro($deductCents)); ?></p>
-			<p class="snk-statement__lead snk-muted"><?php p($l->t('This is what payroll takes from your pay for this period.')); ?></p>
+			<h2 id="snk-statement-title" class="snk-statement__label"><?php p($heroLabel); ?></h2>
+			<p class="snk-statement__amount" data-snk-hero-value><?php p($fmtEuro(abs($deductCents))); ?></p>
+			<?php if ($isCreditBalance): ?>
+				<p class="snk-statement__lead snk-muted"><?php p($l->t('Your expenses exceed your snacks this period — payroll pays this back to you.')); ?></p>
+			<?php else: ?>
+				<p class="snk-statement__lead snk-muted"><?php p($l->t('This is what payroll takes from your pay for this period.')); ?></p>
+			<?php endif; ?>
+			<?php if ($unusedCreditCents > 0): ?>
+				<p class="snk-statement__lead snk-muted" role="note"><?php p($l->t('Unapplied credit this period:')); ?> <?php p($fmtEuro($unusedCreditCents)); ?></p>
+			<?php endif; ?>
 		</header>
 
 		<?php if ($hasLines): ?>
@@ -39,14 +49,17 @@ $hasLines = !empty($_['lines']);
 						</div>
 					<?php endforeach; ?>
 					<div class="snk-money-list__row snk-money-list__row--total">
-						<dt><?php p($l->t('To deduct')); ?></dt>
-						<dd><?php p($fmtEuro($deductCents)); ?></dd>
+						<dt><?php p($heroLabel); ?></dt>
+						<dd><?php p($fmtEuro(abs($deductCents))); ?></dd>
 					</div>
 				</dl>
 			</div>
 
 			<footer class="snk-statement__actions">
 				<a class="snk-btn snk-btn--primary" href="<?php p($urlGenerator->linkToRoute('snackcheck.api.downloadMyMonthPdf')); ?>"><?php p($l->t('Download PDF for payroll')); ?></a>
+				<?php if (!empty($_['expenseQuickLink'])): ?>
+					<a class="snk-btn snk-btn--secondary" href="<?php p($urlGenerator->linkToRoute('snackcheck.page.log')); ?>"><?php p($l->t('Record expense')); ?></a>
+				<?php endif; ?>
 				<p class="snk-statement__actions-hint snk-muted"><?php p($l->t('Share this PDF with HR if they ask for proof.')); ?></p>
 			</footer>
 		<?php endif; ?>
@@ -82,8 +95,18 @@ $hasLines = !empty($_['lines']);
 					</thead>
 					<tbody>
 						<?php foreach ($_['lines'] as $line): ?>
+							<?php $isCredit = ($line['billing_bucket'] ?? 'personal') === 'personal_credit'; ?>
 							<tr>
-								<td><?php p($line['name']); ?><?php if (!empty($line['free'])): ?> <span class="snk-badge"><?php p($l->t('Free')); ?></span><?php endif; ?></td>
+								<td>
+									<?php if ($isCredit): ?>
+										<span class="snk-badge snk-badge--credit"><?php p($l->t('Expense')); ?></span>
+										<?php if (($line['expenseReason'] ?? '') !== ''): ?>
+											<span class="snk-muted"> — <?php p($line['expenseReason']); ?></span>
+										<?php endif; ?>
+									<?php else: ?>
+										<?php p($line['name']); ?><?php if (!empty($line['free'])): ?> <span class="snk-badge"><?php p($l->t('Free')); ?></span><?php endif; ?>
+									<?php endif; ?>
+								</td>
 								<?php if (!empty($_['multiSite'])): ?>
 								<td class="snk-muted"><?php p($line['siteName'] ?? ''); ?></td>
 								<?php endif; ?>

@@ -24,6 +24,7 @@ return [
 
 		// Web JSON API (CSRF + session)
 		['name' => 'api#createLog', 'url' => '/api/logs', 'verb' => 'POST'],
+		['name' => 'api#createExpense', 'url' => '/api/expenses', 'verb' => 'POST'],
 		['name' => 'api#undoLog', 'url' => '/api/logs/{id}/undo', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 		['name' => 'api#applyStarter', 'url' => '/api/catalog/starter', 'verb' => 'POST'],
 		['name' => 'api#createCatalogItem', 'url' => '/api/catalog', 'verb' => 'POST'],
@@ -54,6 +55,7 @@ return [
 		['name' => 'device_api#unlockVerify', 'url' => '/api/device/unlock/verify', 'verb' => 'POST'],
 		['name' => 'device_api#lockSession', 'url' => '/api/device/unlock/lock', 'verb' => 'POST'],
 		['name' => 'device_api#createLog', 'url' => '/api/device/logs', 'verb' => 'POST'],
+		['name' => 'device_api#createExpense', 'url' => '/api/device/expenses', 'verb' => 'POST'],
 		['name' => 'device_api#undoLog', 'url' => '/api/device/logs/{id}/undo', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 		['name' => 'device_api#colleagues', 'url' => '/api/device/colleagues', 'verb' => 'GET'],
 		['name' => 'device_api#heartbeat', 'url' => '/api/device/heartbeat', 'verb' => 'POST'],

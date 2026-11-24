@@ -90,6 +90,92 @@
       "mobile_reason": "kiosk exposes undo (POST /api/device/logs/{id}/undo, no reason param — src/api/deviceClient.ts undoLog); void is a kitchen-admin web surface only"
     },
     {
+      "id": "expense.amount",
+      "param": "amountCents",
+      "server": [
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["amountCents", "amount_invalid", "EXPENSE_MAX_CENTS"]
+        },
+        {
+          "file": "lib/Service/ConsumptionLogService.php",
+          "needles": ["amountCents", "amount_invalid"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/pages/log.php",
+          "needles": ["name=\"amountEuro\"", "id=\"snk-expense-amount\"", "required"]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["amountEuro", "amountCents", "/expenses"]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/ExpenseOverlay.tsx",
+          "needles": ["amountCents", "expenseAmount", "parseEuroToCents"]
+        }
+      ]
+    },
+    {
+      "id": "expense.reason",
+      "param": "expenseReason",
+      "server": [
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["getParam('expenseReason')"]
+        },
+        {
+          "file": "lib/Service/ConsumptionLogService.php",
+          "needles": ["expense_reason_required"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/pages/log.php",
+          "needles": ["name=\"expenseReason\"", "id=\"snk-expense-reason\"", "minlength=\"3\""]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["expenseReason", "snk-expense-reason"]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/ExpenseOverlay.tsx",
+          "needles": ["expenseReason", "expense-reason"]
+        }
+      ]
+    },
+    {
+      "id": "expense.target_user",
+      "param": "targetUserId",
+      "server": [
+        {
+          "file": "lib/Controller/ApiController.php",
+          "needles": ["getParam('targetUserId')", "assertCanManageSite"]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/pages/log.php",
+          "needles": ["targetUserId", "snk-expense-target"]
+        },
+        {
+          "file": "js/app.js",
+          "needles": ["targetUserId"]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/ExpenseOverlay.tsx",
+          "needles": ["targetUserId", "fetchColleagues"]
+        }
+      ]
+    },
+    {
       "id": "period.reopen_reason",
       "param": "reason",
       "server": [

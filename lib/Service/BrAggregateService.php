@@ -34,6 +34,10 @@ class BrAggregateService
 		$catById = [];
 		$byItem = [];
 		foreach ($this->logs->findForPeriod($periodId, false) as $log) {
+			// NN-05: expense credits are not consumption — never inflate BR aggregates.
+			if ($log->getBillingBucket() === 'personal_credit') {
+				continue;
+			}
 			$itemId = (int)($log->getItemId() ?? 0);
 			$name = $log->getItemNameSnap();
 			$cat = 'other';

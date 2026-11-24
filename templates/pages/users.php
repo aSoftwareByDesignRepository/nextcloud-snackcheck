@@ -99,10 +99,24 @@
 					<div class="snk-card__header-text">
 						<h2 class="snk-card__title"><?php p($u['displayName']); ?></h2>
 						<p class="snk-card__lead">
-							<?php p($l->t('To deduct')); ?>:
-							<strong><?php p(number_format($u['deductCents']/100, 2, ',', '.')); ?> €</strong>
+							<?php if ((int)($u['deductCents'] ?? 0) < 0): ?>
+								<?php p($l->t('Credit balance')); ?>:
+								<strong><?php p(number_format(abs((int)$u['deductCents'])/100, 2, ',', '.')); ?> €</strong>
+							<?php else: ?>
+								<?php p($l->t('To deduct')); ?>:
+								<strong><?php p(number_format($u['deductCents']/100, 2, ',', '.')); ?> €</strong>
+							<?php endif; ?>
 							· <?php p($l->t('Gross')); ?> <?php p(number_format($u['grossCents']/100, 2, ',', '.')); ?> €
 							· <?php p($l->t('Subsidy')); ?> <?php p(number_format($u['subsidyCents']/100, 2, ',', '.')); ?> €
+							<?php if ((int)($u['creditsCents'] ?? 0) > 0): ?>
+								· <?php p($l->t('Expenses')); ?> <?php p(number_format((int)$u['creditsCents']/100, 2, ',', '.')); ?> €
+							<?php endif; ?>
+							<?php if ((int)($u['creditsCents'] ?? 0) > 0 && (int)$u['creditsCents'] > (int)($u['grossCents'] ?? 0)): ?>
+								· <span class="snk-badge snk-badge--credit"><?php p($l->t('Payout')); ?></span>
+							<?php endif; ?>
+							<?php if ((int)($u['unusedCreditCents'] ?? 0) > 0): ?>
+								· <?php p($l->t('Unapplied credit')); ?> <?php p(number_format((int)$u['unusedCreditCents']/100, 2, ',', '.')); ?> €
+							<?php endif; ?>
 						</p>
 					</div>
 				</header>
@@ -120,12 +134,29 @@
 						</thead>
 						<tbody>
 						<?php foreach ($u['lines'] as $line): ?>
+							<?php $isCredit = ($line['billing_bucket'] ?? 'personal') === 'personal_credit'; ?>
 							<tr>
-								<td><?php p($line['name']); ?><?php if (!empty($line['free'])): ?> <span class="snk-badge"><?php p($l->t('Free')); ?></span><?php endif; ?></td>
+								<td>
+									<?php if ($isCredit): ?>
+										<span class="snk-badge snk-badge--credit"><?php p($l->t('Expense')); ?></span>
+										<?php if (($line['source'] ?? '') === 'expense_claim'): ?>
+											<span class="snk-badge" title="<?php p($l->t('Managed by ExpenseCheck, void there.')); ?>"><?php p($l->t('Claim')); ?></span>
+										<?php endif; ?>
+										<?php if (($line['expenseReason'] ?? '') !== ''): ?>
+											<span class="snk-muted"> — <?php p($line['expenseReason']); ?></span>
+										<?php endif; ?>
+									<?php else: ?>
+										<?php p($line['name']); ?><?php if (!empty($line['free'])): ?> <span class="snk-badge"><?php p($l->t('Free')); ?></span><?php endif; ?>
+									<?php endif; ?>
+								</td>
 								<td><?php p($line['qty']); ?></td>
 								<td><?php p(number_format($line['line_total_cents']/100, 2, ',', '.')); ?> €</td>
 								<td>
-									<button type="button" class="snk-btn snk-btn--danger" data-snk-action="void-log" data-log-id="<?php p($line['id']); ?>"><?php p($l->t('Void')); ?></button>
+									<?php if ($isCredit && ($line['source'] ?? '') === 'expense_claim' && !empty($_['expenseClaimsManaged'])): ?>
+										<span class="snk-muted"><?php p($l->t('Managed by ExpenseCheck')); ?></span>
+									<?php else: ?>
+										<button type="button" class="snk-btn snk-btn--danger" data-snk-action="void-log" data-log-id="<?php p($line['id']); ?>"><?php p($l->t('Void')); ?></button>
+									<?php endif; ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>

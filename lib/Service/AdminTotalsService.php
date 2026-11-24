@@ -46,7 +46,8 @@ class AdminTotalsService
 		$siteAllow = $siteIds === null ? null : array_fill_keys(array_map('intval', $siteIds), true);
 		$byUser = [];
 		foreach ($this->logs->findForPeriod((int)$period->getId(), false) as $log) {
-			if ($log->getBillingBucket() === 'company_hospitality') {
+			$bucket = (string)$log->getBillingBucket();
+			if ($bucket === 'company_hospitality') {
 				continue;
 			}
 			if ($siteAllow !== null && !isset($siteAllow[(int)$log->getSiteId()])) {
@@ -65,24 +66,29 @@ class AdminTotalsService
 				'name' => $log->getItemNameSnap(),
 				'qty' => $log->getQty(),
 				'line_total_cents' => (int)$log->getLineTotalCents(),
-				'billing_bucket' => 'personal',
+				'billing_bucket' => $bucket,
 				'createdAt' => $log->getCreatedAt()?->format('c'),
-				'free' => ((int)$log->getLineTotalCents()) === 0,
+				'free' => $bucket === 'personal' && ((int)$log->getLineTotalCents()) === 0,
+				'expenseReason' => $bucket === 'personal_credit' ? (string)($log->getExpenseReason() ?? '') : '',
+				'source' => (string)$log->getSource(),
 				'siteId' => (int)$log->getSiteId(),
 			];
 		}
 		$allowance = $this->settings->getSubsidyAllowanceCents();
+		$clamp = $this->settings->isExpenseClampNegativeDeduct();
 		$users = [];
 		foreach ($byUser as $row) {
 			if ($focusUserId !== null && $focusUserId !== '' && $row['userId'] !== $focusUserId) {
 				continue;
 			}
-			$calc = $this->subsidy->computeForUser($allowance, $row['lines']);
+			$calc = $this->subsidy->computeForUser($allowance, $row['lines'], $clamp);
 			$out = [
 				'userId' => $row['userId'],
 				'displayName' => $row['displayName'],
 				'grossCents' => $calc['gross_cents'],
 				'subsidyCents' => $calc['subsidy_cents'],
+				'creditsCents' => ($calc['credits_cents'] ?? 0),
+				'unusedCreditCents' => ($calc['unused_credit_cents'] ?? 0),
 				'deductCents' => $calc['deduct_cents'],
 			];
 			if (!$privacy) {

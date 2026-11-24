@@ -46,4 +46,22 @@ final class UsersPrivacyProxyContractTest extends TestCase
 			$page
 		);
 	}
+
+	/** US-003 AC-3b: EXP-owned claim credits show a chip, never a dead-end void. */
+	public function testManagedClaimRowsHideVoidAffordance(): void
+	{
+		$users = (string)file_get_contents($this->root() . '/templates/pages/users.php');
+		self::assertStringContainsString("\$_['expenseClaimsManaged']", $users);
+		self::assertStringContainsString('Managed by ExpenseCheck', $users);
+		// The void button must be the else-branch of the managed check, not unconditional.
+		self::assertMatchesRegularExpression(
+			'/expense_claim[\s\S]{0,200}expenseClaimsManaged[\s\S]{0,400}else[\s\S]{0,400}data-snk-action="void-log"/',
+			$users
+		);
+		$page = (string)file_get_contents($this->root() . '/lib/Controller/PageController.php');
+		self::assertMatchesRegularExpression(
+			'/function users\(\)[\s\S]{0,3000}expenseClaimsManaged[\s\S]{0,200}capabilityPresent/',
+			$page
+		);
+	}
 }

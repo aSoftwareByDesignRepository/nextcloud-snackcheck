@@ -205,10 +205,75 @@ foreach ($itemGroups as $g) {
 							</button>
 						<?php endforeach; ?>
 					</div>
+					<?php if (!empty($_['expenseAvailable'])): ?>
+						<div class="snk-expense-entry">
+							<button type="button" class="snk-btn snk-btn--secondary" data-snk-action="open-expense-dialog">
+								<?php p($l->t('Record expense')); ?>
+							</button>
+							<p class="snk-muted"><?php p($l->t('Money you paid out of pocket — it lowers what payroll deducts.')); ?></p>
+						</div>
+					<?php endif; ?>
 				</div>
 			</details>
 		<?php endif; ?>
 			</div>
 		</article>
+		<?php if (!empty($_['expenseAvailable'])): ?>
+			<dialog id="snk-expense-dialog" class="snk-dialog" aria-labelledby="snk-expense-title">
+				<form method="dialog" data-snk-form="expense" class="snk-dialog__form">
+					<h2 id="snk-expense-title" class="snk-h2"><?php p($l->t('Record expense')); ?></h2>
+					<p class="snk-muted"><?php p($l->t('Money you paid out of pocket — it lowers what payroll deducts.')); ?></p>
+					<input type="hidden" name="siteId" value="<?php p((int)($_['siteId'] ?? 0)); ?>" />
+					<input type="hidden" name="idempotencyKey" value="" data-snk-expense-key />
+					<label class="snk-field">
+						<span><?php p($l->t('Amount (EUR)')); ?></span>
+						<input class="snk-input" name="amountEuro" id="snk-expense-amount" required
+							inputmode="decimal" autocomplete="off" placeholder="4,50"
+							<?php if (!empty($_['expenseSelfEntry']) && !empty($_['expenseSelfEntryCapped']) && empty($_['expenseCanProxy'])): ?>
+								aria-describedby="snk-expense-amount-hint"
+							<?php endif; ?> />
+						<?php if (!empty($_['expenseSelfEntry']) && !empty($_['expenseSelfEntryCapped']) && empty($_['expenseCanProxy'])): ?>
+							<span id="snk-expense-amount-hint" class="snk-muted"><?php p($l->t('Up to')); ?> <?php p(number_format((int)$_['expenseSelfEntryMaxCents']/100, 2, ',', '.')); ?> €</span>
+						<?php endif; ?>
+					</label>
+					<label class="snk-field">
+						<span><?php p($l->t('What for? (short note)')); ?></span>
+						<input class="snk-input" name="expenseReason" id="snk-expense-reason" required
+							minlength="3" maxlength="500" autocomplete="off"
+							aria-describedby="snk-expense-reason-hint" />
+						<span id="snk-expense-reason-hint" class="snk-muted"><?php p($l->t('At least 3 characters — e.g. Milk for the kitchen')); ?></span>
+					</label>
+					<?php if (!empty($_['expenseCanProxy'])): ?>
+						<div class="snk-expense-target" data-snk-expense-target>
+							<p class="snk-proxy-pick__step-label" id="snk-expense-target-label"><?php p($l->t('For whom? (optional — kitchen admins only)')); ?></p>
+							<?php
+							$name = 'targetUserId';
+							$value = '';
+							$picker = 'users';
+							$single = true;
+							$required = false;
+							$listLabel = $l->t('Selected colleague');
+							$chips = [];
+							$fieldId = 'snk-expense-target';
+							$inlineSearch = true;
+							$autoReady = true;
+							$searchScope = 'access';
+							include __DIR__ . '/../parts/snk-chip-field.php';
+							$inlineSearch = false;
+							$autoReady = false;
+							$searchScope = 'directory';
+							?>
+						</div>
+					<?php endif; ?>
+					<?php if (!empty($_['expenseClaimRouting'])): ?>
+						<p class="snk-callout snk-callout--info snk-expense-routing-note" role="note"><?php p($l->t('This submits an expense claim for review — the credit lands after approval.')); ?></p>
+					<?php endif; ?>
+					<div class="snk-actions">
+						<button type="submit" class="snk-btn snk-btn--secondary" value="cancel" formnovalidate><?php p($l->t('Cancel')); ?></button>
+						<button type="submit" class="snk-btn snk-btn--primary" value="confirm"><?php p($l->t('Record expense')); ?></button>
+					</div>
+				</form>
+			</dialog>
+		<?php endif; ?>
 	<?php endif; ?>
 </section>

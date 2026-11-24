@@ -85,6 +85,7 @@ class ApiController extends Controller
 		private readonly ShelfQrService $shelfQr,
 		private readonly IL10N $l10n,
 		private readonly MyMonthStatementPresenter $myMonthStatement,
+		private readonly ?\OCA\SnackCheck\Service\ExpenseClaimsBridge $claimsBridge = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -165,6 +166,161 @@ class ApiController extends Controller
 		} catch (\Throwable $e) {
 			return $this->fromDomain($e);
 		}
+	}
+
+	/**
+	 * POST /api/expenses — member self-entry or kitchen-manager entry for others.
+	 * CSRF required (NoAdminRequired only — never NoCSRFRequired on money writes).
+	 */
+	#[NoAdminRequired]
+	public function createExpense(): JSONResponse
+	{
+		try {
+			$user = $this->uid();
+			$this->access->assertAccess($user);
+			$this->rateLimit->assertUserLog($user);
+			$siteId = $this->sites->requireExplicitSiteId((int)$this->request->getParam('siteId') ?: null);
+			$amountCents = $this->parseExpenseAmountCents();
+			$target = trim((string)($this->request->getParam('targetUserId') ?? ''));
+			$isAdminEntry = $target !== '' && $target !== $user;
+			$isKitchenAdmin = $this->access->isAppAdmin($user)
+				|| $this->access->canManageSite($user, $siteId);
+			if ($isAdminEntry) {
+				$this->access->assertCanManageSite($user, $siteId);
+				if ($this->settings->isMultiSiteEnabled()) {
+					$this->assertExpenseTargetOnSiteRoster($target, $siteId);
+				}
+			}
+
+			// Claim routing (F24): when org routes expenses into ExpenseCheck and the
+			// capability is present, the request becomes a claim draft — the credit
+			// endpoint is never invoked (no personal_credit row is written here).
+			if ($this->settings->isExpenseEnabled()
+				&& $this->settings->getExpenseRouting($this->claimsBridge?->capabilityPresent() ?? false) === SettingsService::EXPENSE_ROUTING_CLAIM) {
+				return $this->routeExpenseClaim($user, $isAdminEntry ? $target : $user, $amountCents, $siteId);
+			}
+
+			$idem = (string)($this->request->getHeader('Idempotency-Key')
+				?: $this->request->getParam('idempotencyKey') ?? '');
+			$result = $this->logs->createExpense([
+				'amountCents' => $amountCents,
+				'expenseReason' => (string)($this->request->getParam('expenseReason') ?? ''),
+				'idempotencyKey' => $idem,
+				'siteId' => $siteId,
+				'actorUserId' => $user,
+				'targetUserId' => $target !== '' ? $target : null,
+				'source' => $isAdminEntry ? 'expense_admin' : 'expense_web',
+				'isKitchenAdmin' => $isKitchenAdmin,
+			]);
+			$log = $result['log'];
+			return $this->ok([
+				'id' => $log->getId(),
+				'lineTotalCents' => $log->getLineTotalCents(),
+				'replay' => $result['replay'],
+			], $result['httpStatus']);
+		} catch (\Throwable $e) {
+			return $this->fromDomain($e);
+		}
+	}
+
+	/**
+	 * Expense amount from amountEuro (UI, max 2 decimals) or amountCents (strict int).
+	 * Rejects sci-notation, floats, negatives, >99 999 999 cents — uniform amount_invalid.
+	 */
+	private function parseExpenseAmountCents(): int
+	{
+		$euro = $this->request->getParam('amountEuro');
+		if ($euro !== null && trim((string)$euro) !== '') {
+			try {
+				$normalized = str_replace([' ', ','], ['', '.'], trim((string)$euro));
+				if (preg_match('/\.\d{3,}$/', $normalized) === 1) {
+					throw new \OCA\SnackCheck\Exception\DomainException('amount_invalid', 'Invalid amount', 422);
+				}
+				$cents = $this->parseEuroToCents((string)$euro);
+			} catch (\OCA\SnackCheck\Exception\DomainException $e) {
+				throw new \OCA\SnackCheck\Exception\DomainException('amount_invalid', 'Invalid amount', 422);
+			}
+		} else {
+			$raw = $this->request->getParam('amountCents');
+			if (is_bool($raw) || is_float($raw)
+				|| (is_string($raw) && preg_match('/^\d+$/', trim($raw)) !== 1)
+				|| (!is_int($raw) && !is_string($raw))) {
+				throw new \OCA\SnackCheck\Exception\DomainException('amount_invalid', 'Invalid amount', 422);
+			}
+			$cents = is_int($raw) ? $raw : (int)trim((string)$raw);
+		}
+		if ($cents <= 0 || $cents > ConsumptionLogService::EXPENSE_MAX_CENTS) {
+			throw new \OCA\SnackCheck\Exception\DomainException('amount_invalid', 'Invalid amount', 422);
+		}
+		return $cents;
+	}
+
+	/** Multi-site roster check — same uniform reject as createLog proxy targets. */
+	private function assertExpenseTargetOnSiteRoster(string $target, int $siteId): void
+	{
+		$onRoster = false;
+		foreach ($this->logs->distinctUserIdsForSite($siteId) as $uid) {
+			if (hash_equals((string)$uid, $target)) {
+				$onRoster = true;
+				break;
+			}
+		}
+		if (!$onRoster) {
+			try {
+				foreach ($this->sites->managerUids($this->sites->get($siteId)) as $uid) {
+					if (hash_equals((string)$uid, $target)) {
+						$onRoster = true;
+						break;
+					}
+				}
+			} catch (\Throwable) {
+				$onRoster = false;
+			}
+		}
+		if (!$onRoster) {
+			throw new DomainException('validation_failed', 'Cannot log for this user', 422);
+		}
+	}
+
+	/**
+	 * F24: forward the entry as an ExpenseCheck claim draft. Capability can only
+	 * reach here when present (getExpenseRouting degrades otherwise); a mid-flight
+	 * disable is answered with 409 expense_route_unavailable.
+	 */
+	private function routeExpenseClaim(string $actorUid, string $memberUid, int $amountCents, int $siteId): JSONResponse
+	{
+		$ingress = $this->claimsBridge?->ingress();
+		if ($ingress === null) {
+			throw new DomainException('expense_route_unavailable', 'ExpenseCheck unavailable', 409);
+		}
+		// Deterministic per dialog-open: the client reuses the idempotency key it
+		// already sends, so a resubmit/double-click yields the same source_ref and
+		// EXP-side (source_app, source_ref) dedupe collapses it into one draft.
+		$idem = trim((string)($this->request->getHeader('Idempotency-Key')
+			?: $this->request->getParam('idempotencyKey') ?? ''));
+		$idem = preg_replace('/[^A-Za-z0-9_-]/', '', $idem) ?? '';
+		$sourceRef = 'snkexp:' . ($idem !== '' ? mb_substr($idem, 0, 64) : bin2hex(random_bytes(16)));
+		$result = $ingress->submitDraft([
+			'member' => $memberUid,
+			'lines' => [[
+				'amount_cents' => $amountCents,
+				'reason' => (string)($this->request->getParam('expenseReason') ?? ''),
+			]],
+			'source_app' => 'snackcheck',
+			'source_ref' => $sourceRef,
+			'actor' => $actorUid,
+			'site_id' => $siteId,
+		]);
+		$out = ['routed' => 'expense_claim', 'sourceRef' => $sourceRef];
+		if (is_array($result)) {
+			if (isset($result['ref'])) {
+				$out['ref'] = $result['ref'];
+			}
+			if (isset($result['url'])) {
+				$out['url'] = $result['url'];
+			}
+		}
+		return $this->ok($out);
 	}
 
 	#[NoAdminRequired]
@@ -291,6 +447,8 @@ class ApiController extends Controller
 				$csv = $this->payroll->toCsv($pkg['lines'], [
 					'period_label','user_id','user_display_name','item_name','qty',
 					'unit_price_eur','line_total_eur','logged_at','source','site_code','site_name',
+					// entry_type + reason append at END — positional parsers stay safe.
+					'entry_type','reason',
 				]);
 				return new DataDownloadResponse($csv, 'snackcheck-payroll.csv', 'text/csv');
 			}
@@ -495,6 +653,54 @@ class ApiController extends Controller
 				? (int)$this->request->getParam('personalDigestDaysBefore')
 				: null;
 
+			$expenseEnabled = $this->request->getParam('expenseEnabled') !== null
+				? $this->truthy($this->request->getParam('expenseEnabled'))
+				: null;
+			$expenseSelfEntry = $this->request->getParam('expenseSelfEntry') !== null
+				? $this->truthy($this->request->getParam('expenseSelfEntry'))
+				: null;
+			$expenseClamp = $this->request->getParam('expenseClampNegativeDeduct') !== null
+				? $this->truthy($this->request->getParam('expenseClampNegativeDeduct'))
+				: null;
+			$expenseKiosk = $this->request->getParam('expenseKioskEntry') !== null
+				? $this->truthy($this->request->getParam('expenseKioskEntry'))
+				: null;
+			$expenseMaxCents = null;
+			if ($this->request->getParam('expenseSelfEntryMaxEuro') !== null) {
+				$rawEuro = trim((string)$this->request->getParam('expenseSelfEntryMaxEuro'));
+				$expenseMaxCents = $rawEuro === '' ? 0 : $this->parseEuroToCents($rawEuro);
+				if ($expenseMaxCents > ConsumptionLogService::EXPENSE_MAX_CENTS) {
+					return $this->fail('validation_failed', 422, 'Invalid expense limit');
+				}
+			}
+			if ($this->request->getParam('expenseSelfEntryMaxCents') !== null) {
+				$rawCents = $this->request->getParam('expenseSelfEntryMaxCents');
+				if (is_bool($rawCents) || is_float($rawCents)
+					|| (is_string($rawCents) && preg_match('/^\d+$/', trim($rawCents)) !== 1)
+					|| (!is_int($rawCents) && !is_string($rawCents))) {
+					return $this->fail('validation_failed', 422, 'Invalid expense limit');
+				}
+				$cents = is_int($rawCents) ? $rawCents : (int)trim($rawCents);
+				if ($cents < 0 || $cents > ConsumptionLogService::EXPENSE_MAX_CENTS) {
+					return $this->fail('validation_failed', 422, 'Invalid expense limit');
+				}
+				$expenseMaxCents = $cents;
+			}
+			$expenseRouting = null;
+			if ($this->request->getParam('expenseRouting') !== null) {
+				$r = (string)$this->request->getParam('expenseRouting');
+				if (!in_array($r, [SettingsService::EXPENSE_ROUTING_LEDGER, SettingsService::EXPENSE_ROUTING_CLAIM], true)) {
+					return $this->fail('validation_failed', 422, 'Invalid expense routing');
+				}
+				// Claim routing is only selectable while the EXP capability exists —
+				// the read path additionally force-degrades to ledger when it vanishes.
+				if ($r === SettingsService::EXPENSE_ROUTING_CLAIM
+					&& !($this->claimsBridge?->capabilityPresent() ?? false)) {
+					return $this->fail('validation_failed', 422, 'ExpenseCheck unavailable');
+				}
+				$expenseRouting = $r;
+			}
+
 			// Projected hospitality state after this request (before writes).
 			$projectedOn = $hospOn ?? $this->settings->isHospitalityEnabled();
 			$projectedCompany = $hospCompany
@@ -571,6 +777,24 @@ class ApiController extends Controller
 			if ($personalDigestDaysBefore !== null) {
 				$this->digestMail->setDigestDaysBefore($personalDigestDaysBefore);
 			}
+			if ($expenseEnabled !== null) {
+				$this->settings->setExpenseEnabled($expenseEnabled);
+			}
+			if ($expenseSelfEntry !== null) {
+				$this->settings->setExpenseSelfEntryEnabled($expenseSelfEntry);
+			}
+			if ($expenseClamp !== null) {
+				$this->settings->setExpenseClampNegativeDeduct($expenseClamp);
+			}
+			if ($expenseKiosk !== null) {
+				$this->settings->setExpenseKioskEntryEnabled($expenseKiosk);
+			}
+			if ($expenseMaxCents !== null) {
+				$this->settings->setExpenseSelfEntryMaxCents($expenseMaxCents);
+			}
+			if ($expenseRouting !== null) {
+				$this->settings->setExpenseRouting($expenseRouting);
+			}
 			$hospEnabledNow = $hospOn ?? $this->settings->isHospitalityEnabled();
 			if ($companyUpdate !== null && $hospEnabledNow) {
 				$this->settings->setHospitalityCompanyUserId($this->requireExistingUser($companyUpdate));
@@ -580,7 +804,10 @@ class ApiController extends Controller
 			}
 
 			// Invariant already enforced pre-apply — never 422 after writes (would leave partial state).
-			return $this->ok($this->settings->getAll());
+			$all = $this->settings->getAll();
+			$all['expenseRouting'] = $this->settings->getExpenseRouting(
+				$this->claimsBridge?->capabilityPresent() ?? false);
+			return $this->ok($all);
 		} catch (\Throwable $e) {
 			return $this->fromDomain($e);
 		}
@@ -967,16 +1194,17 @@ class ApiController extends Controller
 			$lineArr = [];
 			$freeQty = 0;
 			foreach ($this->logMapper->findForUserPeriod((int)$period->getId(), $user) as $l) {
-				if ($l->getBillingBucket() === 'company_hospitality') {
+				$bucket = (string)$l->getBillingBucket();
+				if ($bucket === 'company_hospitality') {
 					continue;
 				}
-				$free = ((int)$l->getLineTotalCents()) === 0;
+				$free = $bucket === 'personal' && ((int)$l->getLineTotalCents()) === 0;
 				if ($free) {
 					$freeQty += (int)$l->getQty();
 				}
 				$lineArr[] = [
 					'line_total_cents' => (int)$l->getLineTotalCents(),
-					'billing_bucket' => 'personal',
+					'billing_bucket' => $bucket,
 					'name' => $l->getItemNameSnap(),
 					'qty' => $l->getQty(),
 					'free' => $free,
@@ -985,7 +1213,11 @@ class ApiController extends Controller
 				];
 			}
 			$subsidyAllowanceCents = $this->settings->getSubsidyAllowanceCents();
-			$calc = $this->subsidy->computeForUser($subsidyAllowanceCents, $lineArr);
+			$calc = $this->subsidy->computeForUser(
+				$subsidyAllowanceCents,
+				$lineArr,
+				$this->settings->isExpenseClampNegativeDeduct(),
+			);
 			$displayUser = $user;
 			$sessionUser = $this->userSession->getUser();
 			if ($sessionUser !== null) {
@@ -1007,6 +1239,8 @@ class ApiController extends Controller
 				$subsidyAllowanceCents,
 				$freeQty,
 				$multiSite,
+				(int)$calc['credits_cents'],
+				(int)$calc['unused_credit_cents'],
 			));
 			return new DataDownloadResponse($pdf, 'snackcheck-my-month.pdf', 'application/pdf');
 		} catch (\Throwable $e) {

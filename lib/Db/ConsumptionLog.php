@@ -23,6 +23,7 @@ class ConsumptionLog extends Entity
 	protected $loggedBy;
 	protected $proxyReason;
 	protected $hospReason;
+	protected $expenseReason;
 	protected $idempotencyKey;
 	protected $createdAt;
 	protected $voidedAt;

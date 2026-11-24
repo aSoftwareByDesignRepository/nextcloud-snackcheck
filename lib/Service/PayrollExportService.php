@@ -35,6 +35,7 @@ class PayrollExportService
 	 *   lines: list<array<string,mixed>>,
 	 *   summaryByUser: list<array<string,mixed>>,
 	 *   summaryByUserSite: list<array<string,mixed>>,
+	 *   creditsBySite: list<array<string,mixed>>,
 	 *   grandTotalCents: int,
 	 *   complimentaryQtyExcluded: int,
 	 *   reconcileOk: bool
@@ -54,19 +55,30 @@ class PayrollExportService
 		$personalLines = [];
 		$byUserLines = [];
 		$byUserSiteGross = [];
+		$bySiteCredits = [];
 		$displayByUser = [];
 
+		$clamp = $this->settings->isExpenseClampNegativeDeduct();
 		foreach ($all as $log) {
 			/** @var ConsumptionLog $log */
-			if ($log->getBillingBucket() === 'company_hospitality') {
+			$bucket = (string)$log->getBillingBucket();
+			if ($bucket === 'company_hospitality') {
 				continue;
 			}
 			$total = (int)$log->getLineTotalCents();
 			$sid = (int)$log->getSiteId();
 			$inSiteFilter = $siteFilter === null || $sid === $siteFilter;
-			if ($total <= 0) {
-				// Complimentary qty respects site filter (Y17 lines/site sheets).
-				if ($inSiteFilter) {
+			$isCredit = $bucket === SubsidyService::BUCKET_PERSONAL_CREDIT;
+			if ($isCredit) {
+				// NN-10 guard: a credit row that is not negative is malformed —
+				// never export it as complimentary or consumption.
+				if ($total >= 0) {
+					continue;
+				}
+			} elseif ($total <= 0) {
+				// NN-02: complimentary counts ONLY zero-total personal rows —
+				// negative credit rows never inflate the excluded qty.
+				if ($inSiteFilter && $total === 0) {
 					$complimentaryQty += (int)$log->getQty();
 				}
 				continue;
@@ -90,29 +102,38 @@ class PayrollExportService
 				'site_code' => $siteMeta['code'],
 				'site_name' => $siteMeta['name'],
 				'site_id' => $sid,
-				'billing_bucket' => 'personal',
+				'billing_bucket' => $bucket,
+				'entry_type' => $isCredit ? 'expense_credit' : 'consumption',
+				'reason' => $isCredit ? (string)($log->getExpenseReason() ?? '') : '',
 			];
 			// Y17: lines + summary_by_user_site respect site filter; summary_by_user stays org-wide.
 			if ($inSiteFilter) {
 				$personalLines[] = $row;
-				$usk = $uid . "\0" . $sid;
-				$byUserSiteGross[$usk] = ($byUserSiteGross[$usk] ?? 0) + $total;
+				if ($isCredit) {
+					// Informational per-site credit split (deduct stays org-wide).
+					$bySiteCredits[$sid] = ($bySiteCredits[$sid] ?? 0) + (-$total);
+				} else {
+					$usk = $uid . "\0" . $sid;
+					$byUserSiteGross[$usk] = ($byUserSiteGross[$usk] ?? 0) + $total;
+				}
 			}
 			$byUserLines[$uid][] = [
 				'line_total_cents' => $total,
-				'billing_bucket' => 'personal',
+				'billing_bucket' => $bucket,
 				'voided' => false,
 			];
 		}
 
 		$summaryByUser = [];
 		foreach ($byUserLines as $uid => $lines) {
-			$calc = $this->subsidy->computeForUser($allowance, $lines);
+			$calc = $this->subsidy->computeForUser($allowance, $lines, $clamp);
 			$summaryByUser[] = [
 				'user_id' => $uid,
 				'user_display_name' => $displayByUser[$uid] ?? '',
 				'gross_cents' => $calc['gross_cents'],
 				'subsidy_cents' => $calc['subsidy_cents'],
+				'credits_cents' => ($calc['credits_cents'] ?? 0),
+				'unused_credit_cents' => ($calc['unused_credit_cents'] ?? 0),
 				'deduct_cents' => $calc['deduct_cents'],
 			];
 		}
@@ -129,13 +150,24 @@ class PayrollExportService
 			];
 		}
 
+		$creditsBySite = [];
+		ksort($bySiteCredits);
+		foreach ($bySiteCredits as $sid => $credits) {
+			$siteMeta = $siteMap[$sid] ?? ['code' => '', 'name' => ''];
+			$creditsBySite[] = [
+				'site_code' => $siteMeta['code'],
+				'site_name' => $siteMeta['name'],
+				'credits_cents' => $credits,
+			];
+		}
+
 		$allPersonalForReconcile = [];
 		foreach ($byUserLines as $lines) {
 			foreach ($lines as $l) {
 				$allPersonalForReconcile[] = $l;
 			}
 		}
-		$reconcileOk = $this->subsidy->reconcileInvariant($summaryByUser, $allPersonalForReconcile);
+		$reconcileOk = $this->subsidy->reconcileInvariant($summaryByUser, $allPersonalForReconcile, $clamp);
 		$grand = 0;
 		foreach ($summaryByUser as $s) {
 			$grand += (int)$s['deduct_cents'];
@@ -145,6 +177,7 @@ class PayrollExportService
 			'lines' => $personalLines,
 			'summaryByUser' => $summaryByUser,
 			'summaryByUserSite' => $summaryByUserSite,
+			'creditsBySite' => $creditsBySite,
 			'grandTotalCents' => $grand,
 			'complimentaryQtyExcluded' => $complimentaryQty,
 			'reconcileOk' => $reconcileOk,
@@ -225,16 +258,20 @@ class PayrollExportService
 	{
 		$sheets = [
 			'lines' => [
-				'cols' => ['period_label','user_id','user_display_name','item_name','qty','unit_price_eur','line_total_eur','logged_at','source','site_code','site_name'],
+				'cols' => ['period_label','user_id','user_display_name','item_name','qty','unit_price_eur','line_total_eur','logged_at','source','site_code','site_name','entry_type','reason'],
 				'rows' => $package['lines'],
 			],
 			'summary_by_user' => [
-				'cols' => ['user_id','user_display_name','gross_cents','subsidy_cents','deduct_cents'],
+				'cols' => ['user_id','user_display_name','gross_cents','subsidy_cents','credits_cents','unused_credit_cents','deduct_cents'],
 				'rows' => $package['summaryByUser'],
 			],
 			'summary_by_user_site' => [
 				'cols' => ['user_id','site_code','site_name','gross_cents'],
 				'rows' => $package['summaryByUserSite'],
+			],
+			'credits_by_site' => [
+				'cols' => ['site_code','site_name','credits_cents'],
+				'rows' => $package['creditsBySite'] ?? [],
 			],
 		];
 		return XlsxWriter::fromSheets($sheets);

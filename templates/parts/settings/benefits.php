@@ -77,6 +77,75 @@ $subsidyEuro = number_format($subsidyCents / 100, 2, '.', '');
 	</fieldset>
 
 	<fieldset class="snk-settings-block">
+		<legend class="snk-settings-block__legend"><?php p($l->t('Expenses')); ?></legend>
+		<p class="snk-muted snk-settings-block__hint"><?php p($l->t('Members record out-of-pocket expenses that lower their payroll deduction.')); ?></p>
+		<input type="hidden" name="expenseEnabled" value="0" />
+		<div class="snk-switch-field">
+			<input class="snk-switch-field__input" type="checkbox" role="switch" name="expenseEnabled" id="snk-expense-enabled" value="1" <?php if (!empty($s['expenseEnabled'])) { ?>checked<?php } ?> />
+			<label class="snk-switch-field__label" for="snk-expense-enabled">
+				<span class="snk-switch-field__track" aria-hidden="true"></span>
+				<span class="snk-switch-field__text"><?php p($l->t('Expense credits')); ?>
+					<span class="snk-switch-field__hint"><?php p($l->t('Expenses count against the payroll deduction of the same period.')); ?></span>
+				</span>
+			</label>
+		</div>
+		<div id="snk-expense-fields" class="snk-settings-block__nested" <?php if (empty($s['expenseEnabled'])) { ?>hidden<?php } ?>>
+			<input type="hidden" name="expenseSelfEntry" value="0" />
+			<div class="snk-switch-field">
+				<input class="snk-switch-field__input" type="checkbox" role="switch" name="expenseSelfEntry" id="snk-expense-self" value="1" <?php if (!isset($s['expenseSelfEntry']) || !empty($s['expenseSelfEntry'])) { ?>checked<?php } ?> />
+				<label class="snk-switch-field__label" for="snk-expense-self">
+					<span class="snk-switch-field__track" aria-hidden="true"></span>
+					<span class="snk-switch-field__text"><?php p($l->t('Members enter their own expenses')); ?>
+						<span class="snk-switch-field__hint"><?php p($l->t('When off, only kitchen admins can record expenses.')); ?></span>
+					</span>
+				</label>
+			</div>
+			<label class="snk-field" for="snk-expense-max">
+				<span><?php p($l->t('Self-entry limit per expense (€)')); ?></span>
+				<input id="snk-expense-max" name="expenseSelfEntryMaxEuro" class="snk-input" type="number" min="0" step="0.01" inputmode="decimal" value="<?php p(number_format((int)($s['expenseSelfEntryMaxCents'] ?? 0) / 100, 2, '.', '')); ?>" />
+				<span class="snk-muted"><?php p($l->t('0 = no limit. Kitchen admins may always enter any amount for anyone.')); ?></span>
+			</label>
+			<input type="hidden" name="expenseClampNegativeDeduct" value="0" />
+			<div class="snk-switch-field">
+				<input class="snk-switch-field__input" type="checkbox" role="switch" name="expenseClampNegativeDeduct" id="snk-expense-clamp" value="1" <?php if (!empty($s['expenseClampNegativeDeduct'])) { ?>checked<?php } ?> />
+				<label class="snk-switch-field__label" for="snk-expense-clamp">
+					<span class="snk-switch-field__track" aria-hidden="true"></span>
+					<span class="snk-switch-field__text"><?php p($l->t('Cap at zero instead of paying out')); ?>
+						<span class="snk-switch-field__hint"><?php p($l->t('When on, expenses can never push the deduction below 0 € — the remainder is reported as unapplied credit. When off, a negative deduction is paid out.')); ?></span>
+					</span>
+				</label>
+			</div>
+			<input type="hidden" name="expenseKioskEntry" value="0" />
+			<div class="snk-switch-field">
+				<input class="snk-switch-field__input" type="checkbox" role="switch" name="expenseKioskEntry" id="snk-expense-kiosk" value="1" <?php if (!empty($s['expenseKioskEntry'])) { ?>checked<?php } ?> />
+				<label class="snk-switch-field__label" for="snk-expense-kiosk">
+					<span class="snk-switch-field__track" aria-hidden="true"></span>
+					<span class="snk-switch-field__text"><?php p($l->t('Expenses on the kitchen tablet')); ?>
+						<span class="snk-switch-field__hint"><?php p($l->t('Lets people record expenses on the paired kitchen tablet (live connection required).')); ?></span>
+					</span>
+				</label>
+			</div>
+			<?php if (!empty($_['expenseClaimsCapability'])): ?>
+				<fieldset class="snk-settings-block snk-expense-routing">
+					<legend class="snk-settings-block__legend"><?php p($l->t('Where expenses go')); ?></legend>
+					<label class="snk-choice">
+						<input type="radio" name="expenseRouting" value="ledger_credit" <?php if (($s['expenseRouting'] ?? 'ledger_credit') !== 'expense_claim') { ?>checked<?php } ?> />
+						<span><?php p($l->t('Credit directly (default)')); ?>
+							<span class="snk-muted"><?php p($l->t('Approved instantly, nets against this period.')); ?></span>
+						</span>
+					</label>
+					<label class="snk-choice">
+						<input type="radio" name="expenseRouting" value="expense_claim" <?php if (($s['expenseRouting'] ?? '') === 'expense_claim') { ?>checked<?php } ?> />
+						<span><?php p($l->t('Submit as ExpenseCheck claim')); ?>
+							<span class="snk-muted"><?php p($l->t('Goes through ExpenseCheck review; the credit lands after approval.')); ?></span>
+						</span>
+					</label>
+				</fieldset>
+			<?php endif; ?>
+		</div>
+	</fieldset>
+
+	<fieldset class="snk-settings-block">
 		<legend class="snk-settings-block__legend"><?php p($l->t('Multi-site')); ?></legend>
 		<input type="hidden" name="multiSiteEnabled" value="0" />
 		<div class="snk-switch-field">

@@ -335,6 +335,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 				'itemId' => 1,
 				'qty' => 1,
 				'idempotencyKey' => 'idem-1',
+				'amountCents' => 250,
+				'expenseReason' => 'Milk for the kitchen',
 			];
 			return $ctrl;
 		}
@@ -498,6 +500,7 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			$mock = $this->createMock(ConsumptionLogService::class);
 			$log = $this->log();
 			$mock->method('create')->willReturn(['log' => $log, 'replay' => false, 'httpStatus' => 201]);
+			$mock->method('createExpense')->willReturn(['log' => $log, 'replay' => false, 'httpStatus' => 201]);
 			$mock->method('selfUndo')->willReturn($log);
 			$mock->method('void')->willReturn($log);
 			$mock->method('distinctUserIdsForSite')->willReturn(['alice']);
@@ -529,6 +532,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			$mock->method('computeForUser')->willReturn([
 				'gross_cents' => 0,
 				'subsidy_cents' => 0,
+				'credits_cents' => 0,
+				'unused_credit_cents' => 0,
 				'deduct_cents' => 0,
 			]);
 			return $this->byType[$key] = $mock;
@@ -542,6 +547,12 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			$mock->method('getAll')->willReturn([]);
 			$mock->method('getAppAdmins')->willReturn(['alice']);
 			$mock->method('getSubsidyAllowanceCents')->willReturn(0);
+			$mock->method('isExpenseEnabled')->willReturn(true);
+			$mock->method('isExpenseSelfEntryEnabled')->willReturn(true);
+			$mock->method('getExpenseSelfEntryMaxCents')->willReturn(0);
+			$mock->method('isExpenseClampNegativeDeduct')->willReturn(false);
+			$mock->method('isExpenseKioskEntryEnabled')->willReturn(true);
+			$mock->method('getExpenseRouting')->willReturn(\OCA\SnackCheck\Service\SettingsService::EXPENSE_ROUTING_LEDGER);
 			return $this->byType[$key] = $mock;
 		}
 
@@ -735,6 +746,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			'targetUserId' => 'alice',
 			'deviceId' => 7,
 			'hospitalityEnabled' => false,
+			'amountCents' => 250,
+			'expenseReason' => 'Milk for the kitchen',
 		];
 		$mock->method('getParam')->willReturnCallback(
 			static function (string $key, mixed $default = null) use ($params): mixed {

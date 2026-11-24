@@ -22,6 +22,8 @@ class ConsumptionLogService
 	public const IDEMPOTENCY_TTL_HOURS = 24;
 	public const UNDO_SECONDS = 60;
 	public const REASON_MAX_LEN = 500;
+	public const EXPENSE_MAX_CENTS = 99_999_999;
+	public const EXPENSE_ITEM_SNAP = 'Expense';
 
 	public function __construct(
 		private readonly ConsumptionLogMapper $mapper,
@@ -35,6 +37,9 @@ class ConsumptionLogService
 		private readonly IDBConnection $db,
 		private readonly ITimeFactory $timeFactory,
 		private readonly IUserManager $userManager,
+		private readonly ?ExpenseClaimsBridge $claimsBridge = null,
+		private readonly ?\OCP\Notification\IManager $notificationManager = null,
+		private readonly ?\OCP\IURLGenerator $urlGenerator = null,
 	) {
 	}
 
@@ -171,6 +176,259 @@ class ConsumptionLogService
 		return ['log' => $log, 'replay' => false, 'httpStatus' => 201];
 	}
 
+	/**
+	 * Expense credit ("Auslage") — a negative ledger entry in bucket
+	 * personal_credit (NN-10: line_total MUST stay < 0; qty pinned to 1;
+	 * item NULL; name snapshot stays the canonical, never-localized label).
+	 *
+	 * @param array{
+	 *   amountCents:int, expenseReason:string, idempotencyKey:string, siteId:int,
+	 *   actorUserId:string, source:string, targetUserId?:string|null,
+	 *   deviceId?:string|null, isKitchenAdmin?:bool, facade?:bool, extRef?:string|null
+	 * } $input
+	 * @return array{log: ConsumptionLog, replay: bool, httpStatus: int}
+	 */
+	public function createExpense(array $input): array
+	{
+		$amount = (int)($input['amountCents'] ?? 0);
+		$reason = trim((string)($input['expenseReason'] ?? ''));
+		$key = trim((string)$input['idempotencyKey']);
+		$siteId = (int)$input['siteId'];
+		$actor = (string)$input['actorUserId'];
+		$facade = (bool)($input['facade'] ?? false);
+		$source = (string)$input['source'];
+		$deviceId = $input['deviceId'] ?? null;
+
+		// NN-12: ext: keys are reserved for first-party contract writers — the
+		// facade passes facade=true; every human/device caller is refused so a
+		// client can never squat a foreign idempotency namespace.
+		if (!$facade && str_starts_with($key, 'ext:')) {
+			throw new DomainException('idempotency_key_reserved', 'Idempotency key reserved', 422);
+		}
+		if ($key === '' || mb_strlen($key) > 128) {
+			throw new DomainException('validation_failed', 'Idempotency key required', 422);
+		}
+		if (!$this->settings->isExpenseEnabled()) {
+			throw new DomainException('expense_disabled', 'Expenses disabled', 403);
+		}
+		if ($amount <= 0 || $amount > self::EXPENSE_MAX_CENTS) {
+			throw new DomainException('amount_invalid', 'Invalid amount', 422);
+		}
+		if (mb_strlen($reason) < 3 || mb_strlen($reason) > self::REASON_MAX_LEN) {
+			throw new DomainException('expense_reason_required', 'Expense reason required', 422);
+		}
+
+		// Attribution: explicit different target = manager/facade credit; otherwise self.
+		$target = trim((string)($input['targetUserId'] ?? ''));
+		$proxyLike = $target !== '' && $target !== $actor;
+		if ($proxyLike) {
+			if (!$facade && empty($input['isKitchenAdmin'])) {
+				throw new DomainException('permission_denied', 'Expense entry for others requires kitchen admin', 403);
+			}
+			// Uniform 422 — nonexistent, inaccessible, and off-roster targets must
+			// be indistinguishable (no uid/roster oracle, NN-06).
+			if ($this->userManager->get($target) === null || !$this->access->canAccessApp($target)) {
+				throw new DomainException('validation_failed', 'Cannot log for this user', 422);
+			}
+			$userId = $target;
+		} else {
+			if (!$facade) {
+				if (!$this->settings->isExpenseSelfEntryEnabled()) {
+					throw new DomainException('expense_self_entry_disabled', 'Self expense entry disabled', 403);
+				}
+				$cap = $this->settings->getExpenseSelfEntryMaxCents();
+				if ($cap > 0 && $amount > $cap) {
+					throw new DomainException('amount_over_self_limit', 'Amount over self-entry limit', 422);
+				}
+			}
+			$userId = $actor;
+		}
+		$canonTarget = $proxyLike ? $userId : '';
+		$fingerprint = $this->expenseCanonHash($amount, $reason, $siteId, $actor, $canonTarget);
+
+		$existing = $this->mapper->findByIdempotencyKey($key);
+		if ($existing !== null) {
+			if (!hash_equals($fingerprint, $this->storedExpenseFingerprint($existing))) {
+				throw new DomainException('idempotency_conflict', 'Idempotency conflict', 409);
+			}
+			$age = $this->timeFactory->getTime() - ($existing->getCreatedAt()?->getTimestamp() ?? 0);
+			if ($age > self::IDEMPOTENCY_TTL_HOURS * 3600) {
+				throw new DomainException('idempotency_conflict', 'Idempotency key expired', 409);
+			}
+			return ['log' => $existing, 'replay' => true, 'httpStatus' => 200];
+		}
+
+		$this->db->beginTransaction();
+		try {
+			$period = $this->periods->getOpenOrFail();
+			$locked = $this->periodMapper->lockRow((int)$period->getId());
+			if ($locked === null || $locked->getState() !== 'open') {
+				throw new DomainException('period_closed', 'Period closed', 409);
+			}
+			$existing2 = $this->mapper->findByIdempotencyKey($key);
+			if ($existing2 !== null) {
+				if (!hash_equals($fingerprint, $this->storedExpenseFingerprint($existing2))) {
+					throw new DomainException('idempotency_conflict', 'Idempotency conflict', 409);
+				}
+				$this->db->commit();
+				return ['log' => $existing2, 'replay' => true, 'httpStatus' => 200];
+			}
+
+			$log = new ConsumptionLog();
+			$log->setPeriodId((int)$locked->getId());
+			$log->setSiteId($siteId);
+			$log->setUserId($userId);
+			$log->setUserDisplaySnap($this->displayName($userId));
+			$log->setItemId(null);
+			$log->setItemNameSnap(self::EXPENSE_ITEM_SNAP);
+			$log->setQty(1);
+			$log->setUnitPriceCents(-$amount);
+			$log->setLineTotalCents(-$amount);
+			$log->setBillingBucket(SubsidyService::BUCKET_PERSONAL_CREDIT);
+			$log->setSource($source);
+			$log->setDeviceId($deviceId !== null ? (string)$deviceId : null);
+			$log->setLoggedBy($actor);
+			$log->setExpenseReason($reason);
+			$log->setIdempotencyKey($key);
+			$log->setCreatedAt($this->timeFactory->getDateTime());
+			// NN-10 insert-time invariant: a personal_credit row must be negative —
+			// a positive credit would silently charge the member instead.
+			if ($log->getLineTotalCents() >= 0
+				|| $log->getBillingBucket() !== SubsidyService::BUCKET_PERSONAL_CREDIT) {
+				throw new \RuntimeException('expense credit sign invariant violated');
+			}
+			$log = $this->mapper->insert($log);
+
+			// MH-08: audit in the same transaction as the ledger row. The reason
+			// text is NEVER audited — amounts + ids only (payload minimization).
+			$payload = ['amount_cents' => $amount, 'site_id' => $siteId];
+			if ($proxyLike) {
+				$payload['target_user_id'] = $userId;
+			}
+			if ($deviceId !== null) {
+				$payload['device_id'] = (string)$deviceId;
+			}
+			if (!empty($input['extRef'])) {
+				$payload['ext_ref'] = (string)$input['extRef'];
+			}
+			$this->audit->record($actor, $this->expenseAuditAction($source, $proxyLike), 'consumption_log', (string)$log->getId(), $payload);
+			$this->db->commit();
+			$this->notifyExpenseCredit($userId, $actor, $amount, (int)$log->getId(), $source, $proxyLike);
+		} catch (DomainException $e) {
+			$this->db->rollBack();
+			throw $e;
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			if ($e instanceof DbException && $e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				$again = $this->mapper->findByIdempotencyKey($key);
+				if ($again !== null) {
+					if (!hash_equals($fingerprint, $this->storedExpenseFingerprint($again))) {
+						throw new DomainException('idempotency_conflict', 'Idempotency conflict', 409);
+					}
+					return ['log' => $again, 'replay' => true, 'httpStatus' => 200];
+				}
+			}
+			throw $e;
+		}
+
+		return ['log' => $log, 'replay' => false, 'httpStatus' => 201];
+	}
+
+	/**
+	 * NH-08: tell the credited member when SOMEONE ELSE booked the credit —
+	 * manager web entry and terminal proxy only. Self-entries, replays, and
+	 * facade-written claim rows stay silent (EXP owns its own notification).
+	 * Best-effort after commit: a notifier failure must never fail the write.
+	 */
+	private function notifyExpenseCredit(string $userId, string $actor, int $amount, int $logId, string $source, bool $proxyLike): void
+	{
+		if (!$proxyLike
+			|| !in_array($source, ['expense_admin', 'expense_terminal_proxy'], true)
+			|| $this->notificationManager === null) {
+			return;
+		}
+		try {
+			$notification = $this->notificationManager->createNotification();
+			$notification->setApp('snackcheck')
+				->setUser($userId)
+				->setDateTime(new \DateTime())
+				->setObject('expense_credit', (string)$logId)
+				->setSubject(\OCA\SnackCheck\Notification\Notifier::SUBJECT_EXPENSE_CREDIT, [
+					'amount' => number_format($amount / 100, 2, '.', ''),
+					'actor' => $this->displayName($actor),
+				]);
+			if ($this->urlGenerator !== null) {
+				$notification->setLink($this->urlGenerator->linkToRouteAbsolute('snackcheck.page.myMonth'));
+			}
+			$this->notificationManager->notify($notification);
+		} catch (\Throwable) {
+			// Notifications are informational — never let them break a money write.
+		}
+	}
+
+	/**
+	 * Facade void — EXP is the writer of its own claim rows, so this path
+	 * skips web ACLs and the managed_externally block; it only ever touches
+	 * source=expense_claim credit rows.
+	 */
+	public function facadeVoidExpense(int $logId, string $actorUid, string $reason): ConsumptionLog
+	{
+		return $this->void($logId, $actorUid, $reason, false, false, false, null, true);
+	}
+
+	private function expenseAuditAction(string $source, bool $proxyLike): string
+	{
+		return match ($source) {
+			'expense_terminal_proxy' => 'expense.terminal_proxy_create',
+			'expense_terminal' => $proxyLike ? 'expense.terminal_proxy_create' : 'expense.terminal_create',
+			'expense_claim' => 'expense.facade_create',
+			'expense_admin' => 'expense.proxy_create',
+			default => $proxyLike ? 'expense.proxy_create' : 'expense.create',
+		};
+	}
+
+	private function expenseCanonHash(int $amountCents, string $reason, int $siteId, string $actor, string $target): string
+	{
+		$canon = [
+			'amountCents' => $amountCents,
+			'expenseReason' => $reason,
+			'siteId' => $siteId,
+			'actorUserId' => $actor,
+			'mode' => 'expense',
+			'targetUserId' => $target,
+		];
+		return hash('sha256', json_encode($canon, JSON_THROW_ON_ERROR));
+	}
+
+	private function storedExpenseFingerprint(ConsumptionLog $log): string
+	{
+		$actor = (string)($log->getLoggedBy() ?? $log->getUserId());
+		$userId = (string)$log->getUserId();
+		$target = $actor !== $userId ? $userId : '';
+		return $this->expenseCanonHash(
+			-((int)$log->getLineTotalCents()),
+			(string)($log->getExpenseReason() ?? ''),
+			(int)$log->getSiteId(),
+			$actor,
+			$target,
+		);
+	}
+
+	/**
+	 * EXP-managed credit: claim rows stay write-locked to the facade while the
+	 * check:expense-claims capability is present (single-writer rule).
+	 */
+	private function isManagedExternally(ConsumptionLog $log): bool
+	{
+		if ($log->getBillingBucket() !== SubsidyService::BUCKET_PERSONAL_CREDIT) {
+			return false;
+		}
+		if ($log->getSource() !== 'expense_claim') {
+			return false;
+		}
+		return $this->claimsBridge?->capabilityPresent() ?? false;
+	}
+
 	public function void(
 		int $logId,
 		string $actorUid,
@@ -179,6 +437,7 @@ class ConsumptionLogService
 		bool $allowLoggedByActor = false,
 		bool $enforceSelfUndoWindow = false,
 		?int $requiredSiteId = null,
+		bool $facadeManaged = false,
 	): ConsumptionLog {
 		$reason = trim($reason);
 		if (mb_strlen($reason) < 3) {
@@ -202,11 +461,28 @@ class ConsumptionLogService
 			if ($period === null || $period->getState() !== 'open') {
 				throw new DomainException('period_closed', 'Cannot void in closed period', 409);
 			}
-			if ($enforceSelfUndoWindow) {
+			if ($facadeManaged) {
+				// Facade void only ever touches its own claim-credit rows.
+				if ($log->getBillingBucket() !== SubsidyService::BUCKET_PERSONAL_CREDIT
+					|| $log->getSource() !== 'expense_claim') {
+					throw new DomainException('managed_externally', 'Not an expense-claim credit', 409);
+				}
+			} elseif ($enforceSelfUndoWindow) {
 				// Permission + undo TTL under the same row lock (closes TOCTOU on window expiry).
 				// Uniform 404 for every "not yours / foreign-site" deny — a caller must
 				// not diff 403-vs-404 to learn that another user's/kitchen's log exists.
+				if ($this->isManagedExternally($log)) {
+					// Single-writer: self-undo on EXP-owned rows is a uniform 404
+					// (US-009 AC-5) — managers get 409 managed_externally below.
+					throw new DomainException('not_found', 'Log not found', 404);
+				}
 				if ($log->getBillingBucket() === 'company_hospitality') {
+					if ((string)$log->getLoggedBy() !== $actorUid) {
+						throw new DomainException('not_found', 'Log not found', 404);
+					}
+				} elseif ($log->getBillingBucket() === SubsidyService::BUCKET_PERSONAL_CREDIT) {
+					// Credits may only be self-undone by the entering actor
+					// (admin-entered credits are never self-undoable).
 					if ((string)$log->getLoggedBy() !== $actorUid) {
 						throw new DomainException('not_found', 'Log not found', 404);
 					}
@@ -226,9 +502,18 @@ class ConsumptionLogService
 				if (!$this->access->canManageSite($actorUid, (int)$log->getSiteId())) {
 					throw new DomainException('not_found', 'Log not found', 404);
 				}
+				if ($this->isManagedExternally($log)) {
+					throw new DomainException('managed_externally', 'Managed by ExpenseCheck', 409);
+				}
 			} else {
+				if ($this->isManagedExternally($log)) {
+					throw new DomainException('not_found', 'Log not found', 404);
+				}
 				$ok = $log->getUserId() === $actorUid
 					|| ($allowLoggedByActor && (string)$log->getLoggedBy() === $actorUid);
+				if ($log->getBillingBucket() === SubsidyService::BUCKET_PERSONAL_CREDIT) {
+					$ok = (string)$log->getLoggedBy() === $actorUid;
+				}
 				if (!$ok) {
 					throw new DomainException('not_found', 'Log not found', 404);
 				}
@@ -240,7 +525,10 @@ class ConsumptionLogService
 			$log->setVoidedBy($actorUid);
 			$log->setVoidReason($reason);
 			$log = $this->mapper->update($log);
-			$this->audit->record($actorUid, 'log.void', 'consumption_log', (string)$logId, ['reason' => $reason]);
+			// Only the facade path claims the facade_void action — a web manager
+			// voiding an orphaned claim row (EXP uninstalled) audits as log.void.
+			$voidAction = $facadeManaged ? 'expense.facade_void' : 'log.void';
+			$this->audit->record($actorUid, $voidAction, 'consumption_log', (string)$logId, ['reason' => $reason]);
 			$this->db->commit();
 		} catch (\Throwable $e) {
 			$this->db->rollBack();
@@ -336,11 +624,17 @@ class ConsumptionLogService
 			if ($log->getVoidedAt() !== null) {
 				continue;
 			}
-			if ($log->getBillingBucket() !== 'personal') {
-				continue;
-			}
+			$bucket = $log->getBillingBucket();
 			// Intentionally ignore $siteId — strip must match org-wide My month.
 			$line = (int)$log->getLineTotalCents();
+			if ($bucket === SubsidyService::BUCKET_PERSONAL_CREDIT) {
+				// Quick total = G − C: credits net against the running total.
+				$total += $line; // negative
+				continue;
+			}
+			if ($bucket !== SubsidyService::BUCKET_PERSONAL) {
+				continue;
+			}
 			if ($line > 0) {
 				$total += $line;
 			}

@@ -57,9 +57,19 @@ if (submitBlock) {
 		'reason reject does not mark field');
 	// Claim-routed responses must not offer a ledger undo id.
 	assert(/routed === 'expense_claim'/.test(b), 'expense_claim routing branch missing');
+	// Response-shape contract: `url` is OPTIONAL — the server emits it only
+	// when the acting uid can actually open the EXP claim page. A missing url
+	// must degrade to linkUrl=null so no dead 'Open claim' action renders.
+	assert(/created\.data\.url \|\| null/.test(b),
+		'claim toast does not degrade missing url to null linkUrl');
+	assert(/if \(linkUrl\)/.test(SRC), 'toast action link renders only when a url is present');
 	// Undo toast carries the created log id (60 s self-undo window).
 	assert(/toast\(t\('Expense recorded'[\s\S]{0,200}?created\.data\.id/.test(SRC),
 		'undo toast does not pass the created log id');
+	// Failure surface is never status-carved: every post() rejection —
+	// 4xx AND 5xx alike — reaches the error toast, nothing is swallowed.
+	assert(/catch \(e\) \{\s*toast\(userFacingError\(e\), null, true\)/.test(SRC),
+		'submit catch must toast every failure, not only 4xx');
 }
 
 if (failures === 0) {

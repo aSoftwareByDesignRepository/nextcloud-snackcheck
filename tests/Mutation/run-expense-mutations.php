@@ -108,6 +108,26 @@ $mutations = [
 	['file' => 'lib/Service/ExpenseClaimsBridge.php', 'name' => 'fingerprint_or_to_and',
 		'search' => 'if ((int)$claim->getTotalMinor() !== $amountCents || (string)$claim->getTitle() !== $title) {',
 		'replace' => 'if ((int)$claim->getTotalMinor() !== $amountCents && (string)$claim->getTitle() !== $title) {'],
+	// role_scoped_endpoint_unhandled: the 'Open claim' url must be emitted
+	// only for actors who can open the page. Ungating restores the dead CTA.
+	['file' => 'lib/Service/ExpenseClaimsBridge.php', 'name' => 'claim_url_emitted_ungated',
+		'search' => '		try {
+			if (!Server::get(self::EXP_ACCESS)->canUseApp($actorUid)) {
+				return null;
+			}
+			if (!Server::get(self::LIFECYCLE)->canView($claim, $actorUid)) {
+				return null;
+			}
+		} catch (\Throwable) {
+			return null;
+		}
+		return $this->claimUrl($claim->getId());',
+		'replace' => '		return $this->claimUrl($claim->getId());'],
+	// Door half alone: killed on restricted instances by the owner leg —
+	// a claim owner outside EXP\'s allowed list must still get no url.
+	['file' => 'lib/Service/ExpenseClaimsBridge.php', 'name' => 'claim_url_door_check_dropped',
+		'search' => 'if (!Server::get(self::EXP_ACCESS)->canUseApp($actorUid)) {',
+		'replace' => 'if (false) {'],
 	['file' => 'lib/Controller/ApiController.php', 'name' => 'keyless_claim_accepted',
 		'search' => 'if ($idem === \'\') {
 			// Same contract as the ledger path: no key, no write. A generated

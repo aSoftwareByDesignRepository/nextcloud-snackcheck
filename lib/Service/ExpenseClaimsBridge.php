@@ -29,6 +29,7 @@ class ExpenseClaimsBridge
 	public const INGRESS_MARKER = 'OCA\\ExpenseCheck\\Controller\\IngressApiController';
 
 	private const LIFECYCLE = 'OCA\\ExpenseCheck\\Service\\ClaimLifecycleService';
+	private const EXP_ACCESS = 'OCA\\ExpenseCheck\\Service\\AccessControlService';
 	private const LINE_SERVICE = 'OCA\\ExpenseCheck\\Service\\ClaimLineService';
 	private const CLAIM_MAPPER = 'OCA\\ExpenseCheck\\Db\\ClaimMapper';
 	private const CATEGORY_MAPPER = 'OCA\\ExpenseCheck\\Db\\CategoryMapper';
@@ -89,7 +90,10 @@ class ExpenseClaimsBridge
 	 * Idempotent on $sourceRef via EXP's request_key convention — a replayed
 	 * submit returns the existing draft instead of a second claim.
 	 *
-	 * @return array{ref:string,url:string,deduplicated:bool}
+	 * @return array{ref:string,deduplicated:bool,url?:string}
+	 *         `url` is emitted only when the ACTING uid can actually open the
+	 *         EXP claim page (access door + claim visibility) — otherwise the
+	 *         response carries the ref without a dead 'Open claim' action.
 	 * @throws DomainException expense_route_unavailable (EXP absent/mid-flight)
 	 *         or validation_failed (EXP rejected a field).
 	 */
@@ -113,11 +117,7 @@ class ExpenseClaimsBridge
 			$existing = self::awaitSettledClaim($claimMapper, $requestKey);
 			if ($existing !== null) {
 				self::assertReplayMatches($existing, $amountCents, $title);
-				return [
-					'ref' => (string)$existing->getClaimNo(),
-					'url' => $this->claimUrl($existing->getId()),
-					'deduplicated' => true,
-				];
+				return $this->claimResult($existing, $actorUid, true);
 			}
 
 			$claim = null;
@@ -137,11 +137,7 @@ class ExpenseClaimsBridge
 					$winner = self::awaitSettledClaim($claimMapper, $requestKey);
 					if ($winner !== null) {
 						self::assertReplayMatches($winner, $amountCents, $title);
-						return [
-							'ref' => (string)$winner->getClaimNo(),
-							'url' => $this->claimUrl($winner->getId()),
-							'deduplicated' => true,
-						];
+						return $this->claimResult($winner, $actorUid, true);
 					}
 				}
 				throw $e;
@@ -187,11 +183,7 @@ class ExpenseClaimsBridge
 				throw $e;
 			}
 
-			return [
-				'ref' => (string)$claim->getClaimNo(),
-				'url' => $this->claimUrl($claim->getId()),
-				'deduplicated' => false,
-			];
+			return $this->claimResult($claim, $actorUid, false);
 		} catch (DomainException $e) {
 			throw $e;
 		} catch (\Throwable $e) {
@@ -260,6 +252,49 @@ class ExpenseClaimsBridge
 			return new DomainException('expense_route_unavailable', $msg, 409);
 		}
 		return new DomainException('expense_route_unavailable', 'ExpenseCheck unavailable', 409);
+	}
+
+	/**
+	 * Response shape for all three claim outcomes. The `url` key exists only
+	 * when the ACTING uid can open the EXP claim page — a link the role
+	 * cannot follow is a dead CTA, so ineligible actors get the ref only.
+	 *
+	 * @return array{ref:string,deduplicated:bool,url?:string}
+	 */
+	private function claimResult(object $claim, string $actorUid, bool $deduplicated): array
+	{
+		$out = [
+			'ref' => (string)$claim->getClaimNo(),
+			'deduplicated' => $deduplicated,
+		];
+		$url = $this->claimUrlForActor($claim, $actorUid);
+		if ($url !== null) {
+			$out['url'] = $url;
+		}
+		return $out;
+	}
+
+	/**
+	 * The 'Open claim' affordance is honest only when the acting uid can
+	 * actually reach /apps/expensecheck/claims/<id>: EXP's access door
+	 * (canUseApp) AND that claim's visibility (owner / EXP admin / finance /
+	 * auditor / pending decision rights — canView). Fail-closed: any doubt
+	 * (service absent, probe throws) omits the url — the submit still
+	 * reports its ref, and a page-reachable role can navigate manually.
+	 */
+	private function claimUrlForActor(object $claim, string $actorUid): ?string
+	{
+		try {
+			if (!Server::get(self::EXP_ACCESS)->canUseApp($actorUid)) {
+				return null;
+			}
+			if (!Server::get(self::LIFECYCLE)->canView($claim, $actorUid)) {
+				return null;
+			}
+		} catch (\Throwable) {
+			return null;
+		}
+		return $this->claimUrl($claim->getId());
 	}
 
 	private function claimUrl(int $claimId): string

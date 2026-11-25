@@ -94,7 +94,6 @@ final class ExpenseClaimsBridgeIntegrationTest extends TestCase
 		$res = $this->bridge->submitDraft($this->uid, 1234, 'Milk for the kitchen', $ref, $this->categoryId, $this->costCenterId);
 
 		self::assertNotSame('', $res['ref']);
-		self::assertStringContainsString('/apps/expensecheck/claims/', $res['url']);
 		self::assertFalse($res['deduplicated']);
 
 		$claim = $this->db->executeQuery(
@@ -125,6 +124,105 @@ final class ExpenseClaimsBridgeIntegrationTest extends TestCase
 		self::assertNotFalse($alloc);
 		self::assertSame($this->costCenterId, (int)$alloc['cost_center_id']);
 		self::assertSame(1234, (int)$alloc['amount_minor']);
+
+		// Role-scoped url contract: `url` exists exactly when the acting uid
+		// passes EXP's access door AND may view the claim — the 'Open claim'
+		// action must never be a dead end for a role that gets 403.
+		self::assertSame(
+			$this->expCanOpenClaim((int)$claim['id'], $this->uid),
+			isset($res['url']),
+			'url must be emitted iff EXP door + claim visibility allow the actor',
+		);
+		if (isset($res['url'])) {
+			self::assertStringContainsString('/apps/expensecheck/claims/', $res['url']);
+		}
+	}
+
+	/**
+	 * EXP-side contract mirror: can the uid actually open the claim page?
+	 * Door (canUseApp) AND claim visibility (canView) — the same two gates
+	 * AppAccessMiddleware + PageController::claimDetail enforce.
+	 */
+	private function expCanOpenClaim(int $claimId, string $uid): bool
+	{
+		$access = \OCP\Server::get(\OCA\ExpenseCheck\Service\AccessControlService::class);
+		if (!$access->canUseApp($uid)) {
+			return false;
+		}
+		$claim = \OCP\Server::get(\OCA\ExpenseCheck\Db\ClaimMapper::class)->findByIdRaw($claimId);
+		if ($claim === null) {
+			return false;
+		}
+		return \OCP\Server::get(\OCA\ExpenseCheck\Service\ClaimLifecycleService::class)->canView($claim, $uid);
+	}
+
+	/**
+	 * A member (or any non-owner, non-privileged actor) who cannot open the
+	 * EXP claim page must get the ref WITHOUT the url — the web toast then
+	 * shows the honest 'Expense claim submitted' text with no dead CTA.
+	 * Deterministic: a synthetic actor uid is never owner/app-admin/finance/
+	 * auditor/decision-rights holder, and fails the door whenever EXP's
+	 * access restriction is enabled.
+	 */
+	public function testSubmitDraftOmitsUrlForIneligibleActor(): void
+	{
+		$ref = 'snkexp:it-' . bin2hex(random_bytes(6));
+		$foreignActor = 'snk-it-other-' . bin2hex(random_bytes(4));
+		$res = $this->bridge->submitDraft(
+			$this->uid, 640, 'Printer paper', $ref, $this->categoryId, $this->costCenterId, $foreignActor,
+		);
+		self::assertNotSame('', $res['ref']);
+		self::assertFalse($res['deduplicated']);
+		self::assertArrayNotHasKey('url', $res, 'ineligible actor must not receive a dead claim url');
+
+		$claim = $this->db->executeQuery(
+			'SELECT id FROM *PREFIX*exp_claims WHERE request_key = ?',
+			[$this->uid . ':ingress:' . $ref]
+		)->fetch();
+		self::assertNotFalse($claim);
+		$this->createdClaims[] = (int)$claim['id'];
+		self::assertFalse($this->expCanOpenClaim((int)$claim['id'], $foreignActor));
+	}
+
+	/**
+	 * Regression leg for page-reachable roles: an actor EXP's door admits
+	 * AND who may view the claim still receives the deep link. Resolved
+	 * dynamically — any Nextcloud admin qualifies (sysadmin passes the door
+	 * and is always an EXP app admin).
+	 */
+	public function testSubmitDraftEmitsUrlForEligibleActor(): void
+	{
+		$actor = $this->eligibleExpActor();
+		if ($actor === null) {
+			self::markTestSkipped('no EXP-eligible actor resolvable on this instance');
+		}
+		$ref = 'snkexp:it-' . bin2hex(random_bytes(6));
+		$res = $this->bridge->submitDraft(
+			$this->uid, 730, 'Dish soap', $ref, $this->categoryId, $this->costCenterId, $actor,
+		);
+		self::assertNotSame('', $res['ref']);
+		self::assertArrayHasKey('url', $res);
+		self::assertStringContainsString('/apps/expensecheck/claims/', $res['url']);
+
+		$claim = $this->db->executeQuery(
+			'SELECT id FROM *PREFIX*exp_claims WHERE request_key = ?',
+			[$this->uid . ':ingress:' . $ref]
+		)->fetch();
+		self::assertNotFalse($claim);
+		$this->createdClaims[] = (int)$claim['id'];
+		self::assertTrue($this->expCanOpenClaim((int)$claim['id'], $actor));
+	}
+
+	/** Any NC admin passes EXP's door (isSystemAdmin→isAppAdmin) + canView. */
+	private function eligibleExpActor(): ?string
+	{
+		$access = \OCP\Server::get(\OCA\ExpenseCheck\Service\AccessControlService::class);
+		foreach (['admin', 'exp_doc_emp', 'exp.tester', 'expe2eweb', 'exp_doc'] as $uid) {
+			if ($access->canUseApp($uid) && $access->isAppAdmin($uid)) {
+				return $uid;
+			}
+		}
+		return null;
 	}
 
 	public function testSubmitDraftDedupesOnRequestKey(): void

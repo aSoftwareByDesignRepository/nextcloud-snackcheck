@@ -63,4 +63,20 @@ final class ExpenseClaimsBridgeTest extends TestCase
 		self::assertStringContainsString("'validation_failed'", $src);
 		self::assertStringContainsString("'expense_route_unavailable'", $src);
 	}
+
+	public function testClaimUrlEmitIsGatedOnActorEligibility(): void
+	{
+		// role_scoped_endpoint_unhandled: the 'Open claim' url must be emitted
+		// only when the acting uid passes EXP's door (canUseApp) AND may view
+		// that claim (canView) — an unconditional emit renders a CTA that
+		// dead-ends on HTTP 403 for whole role classes. Fail-closed helper,
+		// applied at every emit site through claimResult().
+		$src = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Service/ExpenseClaimsBridge.php');
+		self::assertStringContainsString('AccessControlService', $src);
+		self::assertStringContainsString('canUseApp', $src);
+		self::assertStringContainsString('canView', $src);
+		self::assertStringContainsString('claimUrlForActor', $src);
+		// No bare emit left: every url must flow through the eligibility gate.
+		self::assertStringNotContainsString("'url' => \$this->claimUrl(", $src);
+	}
 }

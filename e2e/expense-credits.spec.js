@@ -119,7 +119,7 @@ test.describe('SnackCheck expense credits', () => {
 
 		await gotoApp(page, `${BASE}/index.php/apps/snackcheck/my-month`);
 		await expect(
-			page.locator('.snk-badge--credit').or(page.getByText(/credit|auslag/i)).first(),
+			page.locator('.snk-badge--credit').first(),
 		).toBeVisible({ timeout: 15000 });
 	});
 });

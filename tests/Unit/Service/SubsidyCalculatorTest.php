@@ -73,6 +73,21 @@ final class SubsidyCalculatorTest extends TestCase
 		self::assertTrue($h['top_up']);
 	}
 
+	public function testTopUpOnHorizonEvenAbovePar(): void
+	{
+		// onHand above par but days_left inside the restock horizon —
+		// the || arm alone must still trigger top_up (kills ||-to-&&).
+		$h = SubsidyCalculator::topUpHint(14, 7, 6, 4, 3);
+		self::assertEqualsWithDelta(3.0, $h['days_left'], 1e-9);
+		self::assertTrue($h['top_up']);
+	}
+
+	public function testNoTopUpAboveParBeyondHorizon(): void
+	{
+		$h = SubsidyCalculator::topUpHint(14, 7, 8, 4, 3);
+		self::assertFalse($h['top_up']);
+	}
+
 	public function testSuggestedBuy(): void
 	{
 		self::assertSame(7, SubsidyCalculator::suggestedBuy(10, 3));

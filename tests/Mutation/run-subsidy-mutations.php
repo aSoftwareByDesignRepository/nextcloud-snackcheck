@@ -31,8 +31,21 @@ $mutations = [
 
 function runPhpunit(): bool
 {
-	$cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/../../vendor/bin/phpunit')
-		. ' --filter SubsidyCalculatorTest --no-output';
+	$root = dirname(__DIR__, 2);
+	$filter = 'SubsidyCalculatorTest';
+	if (is_file('/var/www/html/lib/base.php')) {
+		$cmd = 'php -d opcache.enable_cli=0 -d opcache.enable=0 '
+			. escapeshellarg($root . '/vendor/bin/phpunit')
+			. ' -c ' . escapeshellarg($root . '/phpunit.xml')
+			. ' --do-not-cache-result --filter ' . escapeshellarg($filter);
+	} else {
+		$appId = basename($root);
+		$cmd = 'docker compose -f ' . escapeshellarg(dirname($root, 2) . '/docker-compose.yml')
+			. ' exec -u www-data -T nextcloud php -d opcache.enable_cli=0 -d opcache.enable=0 '
+			. '/var/www/html/custom_apps/' . $appId . '/vendor/bin/phpunit '
+			. '-c /var/www/html/custom_apps/' . $appId . '/phpunit.xml '
+			. '--do-not-cache-result --filter ' . escapeshellarg($filter);
+	}
 	exec($cmd . ' 2>&1', $out, $code);
 	return $code === 0;
 }
@@ -49,9 +62,15 @@ foreach ($mutations as $m) {
 	// a kill-test that is red unmutated turns nonzero exits into fake kills.
 	require_once __DIR__ . '/MutationBaseline.php';
 	mutationBaselineSelfCheck(__FILE__);
-	file_put_contents($sourcePath, $mutated);
+	if (file_put_contents($sourcePath, $mutated) === false) {
+		fwrite(STDERR, "SKIP {$m['name']}: cannot write SubsidyCalculator\n");
+		continue;
+	}
 	$ok = runPhpunit();
-	file_put_contents($sourcePath, $original);
+	if (file_put_contents($sourcePath, $original) === false) {
+		fwrite(STDERR, "RESTORE-FAIL {$m['name']}: SubsidyCalculator left mutated\n");
+		exit(2);
+	}
 	if ($ok) {
 		$survived[] = $m['name'];
 		echo "SURVIVED {$m['name']}\n";

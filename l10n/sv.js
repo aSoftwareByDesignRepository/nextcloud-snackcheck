@@ -119,7 +119,7 @@ OC.L10N.register(
 	"Change log" : "Ändringslogg",
 	"Change name, price, or picture. Extra fields stay under More options." : "Ändra namn, pris eller bild. Fler fält under Fler alternativ.",
 	"Changes to catalog, periods, and settings appear here." : "Ändringar av katalog, perioder och inställningar visas här.",
-	"Check Partner" : "Check Partner",
+	"Check Partner" : "Check-partner",
 	"Choose a passphrase of at least 12 characters." : "Välj en lösenfras på minst 12 tecken.",
 	"Choose a site" : "Välj en plats",
 	"Choose a site from the Site menu, then come back to log." : "Välj en plats i Plats-menyn och kom sedan tillbaka för att logga.",
